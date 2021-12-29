@@ -122,14 +122,14 @@ buyonlyprovisioner = ["Cooked Bird","Candle","Scepter","Garlic","Bladed Staff","
 "A Checker Board","Mahjong Game","Spear","Oil Flask","Torch","Crook","Salvage Bag","A Jug Of Cider","Bag",
 "Skin Tingeing Ticture","Lockpick","Chicken Leg","Ginseng","Pear","Beeswax","Copper Key","Empty Bottle","Pouch",
 "Wooden Box","Short Spear","Club","Gnarled Staff","Dice And Cup","Quarter Staff","Maul","Mace","Kindling",
-"Black Staff","Arrow","Crossbow Bolt","Bedroll","Apple","Lantern","Small Ship Deed","War Mace","Bagball",
+"Black Staff","Arrow","crossbow bolt","Bedroll","Apple","Lantern","Small Ship Deed","War Mace","Bagball",
 "Bagball2","A Bottle Of Ale","Leg Of Lamb","A Chessboard","A Bottle Of Liquor","A Plant Bowl","Book","Book1","Hair Dye"]
 
 salv = [0x1715, 0x1F9F, 0x1F03, 0x1714, 0x1F01, 0x1716, 0x1F7B, 0x152E, 0x1EFD, 0x1539, 0x1EFF, 0x1516, 0x1537, 0x153B,
   0x1515, 0x1FA1, 0x171C, 0x1713, 0x1717, 0x1718, 0x171A, 0x171B, 0x1540, 0x1544, 0x1DB9]
  
 manualmove = ["spool of thread","flax bundle","pile of wool","bolt of cloth","cut cloth","bale of cotton","cloth","Cooked Bird","Garlic",
-"Bread Loaf","Lockpick","Chicken Leg","Ginseng","Pear","Beeswax","Empty Bottle","Kindling","Arrow","Crossbow Bolt","Apple","Leg Of Lamb"]
+"Bread Loaf","Lockpick","Chicken Leg","Ginseng","Pear","Beeswax","Empty Bottle","Kindling","Arrow","crossbow bolt","Apple","Leg Of Lamb"]
 
 stocklist = [0x0FA9, 0x0FAB, 0x1DB9, 0x0DBA]  
 
@@ -608,9 +608,9 @@ def buyitem():
              Misc.SendMessage("Arrrow",30)
              BuyAgent.ChangeList('Arrrow')
              idtocheck = 0x0F3F
-         if y == "Crossbow Bolt":
+         if y == "crossbow bolt":
              Misc.SendMessage("Crossbow Bolt",30)
-             BuyAgent.ChangeList('CrossbowBolt')
+             BuyAgent.ChangeList('crossbowbolt')
              idtocheck = 0x1BFB   
          if y == "Bedroll":
              Misc.SendMessage("Bedroll",30)
