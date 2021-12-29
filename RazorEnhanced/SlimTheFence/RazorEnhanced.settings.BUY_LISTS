@@ -1,0 +1,342 @@
+[
+  {
+    "Description": "buyagent",
+    "CompareName": false,
+    "Selected": true
+  },
+  {
+    "Description": "cloth",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "bolt",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "cloths",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "cotton",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "dye",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "flax",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "lcap",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "thread",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "tub",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "wool",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "leather",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "ingots",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "cookedbird",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "candle",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "scepter",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "garlic",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "bladedstaff",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "warhammer",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "backpack",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "breadloaf",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "backgammongame",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "acheckerboard",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "mahjonggame",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "spear",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "oilflask",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "torch",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "crook",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "salvagebag",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "cider",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "bag",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "skin",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "lockpick",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "chickenleg",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "ginseng",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "pear",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "beeswax",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "copperkey",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "emptybottle",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "pouch",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "woodenbox",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "shortspear",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "club",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "gnarledstaff",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "dice",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "quarterstaff",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "maul",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "mace",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "kindling",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "blackstaff",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "arrow",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "crossbowbolt",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "bedroll",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "apple",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "lantern",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "smallshipdeed",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "warmace",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "bagball",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "bagball2",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "ale",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "legoflamb",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "achessboard",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "liquor",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "bowl",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "wine",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "book",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "book1",
+    "CompareName": false,
+    "Selected": false
+  },
+  {
+    "Description": "hairdye",
+    "CompareName": false,
+    "Selected": false
+  }
+]

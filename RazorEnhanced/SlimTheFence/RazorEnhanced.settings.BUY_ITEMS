@@ -1,0 +1,538 @@
+[
+  {
+    "Name": "bolt%s% of cloth (0F95)",
+    "Graphics": 3989,
+    "Amount": 5,
+    "Color": -1,
+    "Selected": true,
+    "List": "bolt"
+  },
+  {
+    "Name": "bolt%s% of cloth (0F9C)",
+    "Graphics": 3996,
+    "Amount": 25,
+    "Color": 0,
+    "Selected": true,
+    "List": "cloth"
+  },
+  {
+    "Name": "Cloth (1767)",
+    "Graphics": 5991,
+    "Amount": 5,
+    "Color": -1,
+    "Selected": true,
+    "List": "cloths"
+  },
+  {
+    "Name": "dyes (0FA9)",
+    "Graphics": 4009,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "dye"
+  },
+  {
+    "Name": "bale%s% of cotton (0DF9)",
+    "Graphics": 3577,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "cotton"
+  },
+  {
+    "Name": "flax bundle%s% (1A9C)",
+    "Graphics": 6812,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "flax"
+  },
+  {
+    "Name": "leather cap (1DB9)",
+    "Graphics": 7609,
+    "Amount": 5,
+    "Color": -1,
+    "Selected": true,
+    "List": "lcap"
+  },
+  {
+    "Name": "spool%s% of thread (0FA0)",
+    "Graphics": 4000,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "thread"
+  },
+  {
+    "Name": "dyeing tub (0FAB)",
+    "Graphics": 4011,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "tub"
+  },
+  {
+    "Name": "pile%s% of wool (0DF8)",
+    "Graphics": 3576,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "wool"
+  },
+  {
+    "Name": "cut up leather (1081)",
+    "Graphics": 4225,
+    "Amount": 10,
+    "Color": 0,
+    "Selected": true,
+    "List": "leather"
+  },
+  {
+    "Name": "iron ingot%s (1BF2)",
+    "Graphics": 7154,
+    "Amount": 50,
+    "Color": 0,
+    "Selected": true,
+    "List": "ingots"
+  },
+  {
+    "Name": "cooked bird%s% (09B7)",
+    "Graphics": 2487,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "cookedbird"
+  },
+  {
+    "Name": "candle (0A0F)",
+    "Graphics": 2575,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "candle"
+  },
+  {
+    "Name": "scepter (26BC)",
+    "Graphics": 9916,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "scepter"
+  },
+  {
+    "Name": "Garlic (0F84)",
+    "Graphics": 3972,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "garlic"
+  },
+  {
+    "Name": "bladed staff (26BD)",
+    "Graphics": 9917,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "bladedstaff"
+  },
+  {
+    "Name": "war hammer (1439)",
+    "Graphics": 5177,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "warhammer"
+  },
+  {
+    "Name": "backpack (0E75)",
+    "Graphics": 3701,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "backpack"
+  },
+  {
+    "Name": "bread loa%ves/f% (103B)",
+    "Graphics": 4155,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "breadloaf"
+  },
+  {
+    "Name": "backgammon game (0FAD)",
+    "Graphics": 4013,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "backgammongame"
+  },
+  {
+    "Name": "game board (0FA6)",
+    "Graphics": 4006,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "acheckerboard"
+  },
+  {
+    "Name": "mahjong game (0FAA)",
+    "Graphics": 4010,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "mahjonggame"
+  },
+  {
+    "Name": "Long Spear (0F62)",
+    "Graphics": 3938,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "spear"
+  },
+  {
+    "Name": "oil flask%s% (1C18)",
+    "Graphics": 7192,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "oilflask"
+  },
+  {
+    "Name": "torch%es% (0F64)",
+    "Graphics": 3940,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "torch"
+  },
+  {
+    "Name": "crook (13F5)",
+    "Graphics": 5109,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "crook"
+  },
+  {
+    "Name": "bag (0E76)",
+    "Graphics": 3702,
+    "Amount": 5,
+    "Color": 590,
+    "Selected": true,
+    "List": "salvagebag"
+  },
+  {
+    "Name": "jug of cider (09C8)",
+    "Graphics": 2504,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "cider"
+  },
+  {
+    "Name": "bag (0E76)",
+    "Graphics": 3702,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "bag"
+  },
+  {
+    "Name": "bottle (0EFF)",
+    "Graphics": 3839,
+    "Amount": 5,
+    "Color": 90,
+    "Selected": true,
+    "List": "skin"
+  },
+  {
+    "Name": "lockpick%s% (14FB)",
+    "Graphics": 5371,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "lockpick"
+  },
+  {
+    "Name": "chicken leg%s% (1608)",
+    "Graphics": 5640,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "chickenleg"
+  },
+  {
+    "Name": "Ginseng (0F85)",
+    "Graphics": 3973,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "ginseng"
+  },
+  {
+    "Name": "pear%s% (172D)",
+    "Graphics": 5933,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "pear"
+  },
+  {
+    "Name": "Beeswax (1422)",
+    "Graphics": 5154,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "beeswax"
+  },
+  {
+    "Name": "copper key (100E)",
+    "Graphics": 4110,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "copperkey"
+  },
+  {
+    "Name": "empty bottle%s% (0F0E)",
+    "Graphics": 3854,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "emptybottle"
+  },
+  {
+    "Name": "pouch (0E79)",
+    "Graphics": 3705,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "pouch"
+  },
+  {
+    "Name": "wooden box (09AA)",
+    "Graphics": 2474,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "woodenbox"
+  },
+  {
+    "Name": "short spear (1403)",
+    "Graphics": 5123,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "shortspear"
+  },
+  {
+    "Name": "club (13B4)",
+    "Graphics": 5044,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "club"
+  },
+  {
+    "Name": "gnarled staff (13F8)",
+    "Graphics": 5112,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "gnarledstaff"
+  },
+  {
+    "Name": "dice and cup (0FA7)",
+    "Graphics": 4007,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "dice"
+  },
+  {
+    "Name": "quarter staff (0E89)",
+    "Graphics": 3721,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "quarterstaff"
+  },
+  {
+    "Name": "maul (143B)",
+    "Graphics": 5179,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "maul"
+  },
+  {
+    "Name": "mace (0F5C)",
+    "Graphics": 3932,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "mace"
+  },
+  {
+    "Name": "kindling (0DE1)",
+    "Graphics": 3553,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "kindling"
+  },
+  {
+    "Name": "black staff (0DF0)",
+    "Graphics": 3568,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "blackstaff"
+  },
+  {
+    "Name": "arrow (0F3F)",
+    "Graphics": 3903,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "arrow"
+  },
+  {
+    "Name": "crossbow bolt (1BFB)",
+    "Graphics": 7163,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "crossbowbolt"
+  },
+  {
+    "Name": "bedroll (0A59)",
+    "Graphics": 2649,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "bedroll"
+  },
+  {
+    "Name": "apple%s% (09D0)",
+    "Graphics": 2512,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "apple"
+  },
+  {
+    "Name": "lantern (0A25)",
+    "Graphics": 2597,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "lantern"
+  },
+  {
+    "Name": "ship plans (14F2)",
+    "Graphics": 5362,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "smallshipdeed"
+  },
+  {
+    "Name": "war mace (1407)",
+    "Graphics": 5127,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "warmace"
+  },
+  {
+    "Name": "small bagball (2256)",
+    "Graphics": 8790,
+    "Amount": 999,
+    "Color": 0,
+    "Selected": true,
+    "List": "bagball"
+  },
+  {
+    "Name": "large bagball (2257)",
+    "Graphics": 8791,
+    "Amount": 999,
+    "Color": 0,
+    "Selected": true,
+    "List": "bagball2"
+  },
+  {
+    "Name": "bottle of ale (099F)",
+    "Graphics": 2463,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "ale"
+  },
+  {
+    "Name": "leg%s% of lamb (160A)",
+    "Graphics": 5642,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "legoflamb"
+  },
+  {
+    "Name": "game board (0FA6)",
+    "Graphics": 4006,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "achessboard"
+  },
+  {
+    "Name": "bottle of liquor (099B)",
+    "Graphics": 2459,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "liquor"
+  },
+  {
+    "Name": "pewter bowl (15FD)",
+    "Graphics": 5629,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "bowl"
+  },
+  {
+    "Name": "bottle of wine (09C7)",
+    "Graphics": 2503,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "wine"
+  },
+  {
+    "Name": "book (0FF1)",
+    "Graphics": 4081,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "book"
+  },
+  {
+    "Name": "book (0FF2)",
+    "Graphics": 4082,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "book1"
+  },
+  {
+    "Name": "bottle (0EFF)",
+    "Graphics": 3839,
+    "Amount": 5,
+    "Color": 0,
+    "Selected": true,
+    "List": "hairdye"
+  }
+]
