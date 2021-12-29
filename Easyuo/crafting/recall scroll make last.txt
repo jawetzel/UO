@@ -1,0 +1,100 @@
+display target recource cont$
+set #targcurs 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set %resource #ltargetid
+display target pen bag$
+set #targcurs 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set %penbag #ltargetid
+
+
+start:
+finditem PBG C_ , %penbag
+if #findkind = -1
+ {
+ halt
+ }
+exevent drag #findid #findstack
+exevent dropc #backpackid
+wait 30
+set #lobjectid #findid
+set %pen #lobjectid
+event macro 17
+wait 20
+set %x #contposx + 285
+set %y #contposy + 455
+
+main:
+finditem KUF C_ , #backpackid
+if #findstack < 25 || #findkind = -1
+ {
+ finditem KUF C_ , %resource
+ exevent drag #findid 250
+ exevent dropc #backpackid
+ wait 20
+ }
+finditem JUF C_ , #backpackid
+if #findstack < 25 || #findkind = -1
+ {
+ finditem JUF C_ , %resource
+ exevent drag #findid 250
+ exevent dropc #backpackid
+ wait 20
+ }
+finditem MZF C_ , #backpackid
+if #findstack < 25 || #findkind = -1
+ {
+ finditem MZF C_ , %resource
+ exevent drag #findid 250
+ exevent dropc #backpackid
+ wait 20
+ }
+finditem DPF C_ , #backpackid
+if #findstack < 25 || #findkind = -1
+ {
+ finditem DPF C_ , %resource
+ exevent drag #findid 200
+ exevent dropc #backpackid
+ wait 20
+ finditem WTL C_ , #backpackid
+ if #findkind > -1
+  {
+  exevent drag #findid #findstack
+  exevent dropc %resource
+  wait 20
+  }
+ }
+if #mana < 40
+{
+repeat
+ {
+ event macro 13 46
+ wait 4s
+ }
+until #mana > 120
+}
+event macro
+click %x %y
+set #scnt 0
+repeat
+ {
+ finditem %pen c_ , #backpackid
+ if #findkind = -1
+  {
+  goto start
+  }
+ }
+until #scnt > 3 || #contsize = 530_497
+if #scnt > 3
+ {
+ goto start
+ }
+goto main

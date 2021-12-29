@@ -1,0 +1,2472 @@
+;=================================================================
+; Script Name: SUOQuester - ScriptUO Heartwood Quester
+; Author: Cerveza / TrailMyx
+; Version: 1.28
+; Shard OSI / FS: OSI / FS?
+; Revision Date: 2007/05/05
+; Purpose: Heartwood Quester with reload support for beetles
+;          Only does Fletching (bows) and Carpentry (stools)
+; Special Thanks:
+;       SorrowMaster - original SMQuester
+;       Cerveza      - Conversion of SorryMaster's work to SMQRail
+;       Bad_Maniac   - BMItemEval
+;       Machine      - craftItem
+;       TrailMyx     - Rail engine, Runebood subs, TM_CLAw
+;       j4bber       - Scripting assistance, suggestions and subs
+;       Maverick/Drak/Cake2/gatecrasher - Testing and suggestions
+;
+;=================================================================
+; Revision History:
+; v0.90 - Initial Beta Release
+;       - Fletching ONLY
+; v0.91 - Added Carpentry quest
+; v0.92 - - Added hiding
+; v0.93 - Hardcoded number of boards for packy
+;       - Removed loading char with boards
+; v0.94 - Added make tools at secure
+;       - Added board check (Thanks Drak for the feedback)
+; v0.95 - Bug Fixes: delay problems, fletching tools
+;       - Added dump loot to secure (thanks J4bber)
+; v0.96 - Should keep 2 tinker tools on you, loading from secure
+; v0.97 - TrailMyx - Included rail system for testing
+; v0.98 - J4bber - Fix for board stacks
+; v0.98a- TrailMyx - OCR for toggling quest items
+; v0.981nokal - TrailMyx - No KalInEx ocr, modified load_boards1
+;             - Fix for make tools
+; v0.985nokal - TrailMyx
+; v0.987nokal - TrailMyx - complete rewrite of crafting sub
+;             - random bag placement
+;             - reset of crafting tools to configurable resource color
+; v0.988 - TrailMyx same as v0.987nokal with test rails removed, phased out KalOCR
+; v0.989 - TrailMyx fixed OCR and carpentry tools setup bug
+; v0.9891 - TrailMyx fixed OCR wrong quest, drop bag in pack
+;         - added waits for stability
+;         - added quest count and safe recall rune support for ending script.
+; V1.0    - FINALLY! Thanks TrailMyx / J4bber and all the testers
+; v1.01   - stability additions
+; v1.10   - Use virtues to clear cursor
+; v1.13   - Switch back to key ESC to fix bugged cursor.  Thanks Mystre!
+; v1.14   - Removed honor self.  Added ability to use resources other than normal color
+; v1.15   - Removed s7 subs for recall.  Added Beetle unhiding feature.
+; v1.16   - Now exclusively at ScriptUO.com
+; v1.20   - Added support for Advanced CLAw Lite/Full.  Revised UI a little bit
+; v1.21   - added CLAw startup check
+; v1.22   - Added file saving support.  Added bank support.
+; v1.24   - Support for 7.x.x.x client and larger craft menu
+; v1.25   - Fixed issue with not making tinker tools correctly
+; v1.26   - REALLY fixed the issue from 1.25 this time.  ;)
+; v1.27   - new craft gump size for 7.0.6.4 and quest name changes
+; v1.28   - uses OCR to select beetle pack position.
+;=================================================================
+; Preview of SUOuester V2.0:
+; - save config
+; - bank support (multiple random banking refills)
+; - random landing spots in heartwood <-- DONE
+; - more (all?) quests, selectable from setup menu
+; - menu with status
+; - new user configurable loot evaluation system
+; - ????
+;=================================================================
+; Files Needed: Make sure they are all in your EUO directory
+; - BMItemEval.euo         - Evaluates loot
+; - tool_railengine30g.txt - Rail Engine to move char
+; - hw_trinket.txt         - Rail File for path to trinket quest
+; - hw_bowcraft.txt        - Rail File for path to bowcraft quest
+;=================================================================
+; Disclaimer:  By running this script, you are accepting the contents of this licence agreement.
+; This script is only authorized to be distributed on www.scriptuo.com.  If you purchase this script,
+; acquire it from another website, it is not considered an authorized copy and should be deleted
+; immediately.
+; You hold the author, TrailMyx, and the distribution site www.scriptuo.com not liable for any loss of
+; items, accounts, monitary or time losses associated with the use of this script.  Furthermore, you promise
+; not to distribute or sell this script to anyone without the express permission of the author, Trailmyx.
+; Violation of the contents of this agreement will result in one of the following: litigation, www.scriptuo.com
+; account termination, discimination of bad karma for your next life, and most definitely causing a black mark
+; placed on your soul.
+;
+; I worked very hard to bring this script to you, so please use it responisibily and
+; respectfully.  If you have any questions, please reach me at trailmyx@yahoo.com.
+; (c) 2007 TrailMyx, All rights reserved.
+;===================================================================
+;========== File Dependencies =======
+
+set %railsubs tool_railengine30k.txt
+set %version v1.29
+
+set %quest_gump_size 507_496
+
+;set %craft_gump_size 530_437 ; old client gump size
+;set %craft_gump_size 530_507 ; 7.0.0.0 to 7.0.6.3 client
+set %craft_gump_size 530_497 ; 7.0.6.4 client
+
+if %craft_gump_size = 530_437
+{
+  set %make_last_x 281 
+  set %make_last_y 414
+}
+
+if %craft_gump_size = 530_507
+{
+  set %make_last_x 281 
+  set %make_last_y 453
+}
+
+if %craft_gump_size = 530_497
+{
+  set %make_last_x 281 
+  set %make_last_y 443
+}
+
+set %use_custom_rails #FALSE  ; change to true to load your own rails
+
+if %use_custom_rails = #FALSE
+{
+  set %railbowcraft hw_bowcraft.txt  ; label = hw_bowcraft index=0
+  set %railtrinket hw_trinket.txt    ; label = hw_trinket  index=1
+  set %label_bowcraft hw_bowcraft
+  set %label_trinket hw_trinket
+}
+else
+{
+  set %railbowcraft YOUR_BOWCRAFT_RAIL.txt
+  set %railtrinket YOUR_TRINKET_RAIL.txt
+  set %label_bowcraft YOUR_BOWCRAFT_LABEL
+  set %label_trinket YOUR_TRINKET_LABEL
+}
+
+gosub TM_LootingAssistantInitialized
+if #RESULT = #FALSE
+{
+  display yesno TM_CLAw has not been initialized, do you wish to proceed with BMEVAL?
+  if #DISPRES = no
+  {
+    display ok Please start TM_CLAw, wait for it to initialize, then start this script again.
+    stop
+  }
+}
+else
+{
+  gosub TM_PingLootingAssistant
+  if #RESULT = PING
+  {
+    display ok TM_CLAw doesn't seem to be responding.  Make sure it is running, or restart it.
+    stop
+  }
+}
+
+gosub showEUOMenu1
+menu Combo select recall 1
+menu combo select EUOComboBoxQuest 1
+gosub LoadSetup
+if #RESULT = #FALSE
+{
+;setup_retry:
+;  gosub GuidedSetup
+;  display yesno Do you want to use this setup?
+;  if #DISPRES = no
+;    goto setup_retry
+;  display ok Be sure to select the correct runes before you start!
+;  display yesno Do you want to save this setup?
+;  if #DISPRES = yes
+;    gosub SaveSetup
+}
+gosub Initialize
+
+set %quest_iterations 0
+set %exevent_drag_wait 10
+set %exevent_drop_wait 20
+set %claw_init #FALSE
+
+set #MENUBUTTON N/A
+set %start #FALSE 
+;========== SUOQUESTER MAIN LOOP =======
+Main:
+gosub HandleMenu
+if %start = #FALSE
+{
+  if #MENUBUTTON = continue
+  {
+    set #MENUBUTTON N/A
+    gosub VerifySetup
+    if #RESULT = #FALSE
+      goto Main
+
+    if #RESULT = #TRUE
+    {
+      set %start #TRUE
+      menu delete continue
+      menu Font BGColor BtnFace
+      menu Button continue 8 272 75 25 Stop
+    }
+    else
+    {
+      display You must pick a valid evaluation method.
+    }
+  }
+  if #MENUBUTTON = EUOButtonLoad
+  {
+    set #MENUBUTTON N/A
+    gosub LoadSetup
+  }
+  if #MENUBUTTON = EUOButtonSave
+  {
+    set #MENUBUTTON N/A
+    gosub SaveSetup
+  }
+  if #MENUBUTTON = EUOButtonSetup
+  {
+    set #MENUBUTTON N/A
+    gosub GuidedSetup
+  }
+  goto Main
+}
+else
+{
+  if #MENUBUTTON = continue
+  {
+    menu delete continue
+    menu Font BGColor BtnFace
+    menu Button continue 8 272 75 25 Start
+    set %start #FALSE
+    set #MENUBUTTON N/A
+    goto Main
+  }
+}
+
+gosub hiding 60
+menu get EUOCheckUseBank
+if #MENURES = #FALSE
+{
+  gosub open_source %lootbag -1
+  finditem * C_ , %lootbag
+  if #FINDCNT > 0
+  {
+
+    for #FINDINDEX 1 #FINDCNT
+      gosub DragItem #FINDID #FINDSTACK C %lootstorebag
+  }
+}
+else
+{
+  gosub LocateBank
+  if #RESULT <> #TRUE
+  {
+    gosub open_source %lootbag -1
+    finditem * C_ , %lootbag
+    if #FINDCNT > 0
+    {
+      for #FINDINDEX 1 #FINDCNT
+        gosub DragItem #FINDID #FINDSTACK C %lootstorebag_bank
+    }    
+  }
+  else
+  {
+    display ok Cannot locate banker.
+    stop
+  }
+}
+
+wait 5
+; Should program end?
+set %quest_iterations %quest_iterations + 1
+if %quest_iterations > %quest_iter_max
+{
+  gosub mount
+  wait 10
+  gosub TM_TravelFromRunebook %recallmethod %logoutrune %logoutrune %runebook
+  wait 2s
+  terminate uo
+}
+gosub dismount
+wait 10
+
+menu get EUOCheckUseBank
+if #MENURES = #FALSE
+{
+  gosub load_resource %ressource %secure %beetlepack %pakboards %reshue ; grab boards from secure
+}
+else
+{
+  gosub load_resource %ressource %bankid %beetlepack %pakboards %reshue ; grab boards from secure
+}
+if #RESULT = #TRUE
+{
+  display Not enough boards to run script, halting.
+  gosub mount
+  halt
+}
+menu get EUOCheckUseBank
+if #MENURES = #FALSE
+{
+  gosub ToolCheck %secure
+}
+else
+{
+  gosub ToolCheck %bankid
+}
+wait 10
+gosub mount
+gosub open_source %lootbag -1
+
+gosub %rail1 ; rail into heartwood
+gosub dismount
+wait 15
+gosub hiding 200
+gosub open_pack
+gosub SUOQuester
+gosub BeetleVisible
+gosub mount
+gosub %rail2 ; rail out of heartwood
+menu get EUOCheckUseBank
+if #MENURES = #FALSE
+{
+  gosub TM_TravelFromRunebook %recallmethod %homerune %homerune %runebook
+}
+else
+{
+  gosub TM_TravelFromRunebook %recallmethod %bankrune %bankrune %runebook
+}
+goto Main
+
+;========== SUOQuester ==========
+
+sub SUOQuester
+  
+loop:
+  gosub bpcount
+  
+SUOQuester_loop2:
+  gosub load_resource %ressource %beetlepack #BACKPACKID %resamount %reshue   ; grab more resources from beetle.
+  if #RESULT = #TRUE
+    return
+  
+SUOQuester_loop3:
+  gosub CheckAndCraftItems %tool %item %ressource %itemresourcecnt %reshue %itemamount %craftitemchain ; craft all the item for the quest
+  if #RESULT = RES_LOW
+  {
+    goto SUOQuester_loop2
+  }
+  if #RESULT = NO_TOOL
+  {
+    gosub ToolCheck %beetlepack
+    goto SUOQuester_loop3
+  }
+  ignoreitem reset mark
+  gosub cyclequests
+  gosub mark
+  gosub finishquest
+  wait 10
+  gosub loot
+  goto loop
+  
+return
+;-------------------------------------------------------------------------------
+sub HandleMenu
+  menu getnum score
+  set %score #menures
+  menu getnum homerune
+  set %homerune #menures
+  menu getnum heartrune
+  set %heartwood #menures
+  menu getnum bankrune
+  set %bankrune #menures
+  menu get recall
+  if #MENURES = 1
+    set %recallmethod RE
+  if #MENURES = 2
+    set %recallmethod GA
+  if #MENURES = 3
+    set %recallmethod SJ
+  menu get hiding
+  set %hiding #menures
+  menu get logoutrune
+  set %logoutrune #menures
+  menu get questiteration
+  set %quest_iter_max #menures
+  menu get EUOCheckBoxCLAw
+  if #MENURES = #TRUE
+  {
+    gosub CheckForCLAwInit
+    if #RESULT = #FALSE
+      menu set EUOCheckBoxCLAw #FALSE
+  }
+  menu get EUOCheckBoxBMEval
+  if #MENURES = #TRUE
+    set %use_bmeval #TRUE
+  else
+    set %use_bmeval #FALSE
+  set #RESULT %use_bmeval || %claw_init
+  
+  ;===== Fletching setup =====
+  menu get EUOComboBoxQuest
+  if #MENURES = 1 && ( %quest_type <> FLETCHING || %mintinkertools = N/A )
+  {
+    set %quest_type FLETCHING
+    set %tool UFG
+    set %toolresource ENK
+    set %toolresourceamt 3
+    set %mintinkertools 2
+    set %maxtinkertools 2
+    set %mincraftingtools 2
+    set %maxcraftingtools 4
+    set %craftitemchain_tool cat_4-nextpage-nextpage-sel_1
+    set %craftitemchain cat_4-sel_1
+    set %ressource TLK
+    set %reshue 1 ; 1-wood, 2-oak, 3-ash, 4-yew, 5-hearwood, 6-bloodwood, 7-frostwood
+    set %item WOH
+    set %string %QUEST_A_Simple_Bow
+    set %itemamount 10
+    set %itemresourcecnt 7
+    set %resamount 120   ; was 70
+    set %cat 3
+    set %page 1
+    set %itemnum 1
+    set %vendortype bowcrafter$
+    set %rail1 tobowcrafter
+    set %rail2 frombowcrafter
+    set %pakboards 1540
+  }
+   
+  ;===== Carpentry setup =====
+  if #MENURES = 2 && ( %quest_type <> CARPENTRY || %mintinkertools = N/A )
+  {
+    set %quest_type CARPENTRY
+    set %tool IGG
+    set %toolresource TLK
+    set %toolresourceamt 4
+    set %mintinkertools 2
+    set %maxtinkertools 2
+    set %mincraftingtools 4
+    set %maxcraftingtools 4
+    set %craftitemchain_tool cat_3-sel_2 
+    set %craftitemchain cat_3-sel_1
+    set %ressource TLK
+    set %reshue 1 ; 1-wood, 2-oak, 3-ash, 4-yew, 5-hearwood, 6-bloodwood, 7-frostwood
+    set %item QFE
+    set %string %QUEST_Arch_Support
+    set %itemamount 10
+    set %itemresourcecnt 9
+    set %resamount 130  ; was 90
+    set %cat 2
+    set %page 1
+    set %itemnum 1
+    set %vendortype trinket , #spc , weaver$arborist$
+    set %rail1 totrinketweaver
+    set %rail2 fromtrinketweaver
+    set %pakboards 1530
+  }
+  
+return #RESULT
+;-------------------------------------------------------------------------------
+sub CheckForCLAwInit
+  set %claw_init #FALSE
+  gosub TM_LootingAssistantInitialized
+  if #RESULT = #TRUE
+  {
+    gosub TM_PingLootingAssistant
+    if #RESULT = PING
+      display ok Looter has been initialized but is not responding.
+    else
+      set %claw_init #TRUE
+  }
+  else
+  {
+    display ok Looter did not initialize.  Make sure you are running in another tab.
+  }
+return %claw_init
+;-------------------------------------------------------------------------------
+sub TM_GetPersistantVariable
+  set #RESULT %1 , _TM_ , #CHARID
+  set #RESULT * . #RESULT
+return #RESULT
+;-------------------------------------------------------------------------------
+sub TM_SetPersistantVariable
+  set #RESULT %1 , _TM_ , #CHARID
+  set * . #RESULT %2
+return
+;-------------------------------------------------------------------------------
+sub VerifySetup
+  menu get EUOCheckUseBank
+  if #MENURES = #FALSE
+  {
+    if %secure = N/A || %lootstorebag = N/A
+    {
+      display ok You must complete guided setup in order to use your home secure.
+      return #FALSE
+    }
+  }
+  else
+  {
+    if %lootstorebag_bank = N/A
+    {
+      display ok You must complete guided setup in order to use your bank.
+      return #FALSE    
+    }
+  }
+  
+  finditem %lootbag C_ , #BACKPACKID
+  if #FINDKIND = -1
+  {
+    display ok I cannot locate your configured loot pack in your backpack.$Please restart the guided setup.
+    return #FALSE
+  }
+  
+  finditem %runebook C_ , #BACKPACKID
+  if #FINDKIND = -1
+  {
+    display ok I cannot locate your configured runebook in your backpack.$Please restart the guided setup.
+    return #FALSE
+  }
+return #TRUE
+;-------------------------------------------------------------------------------
+sub SaveSetup
+  display yesno Are you sure you want to overwrite the current setup?
+  if #DISPRES = no
+    return
+
+  menu get EUOComboBoxQuest 
+  gosub TM_SetPersistantVariable quest_type #MENURES 
+  gosub TM_SetPersistantVariable secure %secure
+  gosub TM_SetPersistantVariable lootstorebag %lootstorebag
+  gosub TM_SetPersistantVariable lootstorebag_bank %lootstorebag_bank
+  gosub TM_SetPersistantVariable lootbag %lootbag
+  gosub TM_SetPersistantVariable runebook %runebook
+  gosub TM_SetPersistantVariable beetle %beetle
+  gosub TM_SetPersistantVariable beetlepack %beetlepack
+  
+  menu get score
+  gosub TM_SetPersistantVariable score #MENURES
+  menu get homerune
+  gosub TM_SetPersistantVariable homerune #MENURES
+  menu get heartrune
+  gosub TM_SetPersistantVariable heartrune #MENURES
+  menu get bankrune
+  gosub TM_SetPersistantVariable bankrune #MENURES
+  menu get recall
+  gosub TM_SetPersistantVariable recall #MENURES
+  
+  menu get hiding
+  gosub TM_SetPersistantVariable hiding #MENURES
+  menu get logoutrune
+  gosub TM_SetPersistantVariable logoutrune #MENURES
+  menu get questiteration
+  gosub TM_SetPersistantVariable questiteration #MENURES
+
+  menu get EUOCheckBoxCLAw
+  gosub TM_SetPersistantVariable EUOCheckBoxCLAw #MENURES
+  menu get EUOCheckBoxBMEval
+  gosub TM_SetPersistantVariable EUOCheckBoxBMEval #MENURES 
+  menu get EUOCheckUseBank
+  gosub TM_SetPersistantVariable EUOCheckUseBank #MENURES
+  
+  gosub TM_SetPersistantVariable CONFIGURED #TRUE
+return
+;-------------------------------------------------------------------------------
+sub LoadSetup
+  gosub TM_GetPersistantVariable CONFIGURED
+  if #RESULT <> #TRUE
+  {
+    display ok No default configuration found for this character.
+    return #FALSE
+  }
+
+  gosub TM_GetPersistantVariable quest_type
+  menu combo select EUOComboBoxQuest #RESULT
+  if #RESULT = 1
+    set %quest_type FLETCHING
+  if #RESULT = 2
+    set %quest_type CARPENTRY
+         
+  gosub TM_GetPersistantVariable secure
+  set %secure #RESULT
+  gosub TM_GetPersistantVariable lootstorebag
+  set %lootstorebag #RESULT
+  gosub TM_GetPersistantVariable lootstorebag_bank
+  set %lootstorebag_bank #RESULT
+  gosub TM_GetPersistantVariable lootbag
+  set %lootbag #RESULT
+  gosub TM_GetPersistantVariable runebook
+  set %runebook #RESULT 
+  gosub TM_GetPersistantVariable beetle
+  set %beetle #RESULT
+  gosub TM_GetPersistantVariable beetlepack
+  set %beetlepack #RESULT
+  
+  gosub TM_GetPersistantVariable score
+  menu set score #RESULT
+  set %score #RESULT
+  
+  gosub TM_GetPersistantVariable homerune
+  menu set homerune #RESULT
+  set %homerune #RESULT
+ 
+  gosub TM_GetPersistantVariable heartrune
+  menu set heartrune #RESULT
+  set %heartrune #RESULT
+
+  gosub TM_GetPersistantVariable bankrune
+  menu set bankrune #RESULT
+  set %bankrune #RESULT
+  
+  gosub TM_GetPersistantVariable recall
+  menu combo select recall #RESULT 
+  
+  if #RESULT = 1
+    set %recallmethod RE
+  if #RESULT = 2
+    set %recallmethod GA
+  if #RESULT = 3
+    set %recallmethod SJ
+
+  gosub TM_GetPersistantVariable hiding
+  menu set hiding #RESULT
+  set %hiding #RESULT
+  
+  gosub TM_GetPersistantVariable logoutrune
+  menu set logoutrune #RESULT
+  set %logoutrune #RESULT
+  
+  gosub TM_GetPersistantVariable questiteration
+  menu set questiteration #RESULT
+  set %quest_iter_max #RESULT
+
+  gosub TM_GetPersistantVariable EUOCheckBoxCLAw
+  menu set EUOCheckBoxCLAw #RESULT
+  
+  gosub TM_GetPersistantVariable EUOCheckBoxBMEval
+  menu set EUOCheckBoxBMEval #RESULT
+  set %use_bmeval #RESULT
+  
+  gosub TM_GetPersistantVariable EUOCheckUseBank
+  menu set EUOCheckUseBank #RESULT
+  set %use_bank #RESULT
+return #TRUE
+;-------------------------------------------------------------------------------
+sub LocateBank
+  namespace push
+  namespace local LB
+  set !open %1
+  set !old_lobjectid #LOBJECTID
+  finditem HS_IS G_10
+  set #RESULT #TRUE
+  for #FINDINDEX 1 #FINDCNT
+  {
+    event property #FINDID
+    if the , #SPC , minter in #PROPERTY || the , #SPC , banker in #PROPERTY
+    {
+      msg bank$
+      set !timer #SCNT + 5
+      repeat
+      until ( #CONTTYPE = IKF && #CONTSIZE = 180_240 && %bankid = N/A ) || #CONTID = %bankid || #SCNT > !timer
+      if #SCNT <= !timer
+      {
+        set #RESULT #CONTID
+        set %bankid #CONTID
+        break
+      }
+    }
+  }
+  set #LOBJECTID !old_lobjectid
+  namespace pop
+return #RESULT
+;-------------------------------------------------------
+sub BeetleVisible
+  namespace push
+  namespace local BV
+  set !tempx #CHARPOSX
+  set !tempy #CHARPOSY
+  set !tempz #CHARPOSZ
+  set !move #FALSE
+  repeat
+    finditem %beetle G_4
+    if #FINDKIND = -1
+    {
+      set !addx #RANDOM
+      set !addx ( !addx % 3 ) - 1
+      set !addy #RANDOM
+      set !addy ( !addy % 3 ) - 1
+      set !addx #CHARPOSX + !addx
+      set !addy #CHARPOSY + !addy
+      event pathfind !addx !addy !tempz
+      wait 5
+      set !move #TRUE
+      if #RANDOM > 500
+        click 370 380 mc n
+      else
+        click 650 650 mc
+    }
+  until #FINDKIND <> -1
+  if !move = #TRUE
+  {
+    event pathfind !tempx !tempy !tempz
+    wait 10
+  }
+  namespace pop
+return
+; ------------------------------------------------------
+sub SetupTool
+  namespace push
+  namespace local SetupTool
+  set !tool_kind %1
+  set !tool_hue %2
+  finditem %1 C_ , #BACKPACKID
+  if #FINDKIND <> -1
+  {
+    set #LOBJECTID #FINDID
+    event macro 17 0
+    set !selection act1_2-sel_ , !tool_hue
+    gosub craftItem %craft_gump_size !selection
+    gosub GumpAndSizeWait NULL generic_gump %craft_gump_size
+    gosub OffsetClick 233 68 r
+  }
+  namespace pop
+return
+;-----------------------------------
+; %1 - #FINDID
+; %2 - Stack size
+; %3 - destination G=ground, C=container
+; %4 - destination ID
+; %5 - drop x
+; %6 - drop y
+; %7 - drop z
+sub DragItem
+  namespace push
+  namespace local DI
+  set !drag_item %1
+  set !drag_stack %2
+  set !drag_dest_op %3
+  set !drag_dest_id %4
+  set !drag_x %5
+  set !drag_y %6
+  set !dray_z %7
+  set !drag_lpc #LPC
+  set #LPC 1000
+  
+  exevent drag !drag_item !drag_stack
+  wait %exevent_drag_wait
+  if C in !drag_dest_op
+  {
+    exevent dropc !drag_dest_id
+  }
+  else
+  {
+    exevent dropg !drag_x !drag_y !dray_z
+  }
+  wait %exevent_drop_wait
+  set #LPC !drag_lpc
+  namespace pop
+  wait 10
+return #TRUE
+; ------------------------------------------------------
+sub CheckAndCraftItems
+  namespace push
+  namespace local CT
+  set !temp_LPC #LPC
+  set #LPC 100
+  set !tool_kind %1
+  set !craft_kind %2
+  set !craft_resource %3
+  set !craft_resource_amt %4
+  set !craft_resource_hue %5
+  set !amount %6
+  set !craftItem_chain %7
+  
+  set !val craft , !craft_kind
+  if ! . !val <> !craft_resource_hue
+  {
+    wait 10
+    set ! , craft , !craft_kind !craft_resource_hue
+    gosub SetupTool !tool_kind !craft_resource_hue
+    wait 10
+  }
+  
+  set !rval OK
+  set !old_tool N/A
+CheckAndCraftItems_loop1:
+  finditem !craft_resource C_ , #BACKPACKID
+  if #FINDSTACK < !craft_resource_amt
+  {
+    set !rval RES_LOW
+    goto CheckAndCraftItems_skip1
+  }
+  finditem !tool_kind C_ , #BACKPACKID
+  if #FINDKIND <> -1
+  {
+    set !temp_tool #FINDID
+    if #FINDID <> !old_tool
+    {
+      finditem !old_tool C_ , #BACKPACKID
+      if #FINDKIND = -1
+      {
+        set !created #FALSE   ; must be first attempt
+        set !old_tool !temp_tool
+      }
+    }
+  }
+  else
+  {
+    set !rval NO_TOOL
+    goto CheckAndCraftItems_skip1
+  }
+  finditem !craft_kind C_ , #BACKPACKID    ; search for items already in pack
+  if #FINDCNT < !amount
+  {
+    if !created = #FALSE
+    {
+      set !created #TRUE
+      set #LOBJECTID !old_tool
+      event macro 17 0
+      gosub craftItem %craft_gump_size !craftItem_chain
+    }
+    else
+    {
+      gosub OffsetClick %make_last_x %make_last_y dmc ; make last
+    }
+    gosub GumpAndSizeWait NULL generic_gump %craft_gump_size
+    if #RESULT = #TRUE
+    {
+      set !created #FALSE
+      goto CheckAndCraftItems_loop1
+    }
+    goto CheckAndCraftItems_loop1
+  }
+  
+CheckAndCraftItems_skip1:
+  finditem !old_tool C_ , #BACKPACKID
+  if !created = #TRUE && #FINDKIND <> -1
+    gosub OffsetClick 234 130 r ; close it, request complete.
+  set #RESULT !rval
+  namespace pop
+  set !temp_LPC #LPC
+return #RESULT
+;-------------------------------------------------------------------------------
+; %1 = x click, %2 = y click, %3 = click args
+sub OffsetClick
+  namespace push
+  namespace local osc
+  set !tempx %1 + #CONTPOSX
+  set !tempy %2 + #CONTPOSY
+  click !tempx !tempy %3
+  namespace clear
+  namespace pop
+return
+;----------------------------------------------------------------
+; %1 = source to look in
+sub ToolCheck
+  namespace push
+  namespace local TC
+  set !source %1
+  gosub transfer_items %tinktools !source #BACKPACKID %maxtinkertools ; grab tinker tools from source container
+  if #RESULT < %maxtinkertools  ; not enough in source container
+  {
+toolcheck_loop1:
+    gosub CheckAndCraftItems %tinktools %tinktools ENK 2 1 %maxtinkertools cat_4-sel_4 ; make tinker tools, iron
+    set !res #RESULT
+    if !res = RES_LOW
+    {
+      gosub load_resource ENK !source #BACKPACKID 5 0   ; grab 5 ingots from beetle
+      if #RESULT = #FALSE
+        goto toolcheck_loop1
+      finditem %tinktools C_ , #BACKPACKID  ; even one left?
+      if #FINDKIND = -1
+      {
+        display OK No more tinker tools in beetle backpack$ and no ingots to make more
+        gosub mount
+        halt
+      }
+    }
+    if !res = NO_TOOL
+    {
+      display OK No more tinker tools.
+      gosub mount
+      halt
+    }
+  }
+  gosub transfer_items %tool !source #BACKPACKID %maxcraftingtools ; try and grab crafting tools from source container
+  if #RESULT < %maxcraftingtools ; wasn't enough in source container
+  {
+toolcheck_loop2:
+    if %tool in IGG_ ; wooden tools us wood at hand.
+      gosub CheckAndCraftItems %tinktools %tool %toolresource %toolresourceamt %reshue %maxcraftingtools %craftitemchain_tool ; use the wood you have on you
+    else
+      gosub CheckAndCraftItems %tinktools %tool %toolresource %toolresourceamt 1 %maxcraftingtools %craftitemchain_tool ; always use iron ingots 
+      set !res #RESULT
+    if !res = RES_LOW
+    {
+      gosub load_resource %toolresource !source #BACKPACKID 5 0   ; grab 5 ingots from beetle
+      if #RESULT = #FALSE
+        goto toolcheck_loop2
+      finditem %tool C_ , #BACKPACKID    ; even one left?
+      if #FINDKIND = -1
+      {
+        display OK No more tinker tools in beetle backpack$ and no resources to make more
+        gosub mount
+        halt
+      }
+    }
+    if !res = NO_TOOL
+    {
+      display OK No more tinker tools.
+      gosub mount
+      halt
+    }
+  }
+  namespace pop
+return
+;-----------------------------------------------
+sub mark
+  {
+    gosub HandleContextMenu NULL #CHARID %CONTEXT_Toggle_Quest_Item
+    finditem %item C_ , #backpackid
+    while #findkind <> -1
+    {
+      if #findcol <> 1258
+      {
+        set #ltargetid #findid
+        set #ltargetkind 1
+        wait 0
+        target 3s
+        event macro 22
+      }
+      ignoreitem #findid mark
+      finditem %item C_ , #backpackid
+    }
+    repeat
+      {
+        wait 5
+        key ESC
+        wait 5
+      }
+    until #TARGCURS = 0
+  return
+}
+;----------------------------------------------------------------
+sub cyclequests
+  {
+    NAMESPACE PUSH
+    NAMESPACE LOCAL cyclequests
+    gosub findvendor %vendortype
+    if #RESULT = #FALSE
+    {
+      display ok Cannot locate a vendor for this quest.
+      stop
+    }
+    gosub SelectQuest NULL %vendor %string -1 ; loop until found, no count
+    NAMESPACE POP
+  return
+}
+;----------------------------------------------------------------
+sub bpcount
+  {
+    event property #backpackid
+    str pos #property Contents:
+    str del #property 1 #strres
+    set %var #strres
+    str pos %var $
+    if #strres > 1
+      str del %var #strres 100
+    set %var #strres
+    str len %var
+    set %strlen #strres
+    set %number1 1
+    str del %number1 1 1
+    set %number1 #strres
+    set %number2 1
+    str del %number2 1 1
+    set %number2 #strres
+    set %numb 1
+    for %i 1 %strlen
+    {
+      str mid %var %i 1
+      if ! ( #strres < 1 || #strres > 0 ) 3
+        if %number1 > 0 2
+        set %numb 2
+      goto skip
+      if ( #strres < 1 || #strres > 0 )
+        set %number . %numb %number . %numb , #strres
+skip:
+    }
+    set %max 115
+    if %number1 > %max
+    {
+      Display OK Backback is too full, halting!
+      gosub mount
+      halt
+    }
+  return
+}
+;----------------------------------------------------------------
+sub finishquest
+  {
+    gosub findvendor %vendortype
+    set #lobjectid %vendor
+finishquest_loop2:
+    event macro 17
+    gosub Gumpwait NULL paperdoll_gump paperdoll_gump
+    set !clickx #CONTPOSX + 80
+    set !clicky #CONTPOSY + 80
+    click !clickx !clicky dmc r
+    gosub GumpAndSizeWait NULL generic_gump %quest_gump_size
+    if #RESULT = #TRUE
+      goto finishquest_loop2
+    set %tempx #CONTPOSX
+    set %tempy #CONTPOSY
+    gosub OffsetClick 131 464 dmc
+    gosub GumpAndSizeWait NULL generic_gump %quest_gump_size
+    gosub OffsetClick 131 464 dmc
+    wait 5
+    set %temp_scnttimeout #SCNT + 5
+    set %temp_rval #FALSE
+finishquest_loop1:
+    if #CONTNAME <> generic_gump && #contsize <> %quest_gump_size
+      return %temp_rval
+    if #SCNT > %temp_scnttimeout
+    {
+      set %clickx %tempx + 350
+      set %clicky %tempy + 400
+      click %clickx %clicky f
+      set %temp_rval #TRUE
+      set %temp_scnttimeout #SCNT + 5
+      wait 5
+    }
+    goto finishquest_loop1
+    
+  return #FALSE ; never gets here.
+}
+;----------------------------------------------------------------
+sub loot
+loot_loop1:
+  finditem ZJF C_ , #backpackid
+  if #findkind <> -1
+  {
+    if %lootbag <> #FINDID
+    {
+      set %bag #findid
+      set #lobjectid %bag
+      event macro 17
+      wait 40
+      gosub checkloot %bag
+      gosub dump_it %bag
+    }
+    else
+    {
+      ignoreitem #FINDID temp
+    }
+    goto loot_loop1
+  }
+  ignoreitem reset temp
+return
+;----------------------------------------------------------------
+sub checkloot  ; <bagid>
+  set %container %1
+  finditem * C_ , %container
+  set %findcount #findcnt
+  for %j 1 %findcount
+  {
+    finditem * C_ , %container
+    event property #findid
+    set #lpc 10000
+    for %i 1 %recipecount
+    {
+      if %artifact . %i in #property
+      {
+        gosub DragItem #findid 1 C %lootbag
+        sound tada.wav
+        wait 1s
+      }
+    }
+    set #lpc 10
+    menu get EUOCheckBoxBMEval
+    if #MENURES = #TRUE
+    {
+      call BMItemEval.euo #findid
+      if #result >= %score
+      {
+        gosub DragItem #findid 1 C %lootbag
+        sound tada.wav
+        wait 1s
+      }
+    }
+    if #findtype = UFG || #findtype = ZFG
+    {
+      gosub DragItem #findid 1 C %lootbag
+      sound ringin.wav
+      wait 1s
+    }
+    ignoreitem #findid checkloot
+    wait 20
+  }
+  ignoreitem reset checkloot
+  
+  menu get EUOCheckBoxCLAw
+  if #MENURES = #TRUE && %claw_init = #TRUE
+  {
+    gosub TM_EvaluateContainer %container %lootbag
+    set %temp_LPC #LPC
+    set #LPC 2
+    repeat
+      gosub TM_LootInProgress
+    until #RESULT = #FALSE
+    set #LPC %temp_LPC
+    
+    gosub TM_ItemFound
+    if #RESULT = #TRUE
+    {
+      sound tada.wav
+      wait 1s
+    }
+  }
+return
+
+;----------------------------------------------------------------
+sub findvendor
+  {
+    namespace push
+    namespace local FV
+    set !temp_lpc #LPC
+    set #LPC 1000
+find_vendor:
+    set !temp_vendortype %1
+    finditem IS_HS_XU_AV G_20
+    if #findkind <> -1
+    {
+findvendor_loop1:
+      str pos !temp_vendortype $
+      if #STRRES <> 0
+      {
+        set !str_len #STRRES
+        set #STRRES !str_len - 1
+        str left !temp_vendortype #STRRES
+        set !present_property #STRRES
+        str del !temp_vendortype 1 !str_len
+        set !temp_vendortype #STRRES
+        event property #findid
+        set !quest_giver quest , #spc , giver
+        if !present_property in #property && !quest_giver in #property
+        {
+          set %vendor #findid
+          ignoreitem reset vendors
+          set #LPC !temp_lpc
+          namespace pop
+          return #true
+        }
+        else
+        {
+          goto findvendor_loop1
+        }
+      }
+      ignoreitem #findid vendors
+      goto find_vendor
+    }
+    ignoreitem reset vendors
+    set #LPC !temp_lpc
+    namespace pop
+  return #false
+}
+;----------------------------------------------------------------
+sub dump_it
+  {
+    NAMESPACE PUSH
+    NAMESPACE LOCAL dump_it
+    set !_bag %1
+dump_it_start:
+    if !randx = N/A
+    {
+      set !randy ( #RANDOM % 3 ) - 1
+      if !randy <= 0
+      {
+        set !randx #RANDOM % 2
+        if !randx = 0
+          set !randx -2
+        else
+          set !randx 1
+      }
+      else
+      {
+        set !randx ( #RANDOM % 3 ) - 1
+      }
+    }
+    finditem JKF G_2
+    if #findkind <> -1
+    {
+      set %trashbarrel #findid
+      gosub DragItem !_bag 1 C %trashbarrel
+      finditem !_bag C_ , #backpackid
+      if #findkind = -1
+      {
+        NAMESPACE POP
+        return #true
+      }
+      else
+      {
+        ignoreitem %trashbarrel dump_it
+        goto dump_it
+      }
+    }
+dump_it:
+    finditem ZJF G_2   ; bag surrounding
+    if #findkind <> -1
+    {
+      if %trashbarrel = N/A
+        set %trashbarrel #FINDID
+      gosub DragItem !_bag 1 C %trashbarrel
+      finditem !_bag C_ , #backpackid
+      if #findkind = -1
+      {
+        NAMESPACE POP
+        return #true
+      }
+      else
+      {
+        ignoreitem %trashbarrel dump_it
+        set %trashbarrel N/A
+        goto dump_it
+      }
+    }
+    else
+    {
+      set %trashbarrel !_bag
+      set !_x #charposx + !randx
+      set !_y #charposy + !randy
+      set !_z #charposz + 1
+      gosub DragItem !_bag 1 G NULL !_x !_y !_z
+      wait 20
+      finditem !_bag G_2
+      if #FINDKIND = -1   ; pick a new random number
+      {
+        set !randx N/A
+        set %trashbarrel N/A
+        goto dump_it_start
+      }
+      NAMESPACE POP
+      return #true
+    }
+    NAMESPACE POP
+  return #false
+}
+
+;========================= SUBS =========================
+;===== Dismount =====
+sub dismount
+  set #LObjectID #CharID
+  wait 5
+  event macro 17 0
+  wait 20
+  finditem %beetle g_2
+  if #findkind = -1
+  {
+    msg All Follow Me$
+  }
+  wait 5
+return
+
+;===== Open Beetles Pack =====
+sub open_pack
+  set #lobjectid %beetlepack
+  wait 5
+  event macro 17
+  wait 20
+return
+
+;===== Open Source Pack =====
+; %1 = #LOBJECTID
+; %2 = #CONTPOSX
+; %3 = #CONTPOSY
+sub open_source
+  set #lobjectid %1
+  wait 5
+  event macro 17
+  wait 10
+  if %2 <> -1
+  {
+    set #CONTPOSX %2
+    set #CONTPOSY %3
+  }
+  wait 10
+return
+
+;===== ReMount Beetle =====
+sub mount
+  finditem %beetle g_2
+  if #findkind = -1
+  {
+    msg All Follow Me$
+  }
+  set #LObjectID %Beetle
+  wait 5
+  event macro 17 0
+  wait 20
+return
+;---------------------------------------------------------------------
+; %1 - resource type
+; %2 - %reshue (index)
+sub GetHue
+  namespace push
+  namespace local BHL
+  set !type %1
+  set !hue %2
+  set #RESULT 0
+  if !type = ENK  ; ingots
+  {
+    if !hue = 1
+      set #RESULT %iron_col
+    if !hue = 2
+      set #RESULT %dcopper_col
+    if !hue = 3
+      set #RESULT %shadow_col
+    if !hue = 4
+      set #RESULT %copper_col
+    if !hue = 5
+      set #RESULT %bronze_col
+    if !hue = 6
+      set #RESULT %goldi_col
+    if !hue = 7
+      set #RESULT %agapite_col
+    if !hue = 8
+      set #RESULT %verite_col
+    if !hue = 9
+      set #RESULT %valorite_col
+  }
+  if !type = TLK  ; wood
+  {
+    if !hue = 1
+      set #RESULT %wood_col
+    if !hue = 2
+      set #RESULT %oak_col
+    if !hue = 3
+      set #RESULT %ash_col
+    if !hue = 4
+      set #RESULT %yew_col
+    if !hue = 5
+      set #RESULT %heart_col
+    if !hue = 6
+      set #RESULT %blood_col
+    if !hue = 7
+      set #RESULT %frost_col
+  }
+  namespace pop
+return #RESULT
+;---------------------------------------------------------------------
+;===== Find/Load Resources =====
+; %1 = resource kind
+; %2 = source
+; %3 = destination
+; %4 = amount
+; %4 = use color
+; assumes #BACKPACKID is open somewhere else
+sub load_resource
+  namespace push
+  namespace local LR
+  
+  set !resource_kind %1
+  set !source %2
+  set !destination %3
+  set !amount %4
+  set !useitemcolor %5 ; index
+  if !source = %beetlepack || !destination = %beetlepack
+    gosub BeetleVisible
+  if !destination <> #BACKPACKID
+    gosub open_source !destination -1
+  if !source <> #BACKPACKID
+    gosub open_source !source -1
+  
+  gosub GetHue !resource_kind !useitemcolor
+  set !actualhue #RESULT
+  
+  ; Count the resource in destination
+  set !_temp_resource !amount
+load_resource_loop2:
+  finditem !resource_kind C_ , !destination
+  if #FINDKIND <> -1
+  {
+    if #FINDCOL <> !actualhue
+    {
+      ignoreitem #FINDID oddresource
+      goto load_resource_loop2
+    }
+  }
+  if #FINDKIND <> -1
+  {
+    set !_temp_resource !_temp_resource - #FINDSTACK
+    ignoreitem #FINDID stackresource
+    goto load_resource_loop2
+  }
+  ignoreitem reset stackresource
+  
+  ; Stack the resource in destination
+  repeat
+    finditem !resource_kind C_ , !destination
+    if #FINDKIND <> -1
+    {
+      if #FINDCNT > 1
+      {
+        gosub DragItem #findid #FINDSTACK C !destination
+      }
+      ignoreitem #FINDID stackresource
+    }
+  until #FINDKIND = -1
+  ignoreitem reset stackresource
+  
+load_resource_loop1:
+  if !_temp_resource > 0
+  {
+    finditem !resource_kind C_ , !source
+    if #FINDKIND <> -1
+    {
+      if #FINDCOL <> !actualhue
+      {
+        ignoreitem #FINDID oddresource
+        goto load_resource_loop1
+      }
+    }
+    finditem !resource_kind C_ , !source
+    if #FINDKIND <> -1
+    {
+      set !drag_num !_temp_resource
+      if #FINDSTACK < !_temp_resource
+        set !drag_num #FINDSTACK
+      gosub DragItem #FINDID !drag_num C !destination
+      set !_temp_resource !_temp_resource - !drag_num
+      goto load_resource_loop1
+    }
+    else
+    {
+      ignoreitem reset oddresource
+      namespace pop
+      return #TRUE ; not enough resource to move
+    }
+  }
+  ignoreitem reset oddresource
+  namespace pop
+return #FALSE ; no error
+;------------------------------------------------
+sub transfer_items
+  namespace push
+  namespace local TI
+  set !item_kind %1
+  set !source %2
+  set !destination %3
+  set !amount %4
+  
+  set !cnt 0
+  if !source <> #BACKPACKID
+    gosub open_source !source -1
+  if !destination <> #BACKPACKID
+    gosub open_source !destination -1
+  
+load_items_loop1:
+  finditem !item_kind C_ , !destination
+  if #FINDCNT < !amount
+  {
+    finditem !item_kind C_ , !source
+    if #FINDKIND <> -1
+    {
+      gosub DragItem #FINDID #FINDSTACK C #BACKPACKID
+      set !cnt !cnt + 1
+      goto load_items_loop1
+    }
+  }
+load_items_end:
+  if !cnt = 0
+    set #RESULT #FINDCNT
+  else
+    set #RESULT !cnt
+  namespace pop
+return #RESULT
+;===== Dump Loot to Secure =====
+sub dumploot
+  finditem * C_ , %lootbag
+  if #FINDCNT > 0
+  {
+    for #FINDINDEX 1 #FINDCNT
+      gosub DragItem #FINDID #FINDSTACK C %lootstorebag
+  }
+return
+
+;===== Hiding =====
+sub hiding
+  if %hiding
+  {
+    event macro 13 21
+    wait %1
+  }
+  wait 20
+return
+
+
+;========== TRAVEL SUB ==========
+
+;===== To Bowcrafter =====
+sub tobowcrafter
+  
+  ;===== Recall to Heartwood =====
+  gosub TM_TravelFromRunebook %recallmethod %heartwood %heartwood %runebook
+  wait 2s
+  
+  ;===== Walking Rail into Heartwood =====
+  set #LPC 1000
+  call %railsubs TM_RunRail %label_bowcraft 0 END FW  ; beginning to end
+  if #RESULT = #TRUE
+  {
+    display ok Rail error occurred.
+  }
+  set #LPC 10
+  
+return
+
+;===== From Bowcrafter =====
+sub frombowcrafter
+  
+  ;===== Walking Rail out of Heartwood =====
+  
+  call %railsubs TM_DetermineCurrentRailWaypoints
+  set %temp #RESULT - 1 ; get the size of the waypoint file.
+  set #LPC 1000
+  call %railsubs TM_RunRail %label_bowcraft %temp END BW  ; end to beginning
+  if #RESULT = #TRUE
+  {
+    display ok Rail error occurred.
+  }
+  set #LPC 10  
+  wait 2s
+return
+
+;===== To Trinketweaver =====
+sub totrinketweaver
+  
+  ;===== Recall to Heartwood =====
+  gosub TM_TravelFromRunebook %recallmethod %heartwood %heartwood %runebook
+  wait 2s
+  
+  ;===== Walking Rail into Heartwood =====
+  set #LPC 1000
+  call %railsubs TM_RunRail %label_trinket 0 END FW  ; beginning to end
+  if #RESULT = #TRUE
+  {
+    display ok Rail error occurred.
+  }
+  set #LPC 10
+return
+
+;===== From Trinketweaver =====
+sub fromtrinketweaver
+  
+  ;===== Walking Rail out of Heartwood =====
+  call %railsubs TM_DetermineCurrentRailWaypoints
+  set %temp #RESULT - 1 ; get the size of the waypoint file.
+  set #LPC 1000
+  call %railsubs TM_RunRail %label_trinket %temp END BW  ; end to beginning
+  if #RESULT = #TRUE
+  {
+    display ok Rail error occurred.
+  }
+  set #LPC 10
+  wait 2s
+return
+
+;========== End Travel Sub ==========
+
+;========== SETUP SUBS ==========
+sub Initialize
+  set %CONTEXT_Toggle_Quest_Item 3603586
+  set %CONTEXT_Open_Backpack 3428334
+  set %QUEST_A_Simple_Bow 6415424
+  set %QUEST_Arch_Support 5963096
+  set %wood_col 0
+  set %oak_col 2010
+  set %ash_col 1191
+  set %yew_col 1192
+  set %heart_col 1193
+  set %blood_col 1194
+  set %frost_col 1151
+  set %iron_col 0
+  set %dcopper_col 2419
+  set %shadow_col 2406
+  set %copper_col 2413
+  set %bronze_col 2418
+  set %goldi_col 2213
+  set %agapite_col 2425
+  set %verite_col 2207
+  set %valorite_col 2219
+  
+  call %railsubs TM_Initialize  ; <----------- very important, TM_LoadRail and TM_RunRail will not work otherwise
+  
+  if !TM_Init <> #TRUE
+  {
+    display ok Cannot locate %railsubs
+    stop
+  }
+  
+  call %railsubs TM_LoadRail %railbowcraft  ; rail index 0
+  if #RESULT = #TRUE
+  {
+    display ok Rail file not found
+    stop
+  }
+  
+  call %railsubs TM_LoadRail %railtrinket   ; rail index 1
+  if #RESULT = #TRUE
+  {
+    display ok Rail file not found
+    stop
+  }
+  
+  set %tinktools GTL_JTL_
+  
+  set %artifact1 blight , #spc , gripped , #spc , longbow
+  set %artifact2 faerie , #spc , fire
+  set %artifact3 feywood , #spc , bow
+  set %artifact4 mischief , #spc , maker
+  set %artifact5 the , #spc , night , #spc , reaper
+  set %artifact6 aquarium
+  set %artifact7 bramble , #spc , coat
+  set %artifact8 ironwood , #spc , crown
+  set %artifact9 phantom , #spc , staff
+  set %artifact10 bonus: , #spc , 27
+  set %artifact11 bonus: , #spc , 28
+  set %artifact12 bonus: , #spc , 29
+  set %artifact13 bonus: , #spc , 30
+  set %recipecount 13
+  
+  ;===== Quest Setup =====
+  
+  set %quest_type FLETCHING
+  
+return
+;-------------------------------------------------------------------------------
+sub GuidedSetup
+  menu get EUOCheckUseBank
+  if #MENURES = #TRUE
+    set %setupval BANK
+  else
+    set %setupval HOME
+  display yesno You are going to setup for , #SPC , %setupval , #SPC , operation, do you want to continue?
+  if #DISPRES = no
+    return  
+
+  display yesno Fletching or Carpentry?$Yes = Fletching$No = Carpentry  
+  if #DISPRES = yes
+  {
+    set %quest_type FLETCHING
+    menu combo select EUOComboBoxQuest 1
+  }
+  else
+  {
+    set %quest_type CARPENTRY
+    menu combo select EUOComboBoxQuest 2
+  }
+  ;===== Bank Setup =====
+  if %setupval = BANK
+  {
+    gosub LocateBank
+    if #RESULT <> #TRUE
+    {
+      display ok Please target the loot bank located in your bank box
+      set #TARGCURS 1
+      repeat
+      until #TARGCURS = 0
+      set %lootstorebag_bank #LTARGETID 
+    }
+    else
+    {
+      display ok Cannot locate banker, please goto your bank and do setup again.
+      set %lootstorebag_bank N/A
+      return
+    }    
+  }
+  ;===== Secure Setup =====
+  if %setupval = HOME
+  {
+    display Target your Secure Container
+    wait 1
+    set #targcurs 1
+    target
+    while #targcurs = 1
+      wait 0
+    set %secure #ltargetid
+    wait 5
+    set #lobjectid %secure
+    wait 5
+    event macro 17
+    wait 20
+    display Target your Dump Bag $Inside your Secure
+    wait 1
+    set #targcurs 1
+    target
+    while #targcurs = 1
+      wait 0
+    set %lootstorebag #ltargetid
+  }
+  
+  ;===== Lootbag Setup =====
+  gosub open_source #BACKPACKID 750 400
+  display Target your Loot Bag $Inside your Main Pack
+  wait 1
+  set #targcurs 1
+  target
+  while #targcurs = 1
+    wait 0
+  set %lootbag #ltargetid
+  gosub open_source %lootbag -1
+  
+  ;===== Runebook Setup =====
+  display Target your Runebook
+  wait 1
+  set #targcurs 1
+  target
+  while #targcurs = 1
+    wait 0
+  set %runebook #ltargetid
+  
+  ;===== Beetle Setup =====
+  finditem #charid G_20
+  set #lobjectid #findid
+  wait 5
+  event macro 17 0
+  wait 20
+  display Target Your Beetle
+  wait 1
+  set #targcurs 1
+  target
+  while #targcurs = 1
+    wait 0
+  set %beetle #ltargetid
+  wait 5
+  finditem VRD c_ , #backpackID
+  if #findkind <> -1
+  {
+    gosub DragItem #FINDID 1 C %beetle
+  }
+  gosub HandleContextMenu NULL %beetle %CONTEXT_Open_Backpack
+  wait 5
+  set %beetlepack #contid
+  finditem %beetle g_2
+  if #findkind = -1
+  {
+    msg All Follow Me$
+    wait 20
+  }
+  set #LObjectID %Beetle
+  wait 5
+  event macro 17 0
+  wait 20
+return
+
+;-------------------------------------------------------------------------------
+;----------------------  Advanced Journal Handling Subs  -----------------------
+;-------------------------------------------------------------------------------
+; %1 - Journal Name
+; %2 - #LPC setting (optional)
+; Brings !_jindex up to the most recent #journal entry
+sub TM_AdvJournalSync
+  namespace push
+  namespace local TM_AdvJS_ , %1
+  set !_jindex #jindex + 1
+  if %0 > 1
+    set !lpc_set %2
+  namespace pop
+  set !TM_FunctionCalled #TRUE
+return
+;-------------------------------------------------------------------------------
+; %1 - Journal Name
+; %2 - NONE, ADVANCE , ( _VALID ) - advances jindex pointer, anything else
+; %3, %4, %5, etc strings to match
+; returns #TRUE for match, #FALSE for no match
+;  Will not advance !_jindex pointer to allow for scanning journal history for more than one search.
+;  Also searches for : , #SPC in journal entry to be sure someone isn't spamming the text
+;  About %2 arguments:
+;    NONE: defaults to basic journal scan (no SPAM checking, no #jindex pointer copy advancing)
+;    ADVANCE: no spam checking, advances #jindex copy
+;    VALID: invokes SPAM filtering, no advance of #jindex copy
+;    VALID_ADVANCE, VALIDADVANCE, ADVANCE_VALID, etc.: invokes SPAM filtering, advances of #jindex copy
+sub TM_AdvJournalScan
+  namespace push
+  namespace local TM_AdvJS_ , %1
+  set !args %2
+  set !temp_lpc #LPC
+  if !lpc_set = N/A
+    set #LPC 1000
+  else
+    set #LPC !lpc_set
+  set !num_args %0
+  set !first_arg 3
+  if !_jindex = N/A
+    set !_jindex #jindex
+  if !charname = N/A
+  {
+    set !charname #CHARNAME
+AdvJournalScan_loop1:
+    str pos !charname #SPC
+    if #STRRES <> 0
+    {
+      set !val #STRRES - 1
+      str left !charname !val
+      set !left #STRRES
+      set !val !val + 1
+      str del !charname 1 !val
+      set !charname !left , _ , #STRRES
+      goto AdvJournalScan_loop1
+    }
+  }
+  set !index !first_arg
+  repeat
+    set !temp_jindex !_jindex
+    set !text % . !index
+    while !temp_jindex <= #jindex
+    {
+      scanjournal !temp_jindex
+      str pos #JOURNAL !charname 1
+      set !namepos #STRRES
+      str count #JOURNAL !charname
+      set !namecnt #STRRES
+      str pos #JOURNAL :_ 1
+      set !smcpos #STRRES
+      str pos #JOURNAL !text 1
+      set !textpos #STRRES
+      if !textpos < !smcpos && !smcpos <> 0 || !smcpos = 1 || :_ notin #JOURNAL || VALID notin !args
+        set !pass #TRUE
+      else
+        set !pass #FALSE
+      if ( !text in #journal && ( ( !namepos = 1 && !namecnt <= 1 ) || !pass ) )
+      {
+        set !temp_jindex !temp_jindex + 1
+        if ADVANCE in !args
+          set !_jindex !temp_jindex
+        set #LPC !temp_lpc
+        namespace pop
+        set !TM_FunctionCalled #TRUE
+        return #TRUE
+      }
+      set !temp_jindex !temp_jindex + 1
+    }
+    set !index !index + 1
+  until !index - !first_arg > !num_args - !first_arg
+  set #LPC !temp_lpc
+  namespace pop
+  set !TM_FunctionCalled #TRUE
+return #FALSE
+;------------------------------------------------------------
+sub TM_NewCastSpell
+  namespace push
+  namespace local NCS
+  set !lpc #LPC
+  set #LPC 100
+  set !whichspell %1
+  set !whichtarget %2
+  set !castretrymax %3
+  set !waitdelay %4
+  set !recovery_delay %5
+  
+  set !castretry 0
+  set !temp_ltargetid #LTARGETID
+  set !temp_ltargetkind #LTARGETKIND
+  
+NewCastSpell_loop1:
+  if !castretrymax < 0
+    goto NewCastSpell_cont1
+  if !castretry > !castretrymax
+    goto NewCastSpell_end1
+NewCastSpell_cont1:
+  gosub TM_AdvJournalSync SPELLCAST
+  set #LTARGETKIND 1
+  set #LTARGETID !whichtarget
+  set !tempmana #MANA
+  event macro 15 !whichspell ; cast the spell
+  wait !waitdelay
+  set !targettimeout #SCNT + 7
+NewCastSpell_wait1:
+  gosub TM_AdvJournalScan SPELLCAST VALID spell_fizzles you_have_not_yet mana your_spirit more_reagents
+  if #RESULT = #TRUE || #SCNT > !targettimeout
+  {
+    set !casttimeout #SCNT2 + !recovery_delay
+    repeat
+    until #SCNT2 > !casttimeout     ; finish up cast delay
+    set !castretry !castretry + 1
+    goto NewCastSpell_loop1
+  }
+  if !whichtarget = NONE
+    goto NewCastSpell_skip1
+  if #TARGCURS = 1
+    goto NewCastSpell_targ1
+  goto NewCastSpell_wait1 ; wait for target cursor
+  
+NewCastSpell_targ1:
+  if !whichtarget = SELF
+    event macro 23
+  else
+    event macro 22
+  
+NewCastSpell_skip1:
+  wait 5
+  set !casttimeout #SCNT2 + !recovery_delay
+NewCastSpell_skip2:
+  if !whichspell >= 0 && !whichspell <= 63 ; Magery
+  {
+    gosub TM_AdvJournalScan SPELLCAST VALID spell_fizzles there_is_already mana your_spirit more_reagents
+  }
+  else
+  {
+    set !cont #FALSE  ; Chivalry, Necromancy, etc
+    finditem !whichtarget *
+    if !whichtarget in SELF_NONE || #FINDKIND <> -1
+      set !cont #TRUE
+    
+    if #MANA >= !tempmana && !cont = #TRUE ; check if target is still there
+      set #RESULT #TRUE
+    else
+      set #RESULT #FALSE
+  }
+  repeat
+  until #SCNT2 > !casttimeout     ; finish up cast delay
+  if #RESULT = #TRUE
+  {
+    if !castretrymax > -1
+    {
+      set !castretry !castretry + 1 ; %castretrymax of -1 will cast until successful
+      if !castretry > !castretrymax
+        goto NewCastSpell_end1
+    }
+    goto NewCastSpell_loop1
+  }
+  if #SCNT2 <= !casttimeout     ; finish up cast delay
+    goto NewCastSpell_skip2
+NewCastSpell_end1:
+  set #LTARGETID !temp_ltargetid
+  set #LTARGETKIND !temp_ltargetkind
+  set #LPC !lpc
+  namespace pop
+return
+;-------------------------------------------------------------------------------
+; %1 = Method (RE, GA, SJ)
+; %2 = index location within runebook (1-16)
+; %3 = index location within runebook (1-16), try up to this point
+; %4 = runebook item id
+; returns #TRUE if error, #FALSE for no error
+sub TM_TravelFromRunebook
+  namespace push
+  namespace local RFR
+  set #LTARGETKIND 1
+  set !method %1
+  set !locindex %2
+  set !locindexend %3
+  set !rbook %4
+  
+  finditem !rbook C_ , #BACKPACKID
+  if !method notin RE_GA_SJ || #FINDKIND = -1
+  {
+    namespace pop
+    return #TRUE
+  }
+  if !locindex notin 1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16
+  {
+    namespace pop
+    return #TRUE
+  }
+  if !locindexend notin 1_2_3_4_5_6_7_8_9_10_11_12_13_14_15_16
+  {
+    namespace pop
+    return #TRUE
+  }
+  
+TravelFromRunebook_loop1:
+  set #LOBJECTID !rbook
+  set #LTARGETKIND 1
+  event macro 17 0
+  gosub GumpWait generic_gump generic_gump
+  
+  set !runeclickx 140 ; page 1, rune 1
+  set !runeclickx ( #CONTPOSX + !runeclickx + ( 35 * ( ( !locindex - 1 ) / 2 ) ) )
+  if !locindex > 8
+  {
+    set !runeclickx 310 ; page 2, rune 1
+    set !runeclickx ( #CONTPOSX + !runeclickx + ( 35 * ( ( !locindex - 9 ) / 2 ) ) )
+  }
+  set !runeclicky #CONTPOSY + 196
+  click !runeclickx !runeclicky
+  wait 5
+  
+  set !runeclicky #CONTPOSY + 24
+  set !runeclickx #CONTPOSX + 164 ; page 1 set to default
+  if !locindex % 2 = 0
+  {
+    set !runeclickx #CONTPOSX + 305 ; page 2 set to default
+  }
+  click !runeclickx !runeclicky
+  wait 5
+  set !oldx #CHARPOSX
+  set !oldy #CHARPOSY
+  if !method = RE
+    gosub TM_NewCastSpell 31 !rbook -1 10 10 ; recall until successful
+  if !method = GA
+  {
+    gosub TM_NewCastSpell 51 !rbook -1 10 20 ; gate until successful
+    set !temp_cnt #SCNT + 10
+    repeat
+      finditem KEF_OTF_JEF G_0
+    until #FINDKIND <> -1 || #SCNT > !temp_cnt
+    if #FINDKIND <> -1
+    {
+      set #LOBJECTID #FINDID
+      wait 10
+      event macro 17 0
+      wait 20
+      if #CONTNAME = generic_gump && #CONTSIZE = 420_280
+      {
+        gosub TM_AdvJournalSync SPELLCAST
+        set !clickx #CONTPOSX + 26
+        set !clicky #CONTPOSY + 261
+        click !clickx !clicky ; click ok
+      }
+    }
+  }
+  
+  if !method = SJ
+    gosub TM_NewCastSpell 210 !rbook -1 10 50 ; sacred journey until successful
+  wait 30
+  
+  set !tempscnt #SCNT + 10
+WaitforTravel_loop1:
+  gosub TM_AdvJournalScan SPELLCAST VALID location_is_blocked something_is_blocking you_spirit_lacks
+  if #RESULT = #TRUE
+  {
+    gosub TM_AdvJournalSync SPELLCAST
+    set !locindex !locindex + 1
+    if !locindex > !locindexend
+    {
+      namespace pop
+      return #TRUE
+    }
+    goto TravelFromRunebook_loop1
+  }
+  if ( ( #CHARPOSX = !oldx && #CHARPOSY = !oldy ) && #SCNT < !tempscnt )
+    goto WaitforTravel_loop1
+  
+  if #CONTNAME = generic_gump && #CONTSIZE = 452_236 ; RunUO close runebook
+  {
+    set !clickx #CONTPOSX + 120
+    set !clicky #CONTPOSY + 60
+    click !clickx !clicky mc r
+    wait 5
+  }
+  namespace pop
+  click 401 254 n
+return #FALSE
+
+
+;===================== Other Peoples Subs ===========================
+
+
+;-------------------------------------------------------------------------------
+; %1 = Gumpname 1
+; %2 = Gumpname 2
+sub GumpWait
+  wait 10
+  namespace push
+  namespace GW
+  set !timedelay #SCNT
+loopwait1:
+  if #CONTNAME = %1 || #CONTNAME = %2
+    goto GumpWait_skip1
+  if #SCNT > !timedelay + 7
+    goto GumpWait_skip1
+  goto loopwait1
+GumpWait_skip1:
+  namespace pop
+return
+
+;========== Begin craftItem ==========
+; --------------------------
+; sub craftItem
+; Author: Machine
+; %1 - craft window size
+; %2 - command chain on
+; form type_buttonNr
+; %3 - {optional} waitTime
+; %4 - {optional} click mode
+; #return = #true if
+; interaction is successful,
+; else #false
+; --------------------------
+sub craftItem
+  namespace push
+  namespace crafter
+  set !contsizecraft %1
+  set !contsize !contsizecraft
+  set !increment 20
+  set !xOffsetCat 30
+  set !yOffsetCat 50
+  set !xOffsetSel 235
+  set !yOffsetSel 50
+  set !xOffsetAct1 30
+  set !yOffsetAct1 330
+  set !xOffsetAct2 285
+  set !yOffsetAct2 330
+  set !xOffsetNextPage 385
+  set !yOffsetNextPage 250
+  set !xOffsetDesc 495
+  set !yOffsetDesc 50
+  set !xOffsetMakeNow 285
+  set !yOffsetMakeNow 380
+  set !xOffsetBack 30
+  set !yOffsetBack 380
+  
+  set !command %2
+  if %0 > 2
+    set !waitTime %3
+  else
+    set !waitTime 5
+  if %0 > 3
+    set !clickMode %4
+  else
+    set !clickMode dmc
+  
+  str Count !command -
+  set !nrSplits #strRes
+  set !nrActions !nrSplits + 1
+  set !i 1
+  if !nrSplits > 0
+  {
+    for !i 1 !nrSplits
+    {
+      str Pos !command - 1
+      set !dashPos #strRes
+      set !actEnd !dashPos - 1
+      str Left !command !actEnd
+      set !act . !i #strRes
+      str Del !command 1 !dashPos
+      set !command #strRes
+    }
+  }
+  set !act . !i !command
+  for !i 1 !nrActions
+  {
+    gosub waitForVar contsize = !contsize !waitTime
+    set !successful #result
+    if !successful = #true
+    {
+      set !currCom !act . !i
+      str Pos !act . !i _
+      set !nr 1
+      if #strRes <> 0
+      {
+        set !usPos #strRes
+        set !comEnd !usPos - 1
+        str Left !act . !i !comEnd
+        set !type #strRes
+        str Del !act . !i 1 !usPos
+        set !nr #strRes
+      }
+      else
+        set !type !act . !i
+      
+      set !xOffset !xOffset . !type + #contPosX
+      set !yOffset !yOffset . !type + !nr * !increment + #contPosY
+      click !xOffset !yOffset !clickMode
+      set !contsize !contsizeCraft
+    }
+    else
+      break
+  }
+  set #result !successful
+  namespace pop
+return #result
+
+sub waitForVar
+  set %timeout #time + 5
+  if  %0 > 3
+    set %timeout #time + %4
+waitForVarLoop:
+  if # . %1 %2 %3
+    return #true
+  if #time >= %timeout
+  return #false
+goto waitForVarLoop
+;========== End craftItem ==========
+
+;-------------------------------------------------------------------------------
+; %1 = SelectQuest
+; %2 = #FINDID to manipulate
+; %3 = quest value
+; %4 = attempts
+; returns #TRUE if entry not found, otherwise #FALSE for no error
+sub SelectQuest
+  namespace push
+  namespace local SQ
+  set !findid %2
+  set !questval %3
+  set !attemptmax %4
+  set !attempts 0
+  wait 20
+  repeat
+SelectQuest_loop1:
+    set #LOBJECTID !findid
+    event macro 17 0
+    gosub Gumpwait NULL paperdoll_gump paperdoll_gump
+    set !clickx #CONTPOSX + 80
+    set !clicky #CONTPOSY + 80
+    click !clickx !clicky dmc r
+    gosub Gumpwait generic_gump generic_gump
+    if ! ( #CONTNAME = generic_gump && #CONTSIZE = %quest_gump_size )
+    {
+      click 0 0 mc n
+      wait 5
+      goto SelectQuest_loop1
+    }
+    wait 10
+    set !sampled_CONTPOSX #CONTPOSX
+    set !sampled_CONTPOSY #CONTPOSY
+    set !x 197
+    set !y 71
+    set !clickxposition1 !sampled_CONTPOSX + !x
+    set !clickyposition1 !sampled_CONTPOSY + !y
+    set !clickxposition2 !sampled_CONTPOSX + !x + 175
+    set !clickyposition2 !sampled_CONTPOSY + !y + 10
+    gosub NewSampleArea NULL !clickxposition1 !clickyposition1 !clickxposition2 !clickyposition2 8701514
+    if #RESULT = !questval
+    {
+      set !clickxposition1 !sampled_CONTPOSX + 131
+      set !clickyposition1 !sampled_CONTPOSY + 464
+      click !clickxposition1 !clickyposition1 f
+      namespace pop
+      return #FALSE
+    }
+    set !attempts !attempts + 1  ; infinite loop otherwise.
+  until !attempts > !attemptmax && !attemptmax > 0
+  namespace pop
+return #TRUE   ; error occurred
+;-------------------------------------------------------------------------------
+; %1 = HandleContextMenu
+; %2 = #FINDID to manipulate
+; %3 = menu selection
+; returns #TRUE if entry not found, otherwise #FALSE for no error
+; stores computed values in !test1, !test2, !test3, etc for each menu selection.
+sub HandleContextMenu
+  namespace push
+  namespace local HCM
+  set !findid %2
+  set !menu_selection %3
+  set !x_offset 12
+  set !y_offset 12
+  set !select_height 18
+  set !y_gump_excess 24
+  
+HandleContextMenu_loop1:
+  exevent popup !findid
+  gosub GumpWait normal_gump normal_gump
+  if #CONTNAME <> normal_gump
+  {
+    click 0 0 mc n
+    wait 5
+    goto HandleContextMenu_loop1
+  }
+  str pos #CONTSIZE _
+  str del #CONTSIZE 1 #STRRES
+  set !sampled_CONTPOSX #CONTPOSX
+  set !sampled_CONTPOSY #CONTPOSY
+  set !gump_y #STRRES
+  set !number_of_selections ( ( !gump_y - !y_gump_excess ) / !select_height )
+  for !line_number 1 !number_of_selections
+  {
+    set !clickxposition1 !sampled_CONTPOSX + !x_offset
+    set !clickyposition1 !sampled_CONTPOSY + !y_offset + ( !select_height * ( !line_number - 1 ) )
+    set !clickxposition2 !clickxposition1 + 150
+    set !clickyposition2 !clickyposition1 + !select_height - 1
+    gosub NewSampleArea NULL !clickxposition1 !clickyposition1 !clickxposition2 !clickyposition2 16777215
+    set !test . !line_number #RESULT  ; stores values in !test1, !test2, .. !test . n.  Put in debug mode to gather these sampled values
+    if #RESULT = !menu_selection
+    {
+      click !clickxposition1 !clickyposition1 f
+      namespace pop
+      return #FALSE ; no error, selection found
+    }
+  }
+  namespace clear
+  namespace pop
+return #TRUE
+;-------------------------------------------------------------------------------
+; %1 = NewSampleArea
+; %2 = x1coord
+; %3 = y1coord
+; %4 = x2coord
+; %5 = y2coord
+; %6 = color
+sub NewSampleArea
+  namespace push
+  namespace local NSA2
+  set !temp_LPC #LPC
+  set #LPC 10000
+  set !stamp 0
+  set !x %2
+  set !blank_cnt 0
+  while !x <= %4
+  {
+    set !y %3
+    while !y <= %5
+    {
+      savepix !x !y 1
+      if #PIXCOL = %6
+      {
+        set !stamp ( !stamp + ( !x - %2 + 1 ) * 2048 + ( !y - %3 + 1 ) * 128 )
+        set !blank_cnt 0
+      }
+      else
+      {
+        set !stamp ( !stamp + ( !x - %2 ) * ( !y - %3 ) )
+      }
+      set !y !y + 2
+    }
+    set !blank_cnt !blank_cnt + 1
+    if !blank_cnt >= 10
+      goto NewSampleArea_skip1
+    if %6 = 8701514
+      set !x !x + 2 ; changing this will impact present sampled values!!
+    else
+      set !x !x + 5
+  }
+NewSampleArea_skip1:
+  set #LPC !temp_LPC
+  set #RESULT !stamp
+  namespace pop
+return #RESULT
+;-------------------------------------------------------------------------------
+; %1 = GumpAndSizeWait
+; %2 = Gumpname 1
+; %3 = Gumpname 2
+sub GumpAndSizeWait
+  set %timedelay #SCNT
+  wait 5
+GumpWait_loop1:
+  if #CONTNAME = %2 && #CONTSIZE = %3
+    return #FALSE ; no error
+  if #SCNT > %timedelay + 7
+    return #TRUE ; error, timeout
+  goto GumpWait_loop1
+return #TRUE ; should never get here.
+;-------------------------------------------------------------------------------
+;============================= TM_CLAw Interface ===============================
+;-------------------------------------------------------------------------------
+; sub TM_LootingAssistantInitialized
+; return:
+;   #TRUE if looting assistant is initialized
+;   #FALSE if looting assistant not initialized
+sub TM_LootingAssistantInitialized
+  namespace push
+  namespace global TM_loot
+  set #RESULT !TM_initialized
+  if #RESULT <> #TRUE
+    set #RESULT #FALSE
+  namespace pop
+return #RESULT
+;------------------------------------------------------------
+; sub TM_PingLootingAssistant
+; return:
+;   PING if Looting Assistant not running, but memory space is initialized
+;   PONG if Looting assistant is active and running.
+sub TM_PingLootingAssistant
+  namespace push
+  namespace global TM_loot
+  set !TM_ping PING
+  wait 60
+  set #RESULT !TM_ping
+  namespace pop
+return #RESULT
+;------------------------------------------------------------
+; sub TM_LootInProgress
+; return:
+;   #TRUE if Looting is in progress, wait until #FALSE
+;   #FALSE looting is idle.
+sub TM_LootInProgress
+  namespace push
+  namespace global TM_loot
+  set #RESULT !TM_loot_in_progress
+  namespace pop
+return #RESULT
+;------------------------------------------------------------
+; sub TM_EvaluateContainer
+; %1 - source container to evaluate
+; %2 - destination container ID to place items passing evaluation
+; return:
+;   none
+sub TM_EvaluateContainer
+  namespace push
+  namespace global TM_loot
+  set !TM_loot_artifact_success #FALSE
+  set !TM_loot_success #FALSE
+  set !TM_eval_source %1
+  set !TM_eval_destination %2
+  set !TM_eval_request #TRUE
+  set !TM_loot_in_progress #TRUE ; needed??? probably, due to time taken to start looter.
+  namespace pop
+return
+;------------------------------------------------------------
+; sub TM_ItemFound
+;   #TRUE if artifact looted with last TM_EvaluateContainer
+sub TM_ItemFound
+  namespace push
+  namespace global TM_loot
+  set #RESULT !TM_loot_success
+  namespace pop
+return #RESULT
+;--------- EasyUO Menu Designer Code Begin ---------
+sub showEUOMenu1
+	menu Clear
+	menu Window Title SUOQuester , #SPC , %version
+	menu Window Color BtnFace
+	menu Window Size 242 310
+	menu Font Transparent #true
+	menu Font Align Right
+	menu Font Name MS Sans Serif
+	menu Font Size 8
+	menu Font Style 
+	menu Font Color WindowText
+	menu Font Transparent #false
+	menu Font Align Left
+	menu Text EUOLabel1 44 8 BMitemEval score of loot to keep
+	menu Text EUOLabel3 44 36 Position in Runebook for HOME?
+	menu Text EUOLabel4 44 56 Position in Runebook for Heartwood?
+	menu Text EUOLabel5 100 152 Recall Method
+	menu Text EUOLabel2 44 76 Position in Runebook safe logout spot?
+	menu Text EUOLabel7 44 124 Number of times to run quest?
+	menu Text EUOLabel6 44 96 Position in Runebook for BANK?
+	menu Text EUOLabel8 100 172 Quest Type
+	menu Font BGColor Window
+	menu Edit score 4 4 33 26
+	menu Edit homerune 4 32 33 1
+	menu Edit heartrune 4 52 33 2
+	menu Font BGColor BtnFace
+	menu Button continue 8 272 75 25 Start
+	menu Font Align Right
+	menu Check hiding 4 196 97 17 #false Use Hiding?
+	menu Font BGColor Window
+	menu Edit logoutrune 4 72 33 3
+	menu Edit questiteration 4 120 33 99
+	menu Combo Create recall 4 148 93
+	menu Combo Add recall Recall
+	menu Combo Add recall Gate Travel
+	menu Combo Add recall Sacred Journey
+	menu Font Align Left
+	menu Font BGColor BtnFace
+	menu Check EUOCheckBoxBMEval 4 224 113 17 #true Use BMItemEval
+	menu Check EUOCheckBoxCLAw 4 244 129 17 #false Use Adv TM_CLAw
+	menu Font BGColor Window
+	menu Edit bankrune 4 92 33 4
+	menu Font Align Right
+	menu Font BGColor BtnFace
+	menu Check EUOCheckUseBank 112 196 93 17 #false Use Bank?
+	menu Button EUOButtonSetup 168 276 59 25 Setup
+	menu Button EUOButtonLoad 168 248 59 25 Load
+	menu Button EUOButtonSave 168 220 59 25 Save
+	menu Font BGColor Window
+	menu Combo Create EUOComboBoxQuest 4 168 93
+	menu Combo Add EUOComboBoxQuest Fletching
+	menu Combo Add EUOComboBoxQuest Carpentry
+	menu Font BGColor BtnFace
+	menu Show 421 27
+return
+;--------- EasyUO Menu Designer Code End ---------
+
+
+
+
+
+

@@ -1,0 +1,34 @@
+main:
+set %weight #maxweight - 25
+if #weight < %weight
+ {
+ finditem POF G_1
+ if #findkind > -1
+  {
+  exevent drag #findid #findstack
+  exevent dropc #backpackid
+  wait 20
+  finditem POF C_ , #backpackid
+  if #findstack > 50000
+   {
+   gosub bag
+   }
+  }
+ }
+else
+ {
+ gosub bag
+ }
+goto main
+
+sub bag
+finditem CKF C_ , #backpackid
+set #lobjectid #findid
+finditem POF C_ , #backpackid
+set #ltargetid #findid
+set #ltargetkind 1
+event macro 17
+target
+event macro 22
+wait 20
+return

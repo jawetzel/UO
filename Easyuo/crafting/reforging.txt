@@ -1,0 +1,139 @@
+;set %mode 1
+set %need Leech , #spc , 100
+set %need Mage , #spc , Weapon , #spc , -15
+
+set %mode 2
+set %inmod2 100%
+set %notinmod2 Physical
+
+display target tool were using$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs <> 1
+set #lobjectid #ltargetid
+event macro 17
+wait 20
+set #targcurs 0
+set %tooltype #lobjecttype
+display target resource box$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs <> 1
+set %resource #ltargetid
+
+display target destination box$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs <> 1
+set %dest #ltargetid
+
+set #lobjectid #backpackid
+event macro 17
+wait 5
+contpos 100 500
+wait 30
+
+set #lobjectid %resource
+event macro 17
+wait 5
+contpos 500 500
+wait 30
+
+set #lobjectid %dest
+event macro 17
+wait 5
+contpos 300 500
+wait 30
+$Uses Remaining: 2$
+set %prop1 $Uses , #spc , Remaining: , #spc , 1$
+set %prop2 $Uses , #spc , Remaining: , #spc , 2$
+set %prop3 $Uses , #spc , Remaining: , #spc , 3$
+set %prop4 $Uses , #spc , Remaining: , #spc , 4$
+
+tool:
+finditem %tooltype C_ , #backpackid
+if #findkind = -1
+ {
+ display outa tools$
+ halt
+ }
+set %toolid #findid
+
+main:
+set #property $
+event property %toolid
+wait 5
+repeat
+ {
+ wait 1
+ }
+until #property <> $
+if %prop1 in #property || %prop2 in #property || %prop3 in #property || %prop4 in #property
+ {
+ ignoreitem %toolid
+ goto tool
+ }
+set #lobjectid %toolid
+event macro 17
+wait 30
+finditem * C_ , %resource
+if #findkind = -1
+ {
+ halt
+ }
+set %item #findid
+exevent drag #findid #findstack
+exevent dropc #backpackid
+wait 15
+set #ltargetid #findid
+target
+event macro 22
+wait 20
+set %x  #contposx + 345
+set %y  #contposy + 373
+click %x %y
+wait 15
+set #property $
+event property %item
+wait 5
+repeat
+ {
+ wait 1
+ }
+until #property <> $
+if %mode = 2
+ {
+ if %inmod2 in #property && %notinmod2 notin #property
+  {
+  ignoreitem #findid
+  }
+ else
+  {
+  exevent drag %item 1
+  exevent dropc %dest
+  wait 30
+  }
+ }
+else
+ {
+ if %need in #property
+  {
+  ignoreitem #findid
+  }
+ else
+  {
+  exevent drag %item 1
+  exevent dropc %dest
+  wait 30
+  }
+ }
+goto main
+
+
+

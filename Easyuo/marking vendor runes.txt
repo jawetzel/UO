@@ -1,0 +1,75 @@
+;rune marker
+set %msg -15 , #spc , mage , #spc , weapon, , #spc , Mage-Dexer-Archer , #spc , Suits, , #spc , PVP , #spc , Bows , #spc , - , #spc , Pink , #spc , Vendor , #spc , 2nd , #spc , Row!
+goto name
+;mark, move, name, dye
+;move moves to last object
+;dye, dyetub needs to be last object
+;================================
+mark:
+if #mana > 30
+{
+finditem QWL C_
+if #findkind = -1
+ {
+ halt
+ }
+event property #findid
+if Recall , #spc , Rune$Weight: , #spc , 1 , #spc , Stone$ <> #property
+ {
+ ignoreitem #findid
+ goto mark
+ }
+set #ltargetid #findid
+set #ltargetkind 1
+event macro 15 44
+target
+event macro 22
+wait 20
+}
+goto mark
+
+move:
+finditem QWL C_ , #backpackid
+if #findkind = -1
+ {
+ halt
+ }
+exevent drag #findid #findstack
+exevent dropc #lobjectid
+wait 25
+}
+goto move
+
+name:
+finditem QWL C_
+if #findkind = -1
+ {
+ halt
+ }
+event property #findid
+if %msg in #property
+ {
+ ignoreitem #findid
+ goto name
+ }
+set #lobjectid #findid
+event macro 17
+wait 10
+msg %msg , $
+wait 15
+goto name
+
+dye:
+finditem QWL C_
+set #ltargetid #findid
+set #ltargetkind 1
+if #findkind = -1
+ {
+ halt
+ }
+event macro 17
+target
+event macro 22
+wait 25
+ignoreitem #findid
+goto dye

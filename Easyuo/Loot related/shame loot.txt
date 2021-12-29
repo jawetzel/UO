@@ -1,0 +1,51 @@
+display target ur bag$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %swingprop Swing , #spc , Speed
+set %bag #ltargetid
+top:
+finditem * C_
+if #findkind > -1
+ {
+ if #FINDBAGID = %bag
+  {
+  ignoreitem #findid
+  goto top
+  }
+ event property #findid
+ if Cursed in #property
+   {
+   goto skip
+   }
+ if Splinter in #property
+  {
+  wait 25
+  exevent drag #findid #findstack
+  exevent dropc %bag
+  }
+ if Ring in #property || Bracelet in #property
+  {
+  if Cursed in #property
+   {
+   goto skip
+   }
+  if Swing in #property
+   {
+   wait 20
+   exevent drag #findid #findstack
+   exevent dropc %bag
+   }
+  if Stam in #property
+   {
+   wait 20
+   exevent drag #findid #findstack
+   exevent dropc %bag
+   }
+  }
+ skip:
+ ignoreitem #findid
+ }
+goto top

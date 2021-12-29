@@ -1,0 +1,107 @@
+display target vendor$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %vendor #ltargetid
+
+display target full book$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %full #ltargetid
+
+display target empty book$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %empty #ltargetid
+
+display target packy$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set #lobjectid #ltargetid
+event macro 17
+wait 20
+set %packy #ltargetid
+
+display target packys bag$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %packybag #ltargetid
+
+set %items KEG_BUI_POF_ZZF_TWF_QPF_tvh_ewh_nvi_dui_aui_fui_gui_gbg_TLH_KKH
+
+
+set #lobjectid #backpackid
+event macro 17
+wait 10
+contpos 700 500
+wait 15
+
+set #lobjectid %packy
+event macro 17
+wait 10
+contpos 450 500
+wait 15
+
+set #lobjectid %packybag
+event macro 17
+wait 10
+contpos 200 500
+wait 15
+
+main:
+set #lobjectid %full
+event macro 17
+wait 10
+set %x #contposx + 42
+set %y #contposy + 103
+click %x %y
+wait 10
+click 200 200 r
+finditem EYM C_ , #backpackid
+exevent drag #findid #findstack
+exevent dropc %vendor
+wait 25
+finditem %items C_ , #backpackid
+if #findkind > -1
+ {
+ exevent drag #findid #findstack
+ exevent dropc %packybag
+ wait 20
+ }
+exevent popup %vendor
+click 35 40
+wait 10
+set %x 150
+set %y 230
+repeat
+ {
+ click %x %y
+ wait 5
+ set %y %y + 15
+ }
+until #contname <> generic_gump
+
+finditem EYM C_ , #backpackid
+exevent drag #findid #findstack
+exevent dropc %empty
+wait 10
+click 200 200 r
+wait 15
+goto main
+
+
+

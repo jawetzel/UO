@@ -1,0 +1,120 @@
+;need:
+;   bag full of pens on you
+;   bag full to put slayers secure on ground
+;   bag full of scrolls to use secure on ground
+;   need to be within 2 tiles of trash can
+set #lobjectid #backpackid
+event macro 17
+wait 10
+contpos 800 600
+wait 20
+display target bag to put slayers in$
+set #targcurs 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set %slaybag #ltargetid
+set #lobjectid #ltargetid
+event macro 17
+wait 10
+contpos 50 600
+wait 20
+display target recource cont$
+set #targcurs 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set %resource #ltargetid
+set #lobjectid #ltargetid
+event macro 17
+wait 10
+contpos 300 600
+wait 20
+display target pen bag$
+set #targcurs 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set %penbag #ltargetid
+set #lobjectid #ltargetid
+event macro 17
+wait 10
+contpos 550 600
+wait 20
+
+start:
+wait 20
+finditem PBG C_ , %penbag
+exevent drag #findid #findstack
+exevent dropc #backpackid
+wait 30
+set #lobjectid #findid
+set %pen #findid
+event macro 17
+wait 30
+set #scnt 0
+repeat
+ {
+ finditem %pen c_ , #backpackid
+ if #findkind = -1
+  {
+  goto start
+  }
+ }
+until #scnt > 3 || #contsize = 530_497
+if #scnt > 3
+ {
+ goto start
+ }
+set %x #contposx + 285
+set %y #contposy + 455
+
+main:
+finditem DPF C_ , #backpackid
+if #findstack < 25 || #findkind = -1
+ {
+ wait 20
+ finditem DPF C_ , %resource
+ exevent drag #findid 200
+ exevent dropc #backpackid
+ }
+click %x %y
+set #scnt 0
+repeat
+ {
+ finditem %pen c_ , #backpackid
+ if #findkind = -1
+  {
+  goto start
+  }
+ }
+until #scnt > 3 || #contsize = 530_497
+if #scnt > 3
+ {
+ goto start
+ }
+finditem MPF C_ , #backpackid
+if #findkind > -1
+ {
+ wait 5
+ event property #findid
+ if Repond in #property || Reptile in #property || Undead in #property || Demon in #property || Arachnid in #property
+  {
+  exevent drag #findid #findstack
+  exevent dropc %slaybag
+  wait 20
+  }
+ else
+  {
+  exevent drag #findid #findstack
+  finditem BKF G_2
+  exevent dropc #findid
+  }
+ }
+goto main

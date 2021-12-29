@@ -1,0 +1,21 @@
+12 17 21 17 17 kasa
+
+12 08 13 09 09 reforged 20lrc 6lmc
+
+17 11 09 11 11 20lrc 6lmc 2mr      5hp
+10 11 09 11 11 20lrc 6lmc 2mr 2hpr 5hp
+10 11 09 11 11 20lrc 6lmc 2mr 2hpr 5hp
+09 12 09 11 11 20lrc 6lmc 2mr 2hpr 5hp
+
+3fc 1fcr 15dci 10magery 5resist
+3fc 1fcr 15dci 10magery 4sdi
+
+quiver
+spell focus sash
+tangle
+
+wep - bokuto - non-exceptional
+-20mnage
+sc no -
+38fireball
+2hpr

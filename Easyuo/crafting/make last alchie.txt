@@ -1,0 +1,129 @@
+;have tools made inside a bag in your pack
+;have a secure with empty bottles and regs
+;make 1 of whatever you plan to make before start
+
+set %howmany 999999
+;set this to how many you want to make
+;=====================================
+set %number 0
+display target recource cont$
+set #targcurs 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set %res #ltargetid
+display target tool bag$
+set #targcurs 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set %tools #ltargetid
+display target regant$
+set #targcurs 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set #lobjectid #ltargetid
+event macro 17
+wait 20
+set %reag #lobjecttype
+set %pots NUF_UUF_YUF_XUF_ZUF_AVF_OUF_TUF
+
+start:
+finditem RQF C_ , %tools
+if #findkind = -1
+ {
+ display no tools$
+ halt
+ }
+set %mortar #findid
+set #lobjectid #findid
+event macro 17
+wait 20
+set #scnt 0
+repeat
+ {
+ finditem %mortar c_ , %tools
+ if #findkind = -1
+  {
+  goto start
+  }
+ }
+until #scnt > 3 || #contsize = 530_497
+if #scnt > 3
+ {
+ goto start
+ }
+set %x #contposx + 286
+set %y #contposy + 457
+ 
+main:
+if %number => %howmany
+ {
+ display done$
+ halt
+ }
+finditem %reag C_ , #backpackid
+if #findstack < 30 || #findkind = -1
+ {
+ gosub regs
+ }
+finditem WUF C_ , #backpackid
+if #findstack < 20 || #findkind = -1
+ {
+ gosub empty
+ }
+click %x %y
+set #scnt 0
+repeat
+ {
+ finditem %mortar c_ , %tools
+ if #findkind = -1
+  {
+  goto start
+  }
+ }
+until #scnt > 3 || #contsize = 530_497
+if #scnt > 3
+ {
+ goto start
+ }
+goto main
+
+sub regs
+finditem %reag C_ , %res
+if #findkind = -1
+ {
+ display no regs$
+ halt
+ }
+exevent drag #findid 400
+exevent dropc #backpackid
+wait 20
+return
+
+sub empty
+finditem %pots C_ , #backpackid
+if #findkind > -1
+ {
+ set %number %number + #findstack
+ exevent drag #findid #findstack
+ exevent dropc %res
+ wait 20
+ }
+finditem WUF C_ , %res
+if #findkind = -1
+ {
+ display no bottles$
+ halt
+ }
+exevent drag #findid 150
+exevent dropc #backpackid
+wait 20
+return

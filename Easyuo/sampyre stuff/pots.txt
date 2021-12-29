@@ -1,0 +1,19 @@
+if #dex < 130 || #str < 130
+ {
+  {
+  if #dex < 130
+   {
+   finditem YUF c_ , #backpackid
+   set #lobjectid #findid
+   event macro 17
+   wait 20
+   }
+  if #str < 130
+   {
+   finditem XUF c_ , #backpackid
+   set #lobjectid #findid
+   event macro 17
+   wait 20
+   }
+  }
+ }

@@ -1,0 +1,144 @@
+;==================================
+barbed is 3 2 3 3 5
+
+25 10 10 10 10
+
+09 19 12 12 12      8lmc 5hp 8mana 5stam
+09 19 12 12 12      8lmc 5hp 8mana 5stam
+09 19 12 12 13      8lmc 5hp 8mana 5stam
+10 19 12 12 13      8lmc 5hp 8mana 5stam
+08 10 12 12 10 5hci 8lmc 5hp 8mana 8stam  gorget
+
+12 19 12 11 10      8lmc 5hp 8mana 5stam  gorget
+08 19 12 13 13      8lmc 5hp 8mana 5stam
+08 19 12 12 13      8lmc 5hp 8mana 5stam
+08 19 12 12 12      8lmc 5hp 8mana 5stam
+09 09 12 12 12 5hci 8lmc 5hp 8mana 8stam
+
+06 01 09 09 05
+06 01 09 09 05
+06 01 09 09 05
+06 01 09 09 05
+06 07 09 09 05
+
+15hci 15dci 20di 10skill 20ep
+15hci 15dci 20di 10skill 20ep
+
+;set these to the minimum resists your looking for in armor
+set %Physical 5
+set %Fire 1
+set %Cold 8
+set %Poison 8
+set %Energy 4
+;pulls armor with above specified resists as minimums
+;-------------------------
+;STARTUP------------------
+startup:
+display target ur bag to search$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set #lobjectid #ltargetid
+set %bag #ltargetid
+event macro 17
+wait 20
+set %ps1 %Physical
+set %f1 %Fire
+set %c1 %Cold
+set %psn1 %Poison
+set %e1 %Energy
+;END STARTUP--------------
+
+;MAINLOOP-----------------
+main:
+finditem * C_ , %bag
+if #findkind = -1
+ {
+ display done$
+ halt
+ }
+event property #findid
+set #lpc 500
+gosub phys
+gosub fire
+gosub cold
+gosub poison
+gosub energy
+set #lpc 10
+if %ps2 => %ps1 && %f2 => %f1 && %c2 => %c1 && %psn2 => %psn1 && %e2 => %e1
+ {
+ exevent drag #findid #findstack
+ exevent dropc #backpackid
+ wait 25
+ ignoreitem #findid
+ }
+else
+ {
+ ignoreitem #findid
+ }
+goto main
+
+;SUBS---------------------
+sub phys
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Physical , #spc , Resist , #spc , %number , % in #property
+  {
+  set %ps2 %number
+  }
+ }
+return
+
+sub fire
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Fire , #spc , Resist , #spc , %number , % in #property
+  {
+  set %f2 %number
+  }
+ }
+return
+
+sub cold
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Cold , #spc , Resist , #spc , %number , % in #property
+  {
+  set %c2 %number
+  }
+ }
+return
+
+sub poison
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Poison , #spc , Resist , #spc , %number , % in #property
+  {
+  set %psn2 %number
+  }
+ }
+return
+
+sub energy
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Energy , #spc , Resist , #spc , %number , % in #property
+  {
+  set %e2 %number
+  }
+ }
+return
+;END SUBS-----------------
+

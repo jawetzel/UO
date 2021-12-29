@@ -1,0 +1,573 @@
+;================================== 
+; Script Name: craftinfo.txt
+; Author: Kal In Ex
+; Version: 2.00-EA
+; Client Tested with:
+; EUO version tested with: 
+; Shard OSI / FS: OSI
+; Revision Date: October 09, 2009
+; Public Release: April 21, 2005
+; Global Variables Used: 
+; Purpose: info useful for crafting. Version sanctioned by snicker7
+; for use with s7BODFiller on EA Shards. Thanks to sciondal for
+; updating this to the new SA crafting menu locations.
+; Copyright 2005 Kal In Ex
+;==================================
+; tailoring, blacksmithy, tinkering
+
+set !cgiItemName n/a
+set !cgiItemType n/a
+set !cgiItemWeight n/a
+set !cgiItemDisposal n/a
+set !cgiCategoryName n/a
+set !cgiCategory n/a
+set !cgiSelection n/a
+set !cgiSkillCount n/a
+set !cgiSkillName1 n/a
+set !cgiSkillValue1 n/a
+set !cgiMaterialCount n/a
+set !cgiMaterialName1 n/a
+set !cgiMaterialValue1 n/a
+
+if %1 = cut-up_cloth || %1 = cut-up , #spc , cloth || %1 = cui
+	gosub _sub cut-up_cloth bui 1 trash materials 1 0 1 tailoring 0 1 cloth 0
+if %1 = combine_cloth || %1 = combine , #spc , cloth || %1 = bui
+	gosub _sub combine_cloth bui 1 trash materials 1 1 1 tailoring 0 1 cloth 0
+if %1 = skullcap || %1 = czh
+	gosub _sub skullcap czh 1 scissors hats 2 0 1 tailoring 0 1 cloth 2
+if %1 = bandana || %1 = gzh
+	gosub _sub bandana gzh 1 scissors hats 2 1 1 tailoring 0 1 cloth 2
+if %1 = floppy_hat || %1 = floppy , #spc , hat || %1 = bwi
+	gosub _sub floppy_hat bwi 1 trash hats 2 2 1 tailoring 62 1 cloth 11
+if %1 = cap || %1 = vvi
+	gosub _sub cap vvi 1 trash hats 2 3 1 tailoring 62 1 cloth 11
+if %1 = wide-brim_hat || %1 = wide-brim , #spc , hat || %1 = wvi
+	gosub _sub wide-brim_hat wvi 1 trash hats 2 4 1 tailoring 62 1 cloth 12
+if %1 = straw_hat || %1 = straw , #spc , hat || %1 = xvi
+	gosub _sub straw_hat xvi 1 trash hats 2 5 1 tailoring 62 1 cloth 10
+if %1 = tall_straw_hat || %1 = tall , #spc , straw , #spc , hat
+	gosub _sub tall_straw_hat yvi 1 trash hats 2 6 1 tailoring 67 1 cloth 13
+if %1 = wizard's_hat || %1 = wizard's , #spc , hat || %1 = iwi
+	gosub _sub wizard's_hat iwi 1 trash hats 2 7 1 tailoring 72 1 cloth 15
+if %1 = bonnet || %1 = hwi
+	gosub _sub bonnet hwi 1 trash hats 2 8 1 tailoring 62 1 cloth 11
+if %1 = feathered_hat || %1 = feathered , #spc , hat || %1 = kwi
+	gosub _sub feathered_hat kwi 1 trash hats 2 9 1 tailoring 62 1 cloth 12
+if %1 = tricorne_hat || %1 = tricorne , #spc , hat || %1 = jwi
+	gosub _sub tricorne_hat jwi 1 trash hats 2 10 1 tailoring 62 1 cloth 12
+if %1 = jester_hat || %1 = jester , #spc , hat || %1 = ewi
+	gosub _sub jester_hat ewi 1 trash hats 2 11 1 tailoring 72 1 cloth 15
+if %1 = flower_garland || %1 = flower , #spc , garland || %1 = jjn
+	gosub _sub flower_garland jjn 1 scissors hats 2 12 1 tailoring 100 1 cloth 5
+if %1 = cloth_ninja_hood || %1 = cloth , #spc , ninja , #spc , hood
+	gosub _sub cloth_ninja_hood bcp 2 scissors hats 2 13 1 tailoring 800 1 cloth 13
+if %1 = kasa || %1 = ucp
+	gosub _sub kasa ucp 3 scissors hats 2 14 1 tailoring 600 1 cloth 12
+if %1 = doublet || %1 = xvl
+	gosub _sub doublet xvl 2 scissors shirts 3 0 1 tailoring 0 1 cloth 8
+if %1 = shirt || %1 = fci
+	gosub _sub shirt fci 1 scissors shirts 3 1 1 tailoring 207 1 cloth 8
+if %1 = fancy_shirt || %1 = fancy , #spc , shirt || %1 = tql
+	gosub _sub fancy_shirt tql 2 scissors shirts 3 2 1 tailoring 248 1 cloth 8
+if %1 = tunic || %1 = hcm
+	gosub _sub tunic hcm 5 scissors shirts 3 3 1 tailoring 0 1 cloth 12
+if %1 = surcoat || %1 = pam
+	gosub _sub surcoat pam 6 scissors shirts 3 4 1 tailoring 82 1 cloth 14
+if %1 = plain_dress || %1 = plain , #spc , dress || %1 = dwl
+	gosub _sub plain_dress dwl 2 scissors shirts 3 5 1 tailoring 124 1 cloth 10
+if %1 = fancy_dress || %1 = fancy , #spc , dress || %1 = vql_EWL
+	gosub _sub fancy_dress vql_EWL 3 scissors shirts 3 6 1 tailoring 331 1 cloth 12
+if %1 = cloak || %1 = dci
+	gosub _sub cloak dci 5 scissors shirts 3 7 1 tailoring 414 1 cloth 14
+if %1 = robe || %1 = fwl
+	gosub _sub robe fwl 3 scissors shirts 3 8 1 tailoring 539 1 cloth 16
+if %1 = jester_suit || %1 = jester , #spc , suit || %1 = xbm
+	gosub _sub jester_suit xbm 4 scissors shirts 3 9 1 tailoring 82 1 cloth 24
+if %1 = fur_cape || %1 = fur , #spc , cape || %1 = vjn
+	gosub _sub fur_cape vjn 4 scissors shirts 3 10 1 tailoring 350 1 cloth 13
+if %1 = gilded_dress || %1 = gilded , #spc , dress || %1 = rjn
+	gosub _sub gilded_dress rjn 3 scissors shirts 3 11 1 tailoring 375 1 cloth 16
+if %1 = formal_shirt || %1 = formal , #spc , shirt || %1 = tjn
+	gosub _sub formal_shirt tjn 1 scissors shirts 3 12 1 tailoring 260 1 cloth 16
+if %1 = cloth_ninja_jacket || %1 = cloth , #spc , ninja , #spc , jacket
+	gosub _sub cloth_ninja_jacket icp 5 scissors shirts 3 13 1 tailoring 750 1 cloth 12
+if %1 = kamishimo || %1 = tcp
+	gosub _sub kamishimo tcp 3 scissors shirts 3 14 1 tailoring 750 1 cloth 15
+if %1 = hakama-shita || %1 = qcp
+	gosub _sub hakama-shita qcp 3 scissors shirts 3 15 1 tailoring 400 1 cloth 14
+if %1 = male_kimono || %1 = male , #spc , kimono || %1 = ybp
+	gosub _sub male_kimono ybp 4 scissors shirts 3 16 1 tailoring 500 1 cloth 16
+if %1 = female_kimono || %1 = female , #spc , kimono || %1 = xbp
+	gosub _sub female_kimono xbp 4 scissors shirts 3 17 1 tailoring 500 1 cloth 16
+if %1 = jin-baori || %1 = bdp
+	gosub _sub jin-baori bdp 3 scissors shirts 3 18 1 tailoring 300 1 cloth 10
+if %1 = short_pants || %1 = short , #spc , pants || %1 = edi
+	gosub _sub short_pants edi 2 scissors pants 3 19 1 tailoring 248 1 cloth 6
+if %1 = long_pants || %1 = long , #spc , pants || %1 = vdi
+	gosub _sub long_pants vdi 2 scissors pants 3 20 1 tailoring 248 1 cloth 8
+if %1 = kilt || %1 = ldi
+	gosub _sub kilt ldi 2 scissors pants 3 21 1 tailoring 207 1 cloth 8
+if %1 = skirt || %1 = gci
+	gosub _sub skirt gci 4 scissors pants 3 22 1 tailoring 290 1 cloth 10
+if %1 = fur_sarong || %1 = fur , #spc , sarong || %1 = xjn
+	gosub _sub fur_sarong xjn 3 scissors pants 3 24 1 tailoring 350 1 cloth 12
+if %1 = hakama || %1 = wcp
+	gosub _sub hakama wcp 2 scissors pants 3 25 1 tailoring 500 1 cloth 16
+if %1 = tattsuke-hakama || %1 = vcp
+	gosub _sub tattsuke-hakama vcp 2 scissors pants 3 26 1 tailoring 500 1 cloth 16
+if %1 = body_sash || %1 = body , #spc , sash || %1 = fzh
+	gosub _sub body_sash fzh 1 scissors miscellaneous 4 0 1 tailoring 41 1 cloth 4
+if %1 = half_apron || %1 = half , #spc , apron || %1 = xdi
+	gosub _sub half_apron xdi 2 scissors miscellaneous 4 1 1 tailoring 207 1 cloth 6
+if %1 = full_apron || %1 = full , #spc , apron || %1 = rdi
+	gosub _sub full_apron rdi 4 scissors miscellaneous 4 2 1 tailoring 290 1 cloth 10
+if %1 = obi || %1 = cdp
+	gosub _sub obi cdp 1 scissors miscellaneous 4 3 1 tailoring 200 1 cloth 6
+if %1 = oil_cloth || %1 = oil , #spc , cloth || %1 = rti
+	gosub _sub oil_cloth rti 1 trash miscellaneous 4 10 1 tailoring 746 1 cloth 1
+if %1 = goza_(east) || %1 = goza , #spc , (east) || %1 = ewh
+	gosub _sub goza_(east) ewh 1 trash miscellaneous 4 11 1 tailoring 550 1 cloth 25
+if %1 = goza_(south) || %1 = goza , #spc , (south) || %1 = ewh
+	gosub _sub goza_(south) ewh 1 trash miscellaneous 4 12 1 tailoring 550 1 cloth 25
+if %1 = square_goza_(east) || %1 = square , #spc , goza , #spc , (east)
+	gosub _sub square_goza_(east) ewh 1 trash miscellaneous 4 13 1 tailoring 550 1 cloth 25
+if %1 = square_goza_(south) || %1 = square , #spc , goza , #spc , (south)
+	gosub _sub square_goza_(south) ewh 1 trash miscellaneous 4 14 1 tailoring 550 1 cloth 25
+if %1 = brocade_goza_(east) || %1 = brocade , #spc , goza , #spc , (east)
+	gosub _sub brocade_goza_(east) ewh 1 trash miscellaneous 4 15 1 tailoring 550 1 cloth 25
+if %1 = brocade_goza_(south) || %1 = brocade , #spc , goza , #spc , (south)
+	gosub _sub brocade_goza_(south) ewh 1 trash miscellaneous 4 16 1 tailoring 550 1 cloth 25
+if %1 = square_brocade_goza_(east) || %1 = square , #spc , brocade , #spc , goza
+	gosub _sub square_brocade_goza_(east) ewh 1 trash miscellaneous 4 17 1 tailoring 550 1 cloth 25
+if %1 = square_brocade_goza_(south) || %1 = square , #spc , brocade , #spc , goza
+	gosub _sub square_brocade_goza_(south) ewh 1 trash miscellaneous 4 18 1 tailoring 550 1 cloth 25
+if %1 = fur_boots || %1 = fur , #spc , boots || %1 = ljn
+	gosub _sub fur_boots ljn 3 scissors footwear 5 1 1 tailoring 500 1 cloth 12
+if %1 = ninja_tabi || %1 = ninja , #spc , tabi || %1 = jcp
+	gosub _sub ninja_tabi jcp 2 scissors footwear 5 2 1 tailoring 700 1 cloth 10
+if %1 = waraji_and_tabi || %1 = waraji , #spc , and , #spc , tabi
+	gosub _sub waraji_and_tabi kcp 2 scissors footwear 5 3 1 tailoring 200 1 cloth 6
+if %1 = sandals || %1 = nvi
+	gosub _sub sandals nvi 1 trash footwear 5 4 1 tailoring 124 1 leather 4
+if %1 = shoes || %1 in pvi_awi
+	gosub _sub shoes pvi_awi 2 trash footwear 5 5 1 tailoring 165 1 leather 6
+if %1 = boots || %1 = tvi
+	gosub _sub boots tvi 3 trash footwear 5 6 1 tailoring 331 1 leather 8
+if %1 = thigh_boots || %1 = thigh , #spc , boots || %1 in cwi_ZVI
+	gosub _sub thigh_boots cwi_ZVI 4 trash footwear 5 7 1 tailoring 414 1 leather 10
+if %1 = leather_gorget || %1 = leather , #spc , gorget || %1 = jkh
+	gosub _sub leather_gorget jkh 1 scissors lether_armor 6 3 1 tailoring 539 1 leather 4
+if %1 = leather_cap || %1 = leather , #spc , cap || %1 = njl
+	gosub _sub leather_cap njl 2 scissors lether_armor 6 4 1 tailoring 62 1 leather 2
+if %1 = leather_gloves || %1 = leather , #spc , gloves || %1 = kkh
+	gosub _sub leather_gloves kkh 1 scissors lether_armor 6 5 1 tailoring 518 1 leather 3
+if %1 = leather_sleeves || %1 = leather , #spc , sleeves || %1 = hkh
+	gosub _sub leather_sleeves hkh_PKH 2 scissors lether_armor 6 6 1 tailoring 539 1 leather 8
+if %1 = leather_leggings || %1 = leather , #spc , leggings || %1 = vkh
+	gosub _sub leather_leggings vkh 4 scissors lether_armor 6 7 1 tailoring 663 1 leather 10
+if %1 = leather_tunic || %1 = leather , #spc , tunic || %1 = qkh
+	gosub _sub leather_tunic qkh 6 scissors lether_armor 6 8 1 tailoring 705 1 leather 12
+if %1 = leather_jingasa || %1 = leather , #spc , jingasa || %1 = gwo
+	gosub _sub leather_jingasa gwo 3 scissors lether_armor 6 9 1 tailoring 450 1 leather 4
+if %1 = leather_mempo || %1 = leather , #spc , mempo || %1 = swo
+	gosub _sub leather_mempo swo 2 scissors lether_armor 6 10 1 tailoring 800 1 leather 8
+if %1 = leather_do || %1 = leather , #spc , do || %1 = rwo
+	gosub _sub leather_do rwo 6 scissors lether_armor 6 11 1 tailoring 750 1 leather 12
+if %1 = leather_hiro_sode || %1 = leather , #spc , hiro , #spc , sode
+	gosub _sub leather_hiro_sode owo 1 scissors lether_armor 6 12 1 tailoring 550 1 leather 5
+if %1 = leather_suneate || %1 = leather , #spc , suneate || %1 = ubp
+	gosub _sub leather_suneate ubp 4 scissors lether_armor 6 13 1 tailoring 680 1 leather 12
+if %1 = leather_haidate || %1 = leather , #spc , haidate || %1 = gcp
+	gosub _sub leather_haidate gcp 4 scissors lether_armor 6 14 1 tailoring 680 1 leather 12
+if %1 = leather_ninja_pants || %1 = leather , #spc , ninja , #spc , pants
+	gosub _sub leather_ninja_pants lcp 3 scissors lether_armor 6 15 1 tailoring 800 1 leather 13
+if %1 = leather_ninja_jacket || %1 = leather , #spc , ninja , #spc , jacket
+	gosub _sub leather_ninja_jacket ncp 5 scissors lether_armor 6 16 1 tailoring 850 1 leather 13
+if %1 = leather_ninja_belt || %1 = leather , #spc , ninja , #spc , belt
+	gosub _sub leather_ninja_belt mcp 1 scissors lether_armor 6 17 1 tailoring 500 1 leather 5
+if %1 = leather_ninja_mitts || %1 = leather , #spc , ninja , #spc , mitts
+	gosub _sub leather_ninja_mitts ocp 2 scissors lether_armor 6 18 1 tailoring 650 1 leather 12
+if %1 = leather_ninja_hood || %1 = leather , #spc , ninja , #spc , hood
+	gosub _sub leather_ninja_hood ccp 2 scissors lether_armor 6 19 1 tailoring 900 1 leather 14
+if %1 = studded_gorget || %1 = studded , #spc , gorget || %1 = alh
+	gosub _sub studded_gorget alh 1 scissors studded_armor 8 0 1 tailoring 788 1 leather 6
+if %1 = studded_gloves || %1 = studded , #spc , gloves || %1 = xkh
+	gosub _sub studded_gloves xkh 1 scissors studded_armor 8 1 1 tailoring 829 1 leather 8
+if %1 = studded_sleeves || %1 = studded , #spc , sleeves || %1 = ykh_GLH
+	gosub _sub studded_sleeves ykh_GLH 4 scissors studded_armor 8 2 1 tailoring 871 1 leather 10
+if %1 = studded_leggings || %1 = studded , #spc , leggings || %1 = mlh
+	gosub _sub studded_leggings mlh 5 scissors studded_armor 8 3 1 tailoring 912 1 leather 12
+if %1 = studded_tunic || %1 = studded , #spc , tunic || %1 = llh
+	gosub _sub studded_tunic llh 8 scissors studded_armor 8 4 1 tailoring 940 1 leather 14
+if %1 = studded_mempo || %1 = studded , #spc , mempo || %1 = pcp
+	gosub _sub studded_mempo pcp 2 scissors studded_armor 8 5 1 tailoring 800 1 leather 8
+if %1 = studded_do || %1 = studded , #spc , do || %1 = mwo
+	gosub _sub studded_do mwo 8 scissors studded_armor 8 6 1 tailoring 950 1 leather 14
+if %1 = studded_hiro_sode || %1 = studded , #spc , hiro , #spc , sode
+	gosub _sub studded_hiro_sode nwo 1 scissors studded_armor 8 7 1 tailoring 850 1 leather 8
+if %1 = studded_suneate || %1 = studded , #spc , suneate || %1 = tbp
+	gosub _sub studded_suneate tbp 5 scissors studded_armor 8 8 1 tailoring 920 1 leather 14
+if %1 = studded_haidate || %1 = studded , #spc , haidate || %1 = fcp
+	gosub _sub studded_haidate fcp 5 scissors studded_armor 8 9 1 tailoring 920 1 leather 14
+if %1 = leather_shorts || %1 = leather , #spc , shorts || %1 = qsk
+	gosub _sub leather_shorts qsk 3 scissors female_armor 9 0 1 tailoring 622 1 leather 8
+if %1 = leather_skirt || %1 = leather , #spc , skirt || %1 = ysk
+	gosub _sub leather_skirt ysk 1 scissors female_armor 9 1 1 tailoring 580 1 leather 6
+if %1 = leather_bustier || %1 = leather , #spc , bustier || %1 = atk
+	gosub _sub leather_bustier atk 1 scissors female_armor 9 2 1 tailoring 580 1 leather 6
+if %1 = studded_bustier || %1 = studded , #spc , bustier || %1 = usk
+	gosub _sub studded_bustier usk 1 scissors female_armor 9 3 1 tailoring 829 1 leather 8
+if %1 = female_leather_armor || %1 = female , #spc , leather , #spc , armor
+	gosub _sub female_leather_armor osk 1 scissors female_armor 9 4 1 tailoring 622 1 leather 8
+if %1 = studded_armor || %1 = studded , #spc , armor || %1 = ssk
+	gosub _sub studded_armor ssk 6 scissors female_armor 9 5 1 tailoring 871 1 leather 10
+if %1 = bone_helmet || %1 = bone , #spc , helmet || %1 in yph_zph
+	gosub _sub bone_helmet yph_zph 3 trash bone_armor 10 0 1 tailoring 850 2 leather 4 bones 2
+if %1 = bone_gloves || %1 = bone , #spc , gloves || %1 in vph_AQH
+	gosub _sub bone_gloves vph_aqh 2 trash bone_armor 10 1 1 tailoring 890 2 leather 6 bones 2
+if %1 = bone_arms || %1 = bone , #spc , arms || %1 in bqh_qph
+	gosub _sub bone_arms bqh_qph 2 trash bone_armor 10 2 1 tailoring 920 2 leather 8 bones 4
+if %1 = bone_leggings || %1 = bone , #spc , leggings || %1 = cqh
+	gosub _sub bone_leggings cqh 3 trash bone_armor 10 3 1 tailoring 950 2 leather 10 bones 6
+if %1 = bone_armor || %1 = bone , #spc , armor || %1 = pph
+	gosub _sub bone_armor pph 6 trash bone_armor 10 4 1 tailoring 960 2 leather 12 bones 10
+if %1 = ringmail_gloves || %1 = ringmail , #spc , gloves || %1 = bmh
+	gosub _sub ringmail_gloves bmh 2 smelt ringmail 1 0 1 blacksmithy 120 1 ingots 10
+if %1 = ringmail_leggings || %1 = ringmail , #spc , leggings || %1 = imh
+	gosub _sub ringmail_leggings imh 15 smelt ringmail 1 1 1 blacksmithy 194 1 ingots 16
+if %1 = ringmail_sleeves || %1 = ringmail , #spc , sleeves || %1 = xlh
+	gosub _sub ringmail_sleeves xlh_ylh 15 smelt ringmail 1 2 1 blacksmithy 169 1 ingots 14
+if %1 = ringmail_tunic || %1 = ringmail , #spc , tunic || %1 = wlh
+	gosub _sub ringmail_tunic wlh 15 smelt ringmail 1 3 1 blacksmithy 219 1 ingots 18
+if %1 = chainmail_coif || %1 = chainmail__coif || %1 = chainmail , #spc , #spc , coif || %1 = chainmail , #spc , coif || %1 = dph
+	gosub _sub chainmail_coif dph 7 smelt chainmail 1 4 1 blacksmithy 145 1 ingots 10
+if %1 = chainmail_leggings || %1 = chainmail , #spc , leggings || %1 = aph
+	gosub _sub chainmail_leggings aph 7 smelt chainmail 1 5 1 blacksmithy 367 1 ingots 18
+if %1 = chainmail_tunic || %1 = chainmail , #spc , tunic || %1 = zoh
+	gosub _sub chainmail_tunic zoh 7 smelt chainmail 1 6 1 blacksmithy 391 1 ingots 20
+if %1 = platemail_arms || %1 = platemail , #spc , arms || %1 = msh
+	gosub _sub platemail_arms msh 5 smelt platemail 1 7 1 blacksmithy 663 1 ingots 18
+if %1 = platemail_gloves || %1 = platemail , #spc , gloves || %1 = ish
+	gosub _sub platemail_gloves ish 2 smelt platemail 1 8 1 blacksmithy 589 1 ingots 12
+if %1 = platemail_gorget || %1 = platemail , #spc , gorget || %1 = nsh
+	gosub _sub platemail_gorget nsh 2 smelt platemail 1 9 1 blacksmithy 564 1 ingots 10
+if %1 = platemail_legs || %1 = platemail , #spc , legs || %1 = lsh
+	gosub _sub platemail_legs lsh 7 smelt platemail 1 10 1 blacksmithy 688 1 ingots 20
+if %1 = platemail_(tunic) || %1 = platemail , #spc , (tunic) || %1 = platemail_tunic || %1 = platemail , #spc , tunic || %1 = hsh
+	gosub _sub platemail_(tunic) hsh 10 smelt platemail 1 11 1 blacksmithy 750 1 ingots 25
+if %1 = platemail_(female) || %1 = platemail , #spc , (female) || %1 = female_plate || %1 = female , #spc , plate || %1 = msk
+	gosub _sub platemail_(female) msk 4 smelt platemail 1 12 1 blacksmithy 441 1 ingots 20
+if %1 = dragon_barding_deed || %1 = dragon , #spc , barding , #spc , deed
+	gosub _sub dragon_barding_deed ewh 1 smelt platemail 1 13 1 blacksmithy 725 1 ingots 750
+if %1 = platemail_mempo || %1 = platemail , #spc , mempo || %1 = pwo
+	gosub _sub platemail_mempo pwo 3 smelt platemail 1 14 1 blacksmithy 800 1 ingots 18
+if %1 = platemail_do || %1 = platemail , #spc , do || %1 = lwo
+	gosub _sub platemail_do lwo 10 smelt platemail 1 15 1 blacksmithy 870 1 ingots 28
+if %1 = platemail_hiro_sode || %1 = platemail , #spc , hiro , #spc , sode
+	gosub _sub platemail_hiro_sode wbp 2 smelt platemail 1 16 1 blacksmithy 800 1 ingots 16
+if %1 = platemail_suneate || %1 = platemail , #spc , suneate || %1 = ecp
+	gosub _sub platemail_suneate ecp 7 smelt platemail 1 17 1 blacksmithy 650 1 ingots 20
+if %1 = platemail_haidate || %1 = platemail , #spc , haidate || %1 = zbp
+	gosub _sub platemail_haidate zbp 7 smelt platemail 1 18 1 blacksmithy 650 1 ingots 20
+if %1 = bascinet || %1 = ash
+	gosub _sub bascinet ash 5 smelt helmets 2 0 1 blacksmithy 83 1 ingots 15
+if %1 = close_helmet || %1 = close , #spc , helmet || %1 = esh
+	gosub _sub close_helmet esh 5 smelt helmets 2 1 1 blacksmithy 379 1 ingots 15
+if %1 = helmet || %1 = gsh
+	gosub _sub helmet gsh 5 smelt helmets 2 2 1 blacksmithy 379 1 ingots 15
+if %1 = norse_helm || %1 = norse , #spc , helm || %1 = csh
+	gosub _sub norse_helm csh 5 smelt helmets 2 3 1 blacksmithy 379 1 ingots 15
+if %1 = plate_helm || %1 = plate , #spc , helm || %1 = osh
+	gosub _sub plate_helm osh 5 smelt helmets 2 4 1 blacksmithy 626 1 ingots 15
+if %1 = chainmail_hatsuburi || %1 = chainmail , #spc , hatsuburi || %1 = ewo
+	gosub _sub chainmail_hatsuburi ewo 7 smelt helmets 2 5 1 blacksmithy 300 1 ingots 20
+if %1 = platemail_hatsuburi || %1 = platemail , #spc , hatsuburi || %1 = dwo
+	gosub _sub platemail_hatsuburi dwo 5 smelt helmets 2 6 1 blacksmithy 450 1 ingots 20
+if %1 = heavy_platemail_jingasa || %1 = heavy , #spc , platemail , #spc , jingasa
+	gosub _sub heavy_platemail_jingasa fwo 5 smelt helmets 2 7 1 blacksmithy 450 1 ingots 20
+if %1 = light_platemail_jingasa || %1 = light , #spc , platemail , #spc , jingasa
+	gosub _sub light_platemail_jingasa vbp 5 smelt helmets 2 8 1 blacksmithy 450 1 ingots 20
+if %1 = small_platemail_jingasa || %1 = small , #spc , platemail , #spc , jingasa
+	gosub _sub small_platemail_jingasa sbp 5 smelt helmets 2 9 1 blacksmithy 450 1 ingots 20
+if %1 = decorative_platemail_kabuto || %1 = decorative , #spc , platemail , #spc , kabuto
+	gosub _sub decorative_platemail_kabuto qwo 6 smelt helmets 2 10 1 blacksmithy 900 1 ingots 25
+if %1 = platemail_battle_kabuto || %1 = platemail , #spc , battle , #spc , kabuto
+	gosub _sub platemail_battle_kabuto rbp 6 smelt helmets 2 11 1 blacksmithy 900 1 ingots 25
+if %1 = standard_platemail_kabuto || %1 = standard , #spc , platemail , #spc , kabuto
+	gosub _sub standard_platemail_kabuto dcp 6 smelt helmets 2 12 1 blacksmithy 900 1 ingots 25
+if %1 = buckler || %1 = buckler , #spc || %1 = fik
+	gosub _sub buckler fik 5 smelt shields 3 0 1 blacksmithy 0 1 ingots 10
+if %1 = bronze_shield || %1 = bronze , #spc , shield || %1 = gik
+	gosub _sub bronze_shield gik 6 smelt shields 3 1 1 blacksmithy 0 1 ingots 12
+if %1 = heater_shield || %1 = heater , #spc , shield || %1 = cik
+	gosub _sub heater_shield cik 8 smelt shields 3 2 1 blacksmithy 243 1 ingots 18
+if %1 = metal_shield || %1 = metal , #spc , shield || %1 = nik
+	gosub _sub metal_shield nik 6 smelt shields 3 3 1 blacksmithy 0 1 ingots 14
+if %1 = metal_kite_shield || %1 = metal , #spc , kite , #spc , shield
+	gosub _sub metal_kite_shield aik 7 smelt shields 3 4 1 blacksmithy 46 1 ingots 16
+if %1 = tear_kite_shield || %1 = tear , #spc , kite , #spc , shield
+	gosub _sub tear_kite_shield mik_lik 5 smelt shields 3 5 1 blacksmithy 0 1 ingots 8
+if %1 = chaos_shield || %1 = chaos , #spc , shield || %1 = hlk
+	gosub _sub chaos_shield hlk 5 smelt shields 3 6 1 blacksmithy 850 1 ingots 25
+if %1 = order_shield || %1 = order , #spc , shield || %1 = clk
+	gosub _sub order_shield clk 7 smelt shields 3 7 1 blacksmithy 850 1 ingots 25
+if %1 = bone_harvester || %1 = bone , #spc , harvester || %1 = fuo
+	gosub _sub bone_harvester fuo 3 smelt bladed 4 0 1 blacksmithy 330 1 ingots 10
+if %1 = broadsword || %1 = atf
+	gosub _sub broadsword atf 6 smelt bladed 4 1 1 blacksmithy 354 1 ingots 10
+if %1 = crescent_blade || %1 = crescent , #spc , blade || %1 = npo
+	gosub _sub crescent_blade npo 1 smelt bladed 4 2 1 blacksmithy 450 1 ingots 14
+if %1 = cutlass || %1 = jph
+	gosub _sub cutlass jph 8 smelt bladed 4 3 1 blacksmithy 243 1 ingots 8
+if %1 = dagger || %1 in tsf_wsf
+	gosub _sub dagger tsf_wsf 1 smelt bladed 4 4 1 blacksmithy 0 1 ingots 3
+if %1 = katana || %1 = nmh
+	gosub _sub katana nmh 6 smelt bladed 4 5 1 blacksmithy 441 1 ingots 8
+if %1 = kryss || %1 = vrh
+	gosub _sub kryss vrh 2 smelt bladed 4 6 1 blacksmithy 367 1 ingots 8
+if %1 = longsword || %1 = jtf
+	gosub _sub longsword jtf 7 smelt bladed 4 7 1 blacksmithy 280 1 ingots 12
+if %1 = scimitar || %1 = soh
+	gosub _sub scimitar soh 5 smelt bladed 4 8 1 blacksmithy 317 1 ingots 10
+if %1 = viking_sword || %1 = viking , #spc , sword || %1 = bph
+	gosub _sub viking_sword bph 6 smelt bladed 4 9 1 blacksmithy 243 1 ingots 14
+if %1 = no-dachi || %1 = edp
+	gosub _sub no-dachi edp 10 smelt bladed 4 10 1 blacksmithy 750 1 ingots 18
+if %1 = wakizashi || %1 = ycp
+	gosub _sub wakizashi ycp 5 smelt bladed 4 11 1 blacksmithy 500 1 ingots 8
+if %1 = lajatang || %1 = zcp
+	gosub _sub lajatang zcp 12 smelt bladed 4 12 1 blacksmithy 800 1 ingots 25
+if %1 = daisho || %1 = jdp
+	gosub _sub daisho jdp 8 smelt bladed 4 13 1 blacksmithy 600 1 ingots 15
+if %1 = tekagi || %1 = ldp
+	gosub _sub tekagi ldp 5 smelt bladed 4 14 1 blacksmithy 550 1 ingots 12
+if %1 = shuriken || %1 = gdp
+	gosub _sub shuriken gdp 1 smelt bladed 4 15 1 blacksmithy 450 1 ingots 5
+if %1 = kama || %1 = fdp
+	gosub _sub kama fdp 7 smelt bladed 4 16 1 blacksmithy 400 1 ingots 14
+if %1 = sai || %1 = hdp
+	gosub _sub sai hdp 7 smelt bladed 4 17 1 blacksmithy 500 1 ingots 12
+if %1 = axe || %1 = lsf
+	gosub _sub axe lsf 4 smelt axes 5 0 1 blacksmithy 342 1 ingots 14
+if %1 = battle_axe || %1 = battle , #spc , axe || %1 = bsf
+	gosub _sub battle_axe bsf 4 smelt axes 5 1 1 blacksmithy 305 1 ingots 14
+if %1 = double_axe || %1 = double , #spc , axe || %1 = nsf
+	gosub _sub double_axe nsf 8 smelt axes 5 2 1 blacksmithy 293 1 ingots 12
+if %1 = executioner's_axe || %1 = executioner's , #spc , axe || %1 = zrf
+	gosub _sub executioner's_axe zrf 8 smelt axes 5 3 1 blacksmithy 342 1 ingots 14
+if %1 = large_battle_axe || %1 = large , #spc , battle , #spc , axe
+	gosub _sub large_battle_axe rmh 6 smelt axes 5 4 1 blacksmithy 280 1 ingots 12
+if %1 = two_handed_axe || %1 = two , #spc , handed , #spc , axe
+	gosub _sub two_handed_axe lph 8 smelt axes 5 5 1 blacksmithy 330 1 ingots 16
+if %1 = war_axe || %1 = war , #spc , axe || %1 = uoh
+	gosub _sub war_axe uoh 8 smelt axes 5 6 1 blacksmithy 391 1 ingots 16
+if %1 = bardiche || %1 = hsf
+	gosub _sub bardiche hsf 7 smelt polearms 6 0 1 blacksmithy 317 1 ingots 18
+if %1 = bladed_staff || %1 = bladed , #spc , staff || %1 = zto
+	gosub _sub bladed_staff zto 4 smelt polearms 6 1 1 blacksmithy 400 1 ingots 12
+if %1 = double_bladed_staff || %1 = double , #spc , bladed , #spc , staff
+	gosub _sub double_bladed_staff buo 2 smelt polearms 6 2 1 blacksmithy 450 1 ingots 16
+if %1 = halberd || %1 in yth_xth
+	gosub _sub halberd yth_xth 16 smelt polearms 6 3 1 blacksmithy 391 1 ingots 20
+if %1 = lance || %1 = opo
+	gosub _sub lance opo 12 smelt polearms 6 4 1 blacksmithy 480 1 ingots 20
+if %1 = pike || %1 = cuo
+	gosub _sub pike cuo 8 smelt polearms 6 5 1 blacksmithy 470 1 ingots 12
+if %1 = short_spear || %1 = short , #spc , spear || %1 = xrh
+	gosub _sub short_spear xrh 4 smelt polearms 6 6 1 blacksmithy 453 1 ingots 6
+if %1 = scythe || %1 = guo
+	gosub _sub scythe guo 5 smelt polearms 6 7 1 blacksmithy 390 1 ingots 14
+if %1 = spear || %1 = mtf
+	gosub _sub spear mtf 7 smelt polearms 6 8 1 blacksmithy 490 1 ingots 12
+if %1 = war_fork || %1 = war , #spc , fork || %1 = rrh
+	gosub _sub war_fork rrh 9 smelt polearms 6 9 1 blacksmithy 429 1 ingots 12
+if %1 = hammer_pick || %1 = hammer , #spc , pick || %1 = vth
+	gosub _sub hammer_pick vth 9 smelt bashing 7 0 1 blacksmithy 342 1 ingots 16
+if %1 = mace || %1 = ysf
+	gosub _sub mace ysf 14 smelt bashing 7 1 1 blacksmithy 145 1 ingots 6
+if %1 = maul || %1 = buh
+	gosub _sub maul buh 10 smelt bashing 7 2 1 blacksmithy 194 1 ingots 10
+if %1 = scepter || %1 = auo
+	gosub _sub scepter auo 8 smelt bashing 7 3 1 blacksmithy 214 1 ingots 10
+if %1 = war_mace || %1 = war , #spc , mace || %1 = trh
+	gosub _sub war_mace trh 17 smelt bashing 7 4 1 blacksmithy 280 1 ingots 14
+if %1 = war_hammer || %1 = war , #spc , hammer || %1 = zth
+	gosub _sub war_hammer zth 10 smelt bashing 7 5 1 blacksmithy 342 1 ingots 16
+if %1 = tessen || %1 = ddp
+	gosub _sub tessen ddp 1 smelt bashing 7 6 2 blacksmithy 850 tailoring 500 2 ingots 16 cloth 10
+if %1 = dragon_gloves || %1 = dragon , #spc , gloves || %1 = rko
+	gosub _sub dragon_gloves rko 2 trash dragon_scale_armor 9 0 1 blacksmithy 689 1 dragon_scales 16
+if %1 = dragon_helm || %1 = dragon , #spc , helm || %1 = lko
+	gosub _sub dragon_helm lko 5 trash dragon_scale_armor 9 1 1 blacksmithy 726 1 dragon_scales 20
+if %1 = dragon_leggings || %1 = dragon , #spc , leggings || %1 = nko
+	gosub _sub dragon_leggings nko 6 trash dragon_scale_armor 9 2 1 blacksmithy 788 1 dragon_scales 28
+if %1 = dragon_sleeves || %1 = dragon , #spc , sleeves || %1 = dlo
+	gosub _sub dragon_sleeves dlo 5 trash dragon_scale_armor 9 3 1 blacksmithy 763 1 dragon_scales 24
+if %1 = dragon_breastplate || %1 = dragon , #spc , breastplate || %1 = pko
+	gosub _sub dragon_breastplate pko 10 trash dragon_scale_armor 9 4 1 blacksmithy 850 1 dragon_scales 36
+if %1 = jointing_plane || %1 = jointing , #spc , plane || %1 = igg
+	gosub _sub jointing_plane igg 2 trash wooden_items 2 1 1 tinkering 0 1 boards 4
+if %1 = moulding_planes || %1 = moulding , #spc , planes || %1 = wfg
+	gosub _sub moulding_planes wfg 2 trash wooden_items 2 2 1 tinkering 0 1 boards 4
+if %1 = smoothing_plane || %1 = smoothing , #spc , plane || %1 = kgg
+	gosub _sub smoothing_plane kgg 1 trash wooden_items 2 3 1 tinkering 0 1 boards 4
+if %1 = clock_frame || %1 = clock , #spc , frame || %1 = dcg
+	gosub _sub clock_frame dcg 2 trash wooden_items 2 4 1 tinkering 0 1 boards 6
+if %1 = axle || %1 = zcg
+	gosub _sub axle zcg 1 trash wooden_items 2 5 1 tinkering 0 1 boards 1
+if %1 = rolling_pin || %1 = rolling , #spc , pin || %1 = bcg
+	gosub _sub rolling_pin bcg 1 trash wooden_items 2 6 1 tinkering 0 1 boards 5
+if %1 = nunchaku || %1 = idp
+	gosub _sub nunchaku idp 5 trash wooden_items 2 0 1 tinkering 700 2 ingots 3 boards 8
+if %1 = scissors || %1 = kag
+	gosub _sub scissors kag 1 trash tools 3 0 1 tinkering 50 1 ingots 2
+if %1 = mortar_and_pestle || %1 = mortar , #spc , and , #spc , pestle
+	gosub _sub mortar_and_pestle rqf 1 trash tools 3 1 1 tinkering 200 1 ingots 3
+if %1 = scorp || %1 = big
+	gosub _sub scorp big 1 trash tools 3 2 1 tinkering 300 1 ingots 2
+if %1 = tinker's_tools || %1 = tinker's , #spc , tools || %1 = jtl
+	gosub _sub tinker's_tools jtl 1 trash tools 3 3 1 tinkering 100 1 ingots 2
+if %1 = hatchet || %1 = fsf
+	gosub _sub hatchet fsf 4 trash tools 3 4 1 tinkering 300 1 ingots 4
+if %1 = draw_knife || %1 = draw , #spc , knife || %1 = aig
+	gosub _sub draw_knife aig 1 trash tools 3 5 1 tinkering 300 1 ingots 2
+if %1 = sewing_kit || %1 = sewing , #spc , kit || %1 = hag
+	gosub _sub sewing_kit hag 2 trash tools 3 6 1 tinkering 100 1 ingots 2
+if %1 = saw || %1 = egg
+	gosub _sub saw egg 2 trash tools 3 7 1 tinkering 300 1 ingots 4
+if %1 = dovetail_saw || %1 = dovetail , #spc , saw || %1 = agg
+	gosub _sub dovetail_saw agg 2 trash tools 3 8 1 tinkering 300 1 ingots 4
+if %1 = froe || %1 = zhg
+	gosub _sub froe zhg 1 trash tools 3 9 1 tinkering 300 1 ingots 2
+if %1 = shovel || %1 = wwf
+	gosub _sub shovel wwf 5 trash tools 3 10 1 tinkering 400 1 ingots 4
+if %1 = hammer || %1 = cgg
+	gosub _sub hammer cgg 2 trash tools 3 11 1 tinkering 300 1 ingots 1
+if %1 = tongs || %1 = obg
+	gosub _sub tongs obg 2 trash tools 3 12 1 tinkering 350 1 ingots 1
+if %1 = smith's_hammer || %1 = smith's , #spc , hammer || %1 = tlh
+	gosub _sub smith's_hammer tlh 8 trash tools 3 13 1 tinkering 400 1 ingots 4
+if %1 = sledge_hammer || %1 = sledge , #spc , hammer || %1 = fbg
+	gosub _sub sledge_hammer fbg 10 trash tools 3 14 1 tinkering 400 1 ingots 4
+if %1 = inshave || %1 = cig
+	gosub _sub inshave cig 1 trash tools 3 15 1 tinkering 300 1 ingots 2
+if %1 = pickaxe || %1 = qpf
+	gosub _sub pickaxe qpf n/a trash tools 3 16 1 tinkering 400 1 ingots 4
+if %1 = lockpick || %1 = nwh
+	gosub _sub lockpick nwh 1 trash tools 3 17 1 tinkering 450 1 ingots 1
+if %1 = skillet || %1 = dnd
+	gosub _sub skillet dnd 1 trash tools 3 18 1 tinkering 300 1 ingots 4
+if %1 = flour_sifter || %1 = flour , #spc , sifter || %1 = ogg
+	gosub _sub flour_sifter ogg 1 trash tools 3 19 1 tinkering 500 1 ingots 3
+if %1 = fletcher's_tools || %1 = fletcher's , #spc , tools || %1 = ufg
+	gosub _sub fletcher's_tools ufg 2 trash tools 3 20 1 tinkering 350 1 ingots 3
+if %1 = mapmaker's_pen || %1 = mapmaker's , #spc , pen || %1 = cxf
+	gosub _sub mapmaker's_pen cxf 1 trash tools 3 21 1 tinkering 250 1 ingots 1
+if %1 = scribe's_pen || %1 = scribe's , #spc , pen || %1 = pbg
+	gosub _sub scribe's_pen pbg 1 trash tools 3 22 1 tinkering 250 1 ingots 1
+if %1 = gears || %1 = rcg
+	gosub _sub gears rcg 1 trash parts 4 0 1 tinkering 50 1 ingots 2
+if %1 = clock_parts || %1 = clock , #spc , parts || %1 = fcg
+	gosub _sub clock_parts fcg 1 trash parts 4 1 1 tinkering 250 1 ingots 1
+if %1 = barrel_tap || %1 = barrel , #spc , tap || %1 = ieg
+	gosub _sub barrel_tap ieg 1 trash parts 4 2 1 tinkering 350 1 ingots 2
+if %1 = springs || %1 = tcg
+	gosub _sub springs tcg 1 trash parts 4 3 1 tinkering 50 1 ingots 2
+if %1 = sextant_parts || %1 = sextant , #spc , parts || %1 = xcg
+	gosub _sub sextant_parts xcg 2 trash parts 4 4 1 tinkering 300 1 ingots 4
+if %1 = barrel_hoops || %1 = barrel , #spc , hoops || %1 = dig
+	gosub _sub barrel_hoops dig 5 trash parts 4 5 1 tinkering 0 1 ingots 5
+if %1 = hinge || %1 = lcg
+	gosub _sub hinge lcg 1 trash parts 4 6 1 tinkering 50 1 ingots 2
+if %1 = bola_balls || %1 = bola , #spc , balls || %1 = fkf
+	gosub _sub bola_balls fkf 1 trash parts 4 7 1 tinkering 450 1 ingots 10
+if %1 = butcher_knife || %1 = butcher , #spc , knife || %1 = gmh
+	gosub _sub butcher_knife gmh 1 trash utensils 5 0 1 tinkering 250 1 ingots 2
+if %1 = spoon_(left) || %1 = spoon , #spc , (left) || %1 = dsd
+	gosub _sub spoon_(left) dsd 1 trash utensils 5 1 1 tinkering 0 1 ingots 1
+if %1 = spoon_(right) || %1 = spoon , #spc , (right) || %1 = esd
+	gosub _sub spoon_(right) esd 1 trash utensils 5 2 1 tinkering 0 1 ingots 1
+if %1 = plate || %1 = nqd
+	gosub _sub plate nqd 1 trash utensils 5 3 1 tinkering 0 1 ingots 2
+if %1 = fork_(left) || %1 = fork , #spc , (left) || %1 = rrd
+	gosub _sub fork_(left) rrd 1 trash utensils 5 4 1 tinkering 0 1 ingots 1
+if %1 = fork_(right) || %1 = fork , #spc , (right) || %1 = srd
+	gosub _sub fork_(right) srd 1 trash utensils 5 5 1 tinkering 0 1 ingots 1
+if %1 = cleaver || %1 = inf
+	gosub _sub cleaver inf 2 trash utensils 5 6 1 tinkering 200 1 ingots 3
+if %1 = knife_(left) || %1 = knife , #spc , (left) || %1 = trd
+	gosub _sub knife_(left) trd 1 trash utensils 5 7 1 tinkering 0 1 ingots 1
+if %1 = knife_(right) || %1 = knife , #spc , (right) || %1 = urd
+	gosub _sub knife_(right) urd 1 trash utensils 5 8 1 tinkering 0 1 ingots 1
+if %1 = goblet || %1 = mtd
+	gosub _sub goblet mtd 1 trash utensils 5 9 1 tinkering 100 1 ingots 2
+if %1 = pewter_mug || %1 = pewter , #spc , mug || %1 = leg
+	gosub _sub pewter_mug leg 1 trash utensils 5 10 1 tinkering 100 1 ingots 2
+if %1 = skinning_knife || %1 = skinning , #spc , knife || %1 = bnf
+	gosub _sub skinning_knife bnf 1 trash utensils 5 11 1 tinkering 250 1 ingots 2
+if %1 = key_ring || %1 = key , #spc , ring || %1 = bfg
+	gosub _sub key_ring bfg 1 trash miscellaneous 6 0 1 tinkering 100 1 ingots 2
+if %1 = candelabra || %1 = nyd
+	gosub _sub candelabra nyd 3 trash miscellaneous 6 1 1 tinkering 550 1 ingots 4
+if %1 = scales || %1 = jdj
+	gosub _sub scales jdj 4 trash miscellaneous 6 2 1 tinkering 600 1 ingots 4
+if %1 = iron_key || %1 = iron , #spc , key || %1 = cfg
+	gosub _sub iron_key cfg 1 trash miscellaneous 6 3 1 tinkering 200 1 ingots 3
+if %1 = globe || %1 = xbg
+	gosub _sub globe xbg 3 trash miscellaneous 6 4 1 tinkering 550 1 ingots 4
+if %1 = spyglass || %1 = zvh
+	gosub _sub spyglass zvh 3 trash miscellaneous 6 5 1 tinkering 600 1 ingots 4
+if %1 = lantern || %1 = lyd
+	gosub _sub lantern lyd 2 trash miscellaneous 6 6 1 tinkering 300 1 ingots 4
+if %1 = heating_stand || %1 = heating , #spc , stand || %1 = bdj
+	gosub _sub heating_stand bdj 1 trash miscellaneous 6 7 1 tinkering 600 1 ingots 4
+if %1 = shoji_lantern || %1 = shoji , #spc , lantern || %1 = iao
+	gosub _sub shoji_lantern iao 1 trash miscellaneous 6 8 1 tinkering 650 2 ingots 10 boards 5
+if %1 = paper_lantern || %1 = paper , #spc , lantern || %1 = kao
+	gosub _sub paper_lantern kao 1 trash miscellaneous 6 9 1 tinkering 650 2 ingots 10 boards 5
+if %1 = round_paper_lantern || %1 = round , #spc , paper , #spc , lantern
+	gosub _sub round_paper_lantern gwn 1 trash miscellaneous 6 10 1 tinkering 650 2 ingots 10 boards 5
+if %1 = wind_chimes || %1 = wind , #spc , chimes || %1 = sip
+	gosub _sub wind_chimes sip 3 trash miscellaneous 6 11 1 tinkering 800 1 ingots 15
+if %1 = fancy_wind_chimes || %1 = fancy , #spc , wind , #spc , chimes
+	gosub _sub fancy_wind_chimes rip 3 trash miscellaneous 6 12 1 tinkering 800 1 ingots 15
+if !cgiItemName = n/a
+	{
+	display ok script halting$craftInfo: item %1 not found
+	halt
+	}
+exit
+sub _sub
+set !cgiItemName %1
+set !cgiItemType %2
+set !cgiItemWeight %3
+set !cgiItemDisposal %4
+set !cgiCategoryName %5
+set !cgiCategory %6
+set !cgiSelection %7
+set %1 8
+
+set !cgiSkillCount % . %1
+set %1 %1 + 1
+set %2 1
+for %3 1 !cgiSkillCount
+	{
+	set !cgiSkillName . %2 % . %1
+	set %1 %1 + 1
+	set !cgiSkillValue . %2 % . %1
+	set %1 %1 + 1
+	set %2 %2 + 1
+	}
+
+set !cgiMaterialCount % . %1
+set %1 %1 + 1
+set %2 1
+for %3 1 !cgiMaterialCount
+	{
+	set !cgiMaterialName . %2 % . %1
+	set %1 %1 + 1
+	set !cgiMaterialValue . %2 % . %1
+	set %1 %1 + 1
+	set %2 %2 + 1
+	}
+return

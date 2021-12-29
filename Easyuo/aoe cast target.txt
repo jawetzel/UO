@@ -1,0 +1,35 @@
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs <> 1
+set #lobjectid #ltargetid
+event macro 17
+wait 10
+set %mon #lobjecttype
+
+main:
+if #mana > 30
+ {
+ event macro 16
+ target 4s
+ repeat
+  {
+  finditem %mon G_10
+  if #findkind > -1
+   {
+   set #ltargetid #findid
+   set #ltargetkind 1
+   event macro 22
+   wait 10
+   }
+  }
+ until #findkind > -1
+ }
+else
+ {
+ event macro 15 56
+ wait 50
+ }
+
+goto main

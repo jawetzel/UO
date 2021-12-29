@@ -1,0 +1,3977 @@
+;-----------------------------------------------------------
+; Script Name: CEOTurboTinker
+; Author: CEO
+; Version: 2.2b
+; Client Tested with: 7.0.0.4
+; EUO version tested with: 1.5_154
+; Shard OSI / FS: OSI 
+; Revision Date: 100309
+; Public Release: 032804 
+; Purpose: Trains Tinkering to 100. 
+;-------------------------------------------------------------
+; This script is copyright by CEO under the CEO Public License (CPL) at: http://www.easyuo.com/forum/viewtopic.php?p=3585
+;
+' Instructions:
+;
+; 1. Start CEOTurboTinker
+; 3. Identify Secure (or it'll use your bankbox automatically)
+; 4. Identify Resource container. The resource container MUST be inside your Secure or bankbox.
+;		Make sure to have all necessary ingots/tools in your resource container.
+;		NOTE: ANY opened bag with resources will be used, the resource
+;				container is also used to drop left over tinkering stuff.
+; 		The script automatically learns your bank/secure/resources setup using
+;		the CEO*filesystem. To reset these, start the script away from your resource
+;		container and away from the bank. 
+; Note: Your paperdoll MUST be visible and the backpack in the paperdoll VISIBLE with
+;		nothing blocking it's view as the script drops direct to the backpack.
+;		The resource container in your secure or bank box must also be visible with nothing
+;		blocking it. It can be just about any valid container type.
+;		
+initevents
+set %version 2.2b
+set #lpc 200
+set %scriptname CEOTurboTinker
+set %scriptstart #scnt
+set %scriptstart2 %scriptstart
+set %gaintime %scriptstart
+set %versioncheck #true
+;=============================================
+; User configuration section
+
+; Most of these defaults should be fine. Please understand 
+; what you're doing before changing. The interactive setup will also override anything
+; you set here.
+;=============================================
+; Set to #true to leave EUO window opened.
+set %debug #false
+if ! %debug
+	gosub Initializing
+; Set to #true to enable system messages to the journal during setup
+; This is mostly for people that are having StayOnTop problems.
+set %sysmessages #false
+; Will autoset to #true if hiding is over 35. Otherwise set to #true
+; to force trying, or #false to never try. Set to #true if you're in a house. It'll always work.
+set %hideme #true
+; Minimum skill required to try hiding. Set lower if you want to attempt even if you
+; may fail. In tenths, defaults to 35.0.
+set %hideskillreq 350
+; Default x/y cords for the EasyUO menu window
+set %menu_windowx N/A
+set %menu_windowy N/A
+; Default x/y cords for bank box or secure screen position.
+set %bank_securex 460
+set %bank_securey 390
+; Default x/y cords for resource bag on screen position.
+set %resource_bagx 630
+set %resource_bagy 390
+; Set these to your x/y cords for the house's trash barrel or bank trash chest when opened.
+set %trash_barrelx 0
+set %trash_barrely 0
+; These are the types for the bank dumpsters. There may be more so I've included
+; them in this section.
+set %bankgarbage IKF_BUD_JIF_HIF_IIF_KIF
+; Set this to the word in your bank's trashcan. 
+; "trash" is the common one. But if it's a freeshard and something else you'll need to change
+set %trashcantext trash
+; Minimum skill required before attempting to tinker
+; In tenths, defaults to 30.0 ... Kind of meanless in this script so set a skill min.
+set %tinkerskillreq 249
+; Maximum number of tinker tools to tinker at one time - Based on Weight. Min of 3. Force to your own number if you want.
+set %maxskilltools #maxweight / 60
+;set %maxskilltools 5
+; Set to #true if you're slow and/or having timing issues. If persistant timing
+; problems see the wait vars further down and change to higher numbers.
+set %slowconnection #false
+; Leave this at N/A for a more intelligent bank checking method and less chance of saying
+; "BANK BANK" at your house. If it fails to detect a bank you use, set to #true.
+set %bankfound N/A
+; If you're on a freeshard with different menu configurations the below variables are for the
+; click points for Make Last RELATIVE to the Tinker gump's position of 50/50. 
+; You may need to adjust to your shard's menu configuration.
+; NOTE: This script was written for OSI and latest client. The Make Item feature and these
+; variables may allow you to use it, but no promises!
+set %makelast_clickx 285
+set %makelast_clicky 410
+; set this to a maximum skillcap if you want to stop at a certain point. 
+; Leave at N/A to use your real cap. In tenths, IE, GM=1000, 99.5=995, etc...
+set %maxskillcap N/A
+; Close EasyUO when the menu window is closed.
+set %exitonclose #true
+; For RunUO and WorldSave avoidance
+set %_worldsavejournalindex #jindex
+; The shard type, if shardType fails for this set %eashard to either #true or #false
+gosub shardType
+set %eaShard #result
+if %eaShard
+{
+  set %tinkertoolsel 4
+  set %makelast_clicky 450
+  set %exitbutton 20
+}
+else
+{
+  set %tinkertoolsel 3
+  set %exitbutton 18
+}
+;=============================================
+; NOTHING BELOW THIS LINE SHOULD NEED CHANGING.
+; DO SO AT YOUR OWN RISK!
+;=============================================
+set %gvar %scriptname
+gosub getGlobalVar %gvar %scriptname #charid menu_windowx NOLOCK
+gosub getGlobalVar %gvar %scriptname #charid menu_windowy NOLOCK
+gosub getGlobalVar %gvar %scriptname #charid bank_securex NOLOCK
+gosub getGlobalVar %gvar %scriptname #charid bank_securey NOLOCK
+gosub getGlobalVar %gvar %scriptname #charid resource_bagx NOLOCK
+gosub getGlobalVar %gvar %scriptname #charid resource_bagy NOLOCK
+gosub getGlobalVar %gvar %scriptname #charid hideme NOLOCK
+;=============================================
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+if %eashard
+{
+set %train1 CEO1
+set %totalTrainingMethods 1
+}
+else
+{
+set %train1 RunUO1
+set %train2 RunUO2
+set %totalTrainingMethods 2
+}
+set %ud1 %totalTrainingMethods + 1
+set %ud2 %totalTrainingMethods + 2
+set %train . %ud1 tinker1.txt
+set %train . %ud2 tinker2.txt
+gosub getGlobalVar %gvar %scriptname #charid train_method NOLOCK
+if ! #result
+{
+	set %train_method 1
+	gosub putGlobalVar %gvar %scriptname #charid train_method
+}
+
+set %gumpx 50
+set %gumpy 50
+if %slowconnection
+{
+	set %gumpwait 10
+	set %shortwait 10
+	set %wait1 20
+	set %wait2 30
+	set %longwait 70
+}
+else
+{
+	set %gumpwait 5
+	set %shortwait 5
+	set %wait1 10
+	set %wait2 15
+	set %longwait 40
+}
+;==================== Do some validating before we start
+gosub CheckEUOVersion 1 41 102 euomajor euominor euobuild
+if ! #result
+{
+	menu hideeuo
+	str del %euobuild 1 1
+	display ok Your Environment:$$EasyUO Version: %euomajor , #dot , %euominor , #spc , ( , build , #spc , #strres , )$
++Client: #CLIVER $$
++This script requires EasyUO version 1.41 (build 0066) or higher.$$
++Sorry you can not use %scriptname , #dot , #spc Halting.
+	if %debug
+	{
+		display ok #euover #cliver #opts
+	}
+	menu hide
+	halt
+}
+if ( %euobuild = x006d || %euobuild = x006e || %euobuild = x006f || %euobuild = x0070 )
+{
+	menu hideeuo
+	display ok Your Environment:$$EasyUO Version: %euomajor , #dot , %euominor , #spc , ( , build , #spc , #strres , )$
++Client: #CLIVER $$
++You are using a buggy build, please get the$
++latest EasyUO from the EasyUO Website.$$Halting.
+	menu hide
+	halt
+
+}
+if %sysmessages && sys notin #opts
+{
+	set %sysmessages #false
+	display ok Unable to use Event Sysmessages. You have the$flag enabled in the script, but EasyUO must also$
++be configured. See :$$Options->Configuration->Enable Event Sysmessages$$ in the EasyUO menu bar to turn it on.$$Script Halted.
+	menu hide
+	halt
+}
+if G in #charstatus
+{
+	event macro 6 0
+	wait %wait1
+}
+;======================================================
+set %atbank #false
+set %talkietalkie #true
+set %euoTopic 5702
+set %bagtypes CKF_LKF_ZJF_JIF_HIF_KIF_IIF_CUD_HKF_VMF_BUD_WMF_TMF_UMF_KKF_ZTD_
++ABG_CTD_AUD_SPF_JKF_OKF_OVH
+set %badcontainers CVD_OVD_EVD_QVD_BKF
+set %chesttypes JIF_HIF_IIF_KIF
+set %chest_findmod 32_19
+set %trashbarreltype BKF
+set %trashcanid N/A
+set %tinkertools GTL_KTL_JTL
+set %makelasttinker #false
+set %ironingots ENK
+set %ironselected #false
+set %moongates JEF_OTF
+set %bodbooks DYM
+set %SkillToolTypes %tinkertools
+set %cleanup #false
+set %NoEventProperty #false
+gosub CheckEventProperty
+if ! #result
+{
+	set %bankfound #true
+	set %bankgarbage %bankgarbage , _ , %trashbarreltype
+	set %NoEventProperty #true
+}
+; Zero Stats
+;recall saved stats
+set %skilltoolsused 0
+gosub getGlobalVar %gvar %scriptname #charid skilltoolsused NOLOCK
+if ! #result
+{
+	set %skilltoolsused 0
+	gosub putGlobalVar %gvar %scriptname #charid skilltoolsused
+}
+gosub getGlobalVar %gvar %scriptname #charid _totaletime
+if ! #result
+{
+	set %_totaletime 0
+	gosub putGlobalVar %gvar %scriptname #charid _totaletime
+}
+;
+set %startetime %_totaletime
+if %maxskilltools > 10
+	set %maxskilltools 10
+if %maxskilltools < 3
+	set %maxskilltools 3
+gosub SetUpSkills
+gosub setupStats
+;gosub skillchart
+linespercycle 40
+SetupMain:
+;set %menu_windowx N/A
+set %adjusttimer 0
+if %menu_windowx = N/A
+{
+	set %menu_windowx 535
+	gosub putGlobalVar %gvar %scriptname #charid menu_windowx
+	gosub InitialSetup
+	if ! #result
+	{
+		menu hideeuo
+		Display OK You must run setup now that you've started!$$Script Halted.$
+		menu hide
+		halt
+	}
+	set %firstmenu #true
+	gosub initmenu
+	goto SetupCont1
+}
+set %firstmenu #true
+gosub initmenu
+gosub gmcheck
+menu font bgcolor $4488ff
+menu font color black
+menu button InitialSetupMain 210 17 40 20 Setup
+menu font bgcolor black
+menu font color lime
+menu font size 7
+set %timer #scnt + 5
+Setuptimer:
+wait 5
+set %timeout %timer - #scnt
+menu delete status
+menu text status 50 5 Press SETUP now to reconfigure. ( , %timeout , #spc , seconds)
+if ( #menubutton = initialsetupMain || #menubutton = initialsetup )
+{
+	set %menu_windowx n/a
+	set #menubutton n/a
+	menu font size 9
+	goto SetupMain
+}
+if #scnt < %timer
+	goto Setuptimer
+menu delete InitialSetupMain
+menu font size 9
+gosub AutoSetup
+gosub gmcheck
+SetupCont1:
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45
+gosub CheckForResources
+set %last_ingotcount %ingotcount
+gosub CountTinkerKits #true
+gosub RemoveNonEssentials
+gosub cleanOutPack
+gosub calcmaxweight
+set %last_productcount 0
+gosub GetMaxtoKeep
+set %firstattempt #true
+set %retrycount 11
+;halt
+MainLoop:
+gosub statusbarup
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45
+wait 1
+if G in #charstatus
+	set #menubutton pause
+if #menubutton <> N/A
+	gosub #menubutton
+gosub DisplayElapsedTime
+gosub HideMe
+finditem %SkillToolID C_ , %backpackID
+if #findkind = -1 || %retrycount > 10
+{
+	gosub CheckForResources
+	gosub FindSkillTool
+	gosub UseSkillTool
+	wait %gumpwait
+	set %retrycount 0
+	if ! %ironselected
+		gosub selectIron
+}
+if #contname <> generic_gump
+{
+	set %retrycount %retrycount + 1
+	wait %gumpwait
+	menu delete status
+	menu text status 50 5 Waiting for tinkering gump ( , %retrycount , ) , #dot
+	goto MainLoop
+}
+if  %firstattempt
+{
+	menu delete status
+	menu text status 50 5 Making first item.
+	str len %desc . %currentitem
+	if #strres > 16
+		menu font size 8
+	menu delete making
+	menu text making 107 35 %desc . %currentitem
+	menu font size 9
+	wait %gumpwait
+	if %nextpage . %currentitem = 1
+	{
+		gosub MakeFirstItem %category . %currentitem 98
+		if ! #result
+			goto MainLoop
+		wait %wait1
+		gosub MakeFirstItem 99 %selection . %currentitem
+		if ! #result
+			goto MainLoop
+		goto MainLoop1
+	}
+	gosub MakeFirstItem %category . %currentitem %selection . %currentitem
+	if ! #result
+		goto MainLoop
+MainLoop1:
+	set %firstattempt #false
+	wait %wait2
+	goto MainLoop2
+}
+menu delete status
+menu text status 50 5 Make last.
+set %gumpx #contposx
+set %gumpy #contposy
+set %clickx %gumpx + %makelast_clickx
+set %clicky %gumpy + %makelast_clicky
+click %clickx %clicky f
+MainLoop2:
+set %retrycount 0
+wait %gumpwait
+gosub CheckForResources
+if ! #result
+	goto MainLoop
+set %ingots_used 0
+if %last_ingotcount <> %ingotcount
+{
+	set %ingots_used %last_ingotcount - %ingotcount
+	if %ingots_used < 0 || ( %debug && %ingots_used > 10 )
+		set %ingots_used 0
+	set %last_ingotcount %ingotcount
+	set %stat_thisgain1 %stat_thisgain1 + %ingots_used
+	set %stat_totals1 %stat_totals1 + %ingots_used
+	gosub putGlobalVar %gvar %scriptname #charid stat_totals1
+	if %ingots_used = %needed . %currentitem
+	{
+		gosub countresource %product . %currentitem %discardTrashBarrel . %currentitem
+		if %last_productcount <> #result
+		{
+			set %dif #result - %last_productcount
+			if %dif <= 0 || %dif > 10
+				set %dif 1
+			set %last_productcount #result
+			set %statindex %statindex . %currentitem
+			set %stat_thisgain . %statindex %stat_thisgain . %statindex + %dif
+			set %stat_totals . %statindex %stat_totals . %statindex + %dif
+			gosub putGlobalVar %gvar %scriptname #charid stat_totals , %statindex . %currentitem
+			if #weight > 405 || ( %atbank && %discardTrashBarrel . %currentitem && ( #weight > %maxweight  ) )
+				gosub RemoveNonEssentials
+		}
+	}
+}
+if #weight > 405 || ( %atbank && %discardTrashBarrel . %currentitem && #weight > ( %maxweight - 5 ) )
+	gosub RemoveNonEssentials
+gosub CheckTinkerKits
+gosub DisplayResourceStats
+gosub CheckTimeToDump
+gosub CheckForGain
+Goto MainLoop
+halt
+
+sub CheckForResources
+menu delete status
+menu text status 50 5 Checking resources.
+set %return #true
+set %loopcheck 0
+;pause
+ingots:
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+gosub countresource %resource . %currentitem #false
+set %_result #result
+if %_result < %needed . %currentitem
+{
+	set %ingotcount  %_result
+	gosub displayIngotCount
+	set %loopcheck %loopcheck + 1
+	if %loopcheck > 5
+	{
+	display ok Hmm, there appears to be a problem getting$
++more ingots, you may be overwieght or$have too many items in your backpack.$$
++Hit OK, correct the problem and then resume script.$$Pausing.
+		gosub NeedMore ingots
+		menu delete status
+		menu text status 50 5 Getting more ingots.
+		set %return #false
+		wait %wait1
+		set %loopcheck 0
+		goto ingots
+	}
+	gosub RemoveNonEssentials
+ingots2:
+	set %amt ( %maxweight - #weight - 10 ) * 10
+	menu delete status
+	menu text status 50 5 Getting more ingots ( , %amt , ).
+	gosub GetMoreResources %resource . %currentitem %amt
+	if ! #result
+	{
+		gosub NeedMore ingots
+		menu delete status
+		menu text status 50 5 Getting more ingots.
+		set %return #false
+		wait %wait1
+		goto ingots
+	}
+	set %return #false
+	wait %wait1
+	goto ingots
+}
+set %ingotcount  %_result
+if ! %return
+	set %last_ingotcount %ingotcount
+gosub displayIngotCount
+return %return
+
+
+sub GetMoreResources
+; sub to get more resources, %1 resource, %2 amount 
+set %resourcetype %1
+set %resourceamt %2
+if %resourceamt < 1
+	set %resourceamt 1
+gosub ClearMenuGump
+gosub statusbarup
+GMR1:
+finditem %resourcetype C
+if #findkind <> -1
+{
+	set %_findstack #findstack
+	set %_findid #findid
+ 	if #findbagid = %backpackid
+	 {
+		ignoreitem #findid backpack
+		goto GMR1
+ 	}
+	if ( #findtype in %ironingots  && #findcol <> 0 )
+	{
+		ignoreitem #findid wrongcolor
+		goto GMR1
+	}
+	if #findstack < %resourceamt
+		set %resourceamt #findstack
+	finditem %backpackid C_ , #charid
+	if #findkind <> -1
+	{
+		set #findmod 140_220
+		set %backpackx #findx
+		set %backpacky #findy
+		event drag %_findid
+		wait %wait2
+		if %_findstack > 1
+			msg %resourceamt  $
+		wait %wait2
+set %gmr2 0
+GMR2:
+		click %backpackx %backpacky p
+		wait %wait1
+		if #contname = drag_gump || #LLIFTEDKIND = 1
+		{
+			set %gmr2 %gmr2 + 1
+			menu font color yellow
+			menu delete status
+			menu text status 50 5 Drop on backpack, retrying ( , %gmr2 , ).
+			sound
+			wait %wait2
+			if %gmr2 < 3
+				goto GMR2
+			display ok A problem occured trying to drop to your paperdoll's$
++backpack. Make sure the backpack icon is not blocked.$
++Press OK,  then drop the resource manually, correct$the problem and resume the script.$
+			gosub pause
+			menu font color lime
+			menu delete status
+			menu text status 50 5 Checking for more resources.
+		}
+		menu font color lime
+		ignoreitem reset backpack
+		set %retrycount 11
+		return #true
+	}
+	gosub GetPaperDollXY
+	menu delete pdwarning
+	gosub LocateTheDump
+	gosub CheckForBank
+	if ! #result
+		gosub GetSecureContainer
+	gosub GetResourceBag
+	goto GMR1
+}
+ignoreitem reset backpack
+return #false
+
+sub MaterialsToResource
+; %1 = type , %2 = name
+set %_MTRType %1
+set %_MTRName %2
+gosub ClearMenuGump
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+MTR1:
+finditem %_MTRType C_ , %backpackid
+if #findkind <> -1
+{
+	set %_MTRfindid #findid
+	set %_MTRfindstack #findstack
+	str lower %_MTRName
+	menu delete status
+	menu text status 50 5 Moving #strres , #spc , to resource.
+	finditem %resourcebagid
+	set #findmod 25_7
+	if #findtype in %chesttypes
+        		set #findmod %chest_findmod
+	if #findkind <> -1
+	{
+		event drag %_MTRfindid
+set %mtr2 0
+MTR2:
+		wait %wait2
+		if %_MTRfindstack <> 1
+			msg $
+		if #contname = stack_gump
+		{
+			set %mtr2 %mtr2 + 1
+			wait %wait2
+			if %mtr2 < 3
+				goto MTR2
+		}
+set %mtr3 0
+MTR3:
+		wait %wait1
+		click #findx #findy p
+		wait %wait1
+		if #contname = drag_gump || #LLIFTEDKIND = 1
+		{
+			set %mtr3 %mtr3 + 1
+			menu font color yellow
+			menu delete status
+			menu text status 50 5 Retrying #strres , #spc , to resource ( , %mtr3 , ).
+			sound
+			wait %wait2
+			if %mtr3 < 3
+				goto MTR3
+			display ok A problem is occuring trying to drop #strres on to$your resource container. Make sure the container is$
++not blocked. Press OK,  drop the #strres manually,$correct the problem and resume the script.$
+			gosub pause
+		}
+		menu font color lime
+		ignoreitem %_MTRfindid mtr
+		goto MTR1
+	}
+	ignoreitem reset mtr
+	return #false
+}
+ignoreitem reset mtr
+return #true
+
+sub FindSkillTool
+FSK1:
+gosub CountTinkerKits #true
+if #result <> 0
+{
+	set %SkillToolID  %tinkertoolsid
+	return
+}
+gosub GetMoreSkillTools
+goto FSK1
+return ; not needed
+
+sub UseSkillTool
+set #lobjectid %SkillToolID
+event macro 17 0
+wait %wait1
+return
+
+sub MakeFirstItem
+; %1 = category , %2 = selection
+set %gumpx #contposx
+set %gumpy #contposy
+if %1 = 99
+	goto MFI1
+wait %gumpwait
+set %clickx %gumpx + 27
+set %clicky %gumpy + 50 + ( %1 * 20 )
+set %MF1_G 0
+MF1_GumpWait:
+wait %gumpwait
+if #contname <> generic_gump
+{
+	set %MF1_G %MF1_G + 1
+	if %MF1_G > 15
+		return #false
+	goto MF1_GumpWait
+}
+click %clickx %clicky f
+if %slowconnection
+	wait %longwait
+wait %wait2 %wait1
+wait %wait1
+if %2 = 99
+	return #true
+set %mfi 0
+MFI1:
+wait %shortwait
+if #contname <> generic_gump
+{
+	set %mfi %mfi + 1
+	if %mfi > 15
+		return #false
+	goto MFI1
+}
+MFI2:
+if %2 = 98
+{
+	set %clickx %gumpx + 385
+	set %clicky %gumpy + 270
+	goto MFI3
+}
+;set %clicky 100 + %2 * 20
+set %clickx %gumpx + 235
+set %clicky %gumpy + 50 + ( %2 * 20 )
+MFI3:
+click %clickx %clicky f
+if %slowconnection
+	wait %longwait
+wait %wait1
+return #true
+
+sub GetMoreSkillTools
+if #weight > %maxweight
+	gosub RemoveNonEssentials
+menu delete status
+menu text status 50 5 Getting more tinker tools.
+set %skilltools 0
+GMSK1:
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+gosub GetMoreResources %SkillToolTypes  1
+if #result
+{
+	set %skilltools %skilltools + 1
+	set %skilltoolsused %skilltoolsused + 1
+	gosub putGlobalVar %gvar %scriptname #charid skilltoolsused
+	menu font color silver
+	menu font size 8
+	menu delete skilltoolsused
+	menu text skilltoolsused 75 %skilltoolx %skilltoolsused
+	menu font size 9
+	menu font color lime
+	ignoreitem %SkillToolID 1
+	if %skilltools >= %maxskilltools
+	{
+		ignoreitem reset 1
+		set %stat_thisgain1 %stat_thisgain1 + ( %skilltools * 3 )
+		set %stat_totals1 %stat_totals1 + ( %skilltools * 3 )
+		gosub putGlobalVar %gvar %scriptname #charid stat_totals1
+		return
+	}
+	goto GMSK1
+}
+if %skilltools = 0
+{
+	gosub TinkerSkillTools
+	if #result > 0
+	{
+		set %skilltoolsused %skilltoolsused + #result
+		gosub putGlobalVar %gvar %scriptname #charid skilltoolsused
+		set %stat_thisgain1 %stat_thisgain1 + ( #result * 3 )
+		set %stat_totals1 %stat_totals1 + ( #result * 3 )
+		gosub putGlobalVar %gvar %scriptname #charid stat_totals1
+		menu font color silver
+		menu font size 8
+		menu delete skilltoolsused
+		menu text skilltoolsused 75 %skilltoolx %skilltoolsused
+		menu font size 9
+		menu font color lime
+		ignoreitem reset 1
+		gosub countresource %ironingots #false
+		set %ingotcount #result
+		set %last_ingotcount %ingotcount
+		gosub displayIngotCount
+		set %firstattempt #true
+		set %retrycount 11
+		return
+	}
+	gosub NeedMore Tinker_Tools
+	finditem %SkillToolTypes C_ , %backpackid
+	if #findkind <> -1
+	{
+		ignoreitem reset 1
+		return
+	}
+	goto GMSK1
+}
+ignoreitem reset 1
+return
+
+sub TinkerSkillTools
+if %tinkerskill < %tinkerskillreq
+	return 0
+set %SkillToolsmade 0
+set %makelasttinker #false
+set #lobjectid n/a
+for %i 1 %maxSkillTools
+{
+TSK1:
+	if #menubutton = pause
+		gosub pause
+;	gosub CountTinkerKits #true
+;	if ( #result = 0 ) || ( #result = 1 && %min_uses < 10 )
+;	{
+;		menu delete status
+;		menu text status 50 5 Getting more Tinker tools.
+;		gosub GetMoreResources %tinkertools  1
+;		if ! #result
+;		{
+;			set #lobjectid n/a
+;			set %makelasttinker #false
+;			gosub MakeTinkerTools
+;			if ! #result
+;				return %SkillToolsmade
+;		}
+;		goto TSK1
+;	}
+	gosub MakeSkillTool
+	if #result = -1 || #result = 0
+		return %SkillToolsmade
+;	if #result = 0
+;		goto TSK1
+	set %i #result
+	set %SkillToolsmade %i
+}
+return %SkillToolsmade
+
+sub MakeTinkerTools
+MTT1:
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+finditem %ironingots C_ , %backpackid
+set %backpack_ingots #findstack
+if #findkind = -1 || #findstack < 2
+{
+	gosub RemoveNonEssentials
+	set %amt ( %maxweight - #weight - 15 ) * 10
+	menu delete status
+	menu text status 50 5 Getting more ingots ( , %amt , ).
+	gosub GetMoreResources %ironingots %amt
+	if ! #result
+		return #false
+	gosub countresource %ironingots #false
+	set %ingotcount #result
+	set %last_ingotcount %ingotcount
+	goto MTT1
+}
+menu delete status
+menu text status 50 5 Tinkering Tinker's tools.
+gosub CountTinkerKits #true
+finditem %tinkertoolsid
+if #findkind = -1
+	return #false
+set %makelasttinker #false
+set #lobjectid %tinkertoolsid
+event macro 17 0
+wait %longwait
+gosub makefirstitem %tinkertoolsel 4
+wait %longwait
+gosub CountTinkerKits #false
+if #result < 2
+	goto MTT1
+set %firstattempt #true
+set %retrycount 11
+return #true
+
+sub MakeSkillTool
+set %_temp %SkillToolsmade + 1
+MST1:
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+menu delete status
+menu text status 50 5 Tinkering Tinker  tool ( , %_temp , / , %maxSkillTools , ).
+finditem %ironingots C_ , %backpackid
+set %backpack_ingots #findstack
+if #findkind = -1 || #findstack < 2
+{
+	gosub RemoveNonEssentials
+	set %amt ( %maxweight - #weight - 15 ) * 10
+	menu delete status
+	menu text status 50 5 Getting more ingots ( , %amt , ).
+	gosub GetMoreResources %ironingots %amt
+	if ! #result
+		return -1
+	gosub countresource %ironingots #false
+	set %ingotcount #result
+	set %last_ingotcount %ingotcount
+	goto MST1
+}
+set %mst2 0
+MST2:
+set %mst2 %mst2 + 1
+if %mst2 > 5
+{
+	display ok Hmm, There appears to be a problem getting a tinker$
++menu to appear. No tinker tools? Something in the wrong place?$
++Please correct the problem. Pausing.
+	gosub pause
+	set %mst2 0
+	set %makelasttinker #false
+	set #lobjectid n/a
+	goto MST2
+}
+gosub CountTinkerKits #true
+finditem %tinkertoolsid C_ , %backpackid
+if #findkind = -1
+	return 0
+set %tinkertoolsid #findid
+if #lobjectid <> %tinkertoolsid
+{
+	set #lobjectid %tinkertoolsid
+	event macro 17 0
+	wait %wait1
+}
+set %MST3 0
+MST3:
+if #contname <> generic_gump
+{
+	if %mst3 > 10
+	{
+		set %makelasttinker #false
+		set #lobjectid n/a
+		goto MST2
+	}
+	set %mst3 %mst3 + 1
+	wait %gumpwait
+	goto MST3
+}
+wait %gumpwait
+if  %makelasttinker
+{
+	set %gumpx #contposx
+	set %gumpy #contposy
+	set %clickx %gumpx + %makelast_clickx
+	set %clicky %gumpy + %makelast_clicky
+	click %clickx %clicky f
+	goto tinkeringdone
+}
+
+gosub makefirstitem %tinkertoolsel 4
+set %makelasttinker #true
+tinkeringdone:
+wait %wait1 %wait1
+finditem  %SkillToolTypes  C_ , %backpackID
+return #findcnt
+
+sub GetUsesRemaining
+if %NoEventProperty
+	return 50
+; %1 = #property
+set %_1 %1
+str pos %_1 :
+set %temp #strres
+str del %_1 1 %temp
+set %_1 #strres
+str pos %_1 $
+set %temp #strres
+str del %_1 %temp 999
+return #strres
+
+sub CountTinkerKits
+set %checkall %1
+set %ctk 0
+set %min_uses 999
+CTK1:
+finditem %tinkertools C_ , %backpackid
+if #findcnt > 1 && ! %checkall
+	return #findcnt
+if #findkind <> -1
+{
+	set %_findid #findid
+	event property %_findid
+	wait %shortwait
+	gosub GetUsesRemaining #property
+	if #result < %min_uses
+	{
+		set %min_uses #result
+		set %tinkertoolsid %_findid
+	}
+	ignoreitem #findid ctk
+	set %ctk %ctk + 1
+	goto CTK1
+}
+ignoreitem reset ctk
+return %ctk
+
+sub NeedMore
+set %_1 %1
+sound
+gosub RemoveNonEssentials
+menu font bgcolor red
+menu font color black
+menu delete status
+str lower %_1
+menu text status 50 5 Need more #strres , #dot , #spc ,  Paused.
+menu font bgcolor black
+menu font color lime
+if %sysmessages
+	event sysmessage Need more #strres , #dot , #spc ,  Paused.
+set #menubutton pause
+gosub pause
+gosub LocateTheDump
+gosub CheckForBank
+if ! #result
+	gosub GetSecureContainer
+gosub GetResourceBag
+set %retrycount 11
+return
+
+sub FindJournalMessage
+set %jc 1
+FJM1:
+scanjournal %jc
+if #journal = N/A
+	return #false
+for %_i 1 %0
+{
+ 	if % . %_i in #journal
+	{
+		deletejournal
+		return #true
+	}
+}
+set %jc %jc + 1
+goto FJM1
+
+sub resetjournal
+scanjournal 1
+deletejournal
+return
+
+sub GetBackPackID
+gosub getGlobalVar 1 COMMON #charid backpackid
+if %backpackid <> N/A
+{
+_openbackpack:
+	event macro 8 1
+	wait %wait2
+	wait %wait1
+	finditem %backpackid C_ , #charid
+	if #findkind <> -1
+	{
+		event macro 8 7
+		wait %wait2
+		wait %wait1
+		goto GBPI2
+	}
+}
+GBPI1:
+if #backpackid <> N/A && #backpackid <> YC
+{
+	set %backpackid #backpackid
+	gosub putGlobalVar 1 COMMON #charid backpackid
+	goto _openbackpack
+}
+set %adjusttimer 8
+gosub resetjournal
+wait %wait2
+event macro 8 7
+wait %wait1
+gosub FindJournalMessage must_wait
+if #result || #contname <> container_gump
+{
+	if %bpmsgon
+	{
+		menu delete status
+		menu text status 50 5 Retrying backpack open.
+	}
+	wait %longwait
+	wait %longwait
+	set %adjusttimer 8
+	goto GBPI1
+}
+set %backpackid #contid
+gosub putGlobalVar 1 COMMON #charid backpackid
+GBPI2:
+if %adjusttimer <> 0
+{
+	menu delete status
+	menu text status 50 5 Adjust your backpack now.
+	if %sysmessages
+		event SysMessage Adjust your backpack now, you have , #spc , %adjusttimer , #spc ,  seconds.
+	gosub waittimer %adjusttimer
+}
+wait %longwait
+menu delete status
+return
+
+sub GetPaperDollXY
+gosub statusbarup
+finditem %backpackid C_ , #charid
+if #findkind <> -1
+{
+	set #findmod 140_220
+	set %backpackx #findx
+	set %backpacky #findy
+	wait %longwait
+	return
+}
+event macro 8 1
+menu delete status
+menu text status 50 5 Adjust your paperdoll now.
+gosub waittimer 6
+menu font bgcolor red
+menu font color black
+menu text pdwarning 1 20 DON'T MOVE YOUR PAPERDOLL ANYMORE!
+menu font bgcolor black
+menu font color lime
+menu delete status
+menu text status 50 5 Getting Paperdoll Info
+GPDXY1:
+if #contname <> paperdoll_gump
+{
+	gosub resetjournal
+	wait %shortwait
+	wait %wait2
+	event macro 8 1
+	wait %wait1
+	gosub FindJournalMessage must_wait
+	if #result || #contname <> paperdoll_gump
+	{
+		menu delete status
+		menu text status 50 5 Retrying Paperdoll open.
+		wait %longwait
+		wait %longwait
+		goto GPDXY1
+	}
+}
+set %paperdollx #contposx
+set %paperdolly #contposy
+set %backpackx #contposx + 140
+set %backpacky #contposy + 220
+wait %longwait
+return
+
+sub GetResourceBag
+GRB1:
+gosub getGlobalVar %gvar %scriptname #charid resourcebagid
+if  %resourcebagid <> N/A
+{
+	menu delete status
+	menu text status 50 5 Re-opening resource container.
+	wait %shortwait
+	set %blinkmsg #true
+	goto GRB3
+}
+set %adjusttimer 8
+menu font color white
+menu delete status
+menu text status 50 5 Target your resource container now!
+set %blinkmsg #true
+set %blinktime #scnt2 + 5
+set #targcurs 1
+wait %wait1
+if %sysmessages
+	event SysMessage Target your resource container now!
+looptgt:
+wait 3
+if %blinktime < #scnt2
+{
+	set %blinktime #scnt2 + 5
+	if %blinkmsg
+	{
+		menu delete status
+		set %blinkmsg #false
+		goto GRB2
+	}
+	menu text status 50 5 Target your resource container now!
+	set %blinkmsg #true
+}
+GRB2:
+if #targcurs = 1
+     goto looptgt
+finditem #ltargetid C_ , %securecontainerid
+if #findkind = -1
+{
+	menu delete status
+	menu font color red
+	menu text status 50 5 Not in Secure/Bank Box. Try Again.
+	menu font color white
+	if %sysmessages
+		event SysMessage Not in Secure/Bank Box. Try Again.
+	wait 3s
+	display YesNo This bag doesn't appear to be in the right place.$
++Possibly a freeshard issue? If it looks ok to you$
++Press YES to use it anyway, or NO to retry.
+	if #dispres = yes
+		goto GRB2B
+	set #targcurs 1
+	wait %wait1
+	goto looptgt
+}
+GRB2B:
+if #findtype notin %bagtypes
+{
+	menu delete status
+	menu font color red
+	menu text status 50 5  Resource container type invalid ( , #findtype , ).
+	if %sysmessages
+		event SysMessage Resource container type invalid.
+	wait 3s
+	display ok The container type you have selected is a type that %scriptname , $
++does not know. A regular chest or bag bought from the provisioners is$
++recommended. Please use a different type bag.$$Unknown Type: , #spc , #findtype $$Script Paused.
+	gosub pause
+	menu delete status
+	set %blinkmsg #false
+	menu font color white
+	set #targcurs 1
+	wait %wait1
+	goto looptgt
+}
+set %resourcebagid  #ltargetid
+GRB3:
+finditem %resourcebagid C_ , %securecontainerid
+set #findmod 25_7
+if #findtype in %chesttypes
+        set #findmod %chest_findmod
+if #findkind = -1
+{
+	menu delete status
+	menu font color red
+	menu text status 50 5 Resource container not found.
+	menu font color white
+	if %sysmessages
+		event SysMessage  Resource container not found.
+	wait 3s
+	set %resourcebagid N/A
+	gosub putGlobalVar %gvar %scriptname #charid resourcebagid
+	goto GRB1
+}
+gosub putGlobalVar %gvar %scriptname #charid resourcebagid
+menu font color lime
+set #lobjectid %resourcebagid
+GRB4:
+gosub resetjournal
+wait %wait1
+nextCPos %resource_bagx %resource_bagy
+event macro 17 0
+wait %wait2
+gosub FindJournalMessage must_wait
+if #result
+{
+	menu delete status
+	menu text status 50 5 Retrying resource open.
+	if %sysmessages
+		event SysMessage Retrying resource open.
+	wait %longwait
+	wait %longwait
+	goto GRB4
+}
+if #contid = %resourcebagid
+	contpos %resource_bagx %resource_bagy
+if %adjusttimer <> 0
+{
+	menu delete status
+	menu text status 50 5 Adjust resource bag now.
+	if %sysmessages
+	event SysMessage Adjust resource bag now, you have , #spc , %adjusttimer , #spc , seconds.
+	gosub waittimer %adjusttimer
+	if #contid = %resourcebagid && ( #contposx <> %resource_bagx || #contposy <> %resource_bagy )
+	{
+		set %resource_bagx #contposx
+		set %resource_bagy #contposy
+		gosub putGlobalVar %gvar %scriptname #charid resource_bagx
+		gosub putGlobalVar %gvar %scriptname #charid resource_bagy
+	}
+}
+wait %longwait
+menu delete status
+return
+
+sub CheckForGain
+if %currentskill = #skill
+	return
+set %currentskill #skill
+menu window color red
+sound
+menu delete status
+menu text status 50 5 Tinker Gain!
+gosub GainStats
+wait %shortwait
+menu window color black
+gosub NewItemcheck
+gosub gmcheck
+return
+
+sub NewItemcheck
+gosub SelectItemToMake
+set %newitem #result
+if %currentitem <> %newitem
+{
+	gosub skillchangedisplay
+	set %currentitem %newitem
+	gosub RemoveNonEssentials
+	gosub displayStatDesc
+	set %firstattempt #true
+	set %retrycount 11
+}
+return
+
+
+sub GMCheck
+if ( ( %skillcap = #skill ) || ( %maxskillcap <= #skill ) ) && ! %debug
+{
+	sound
+	gosub ClearMenuGump
+	sound
+	set %cleanup #true
+	gosub MaterialsToResource %tinkertools tinkertools
+	gosub MaterialsToResource %ironingots ingots
+	gosub RemoveNonEssentials
+	sound
+	menu font transparent #true
+	set #menubutton N/A
+	set %lastehours N/A
+	set %lastemins N/A
+	set %lastesecs N/A
+	set %firstmenu #true
+	gosub initmenu
+	menu delete status
+	menu font color red
+	menu font bgcolor white
+
+	menu text status 50 5 Congratulations, skillcap reached!
+	if %maxskillcap = #skill
+	{
+		menu delete status
+		menu text status 50 5 Yahoo, maxskillcap reached!
+	}
+	menu font transparent #true
+	menu font color lime
+	menu delete making
+	menu text making 107 35 %desc30
+	sound
+	menu font style b
+	menu font align right
+	menu delete g1
+	menu text g1 130 290 #skill
+	menu font align left
+	menu font style n
+	menu font bgcolor black
+	menu font color lime
+	gosub recordTurboStats
+	gosub floatgain
+	halt
+}
+return
+
+sub HideMe
+if ! %hideme || H in #charstatus
+	return #true
+set %ht 0
+set %retrycount 11
+menu show
+menu delete status
+menu text status 50 5 Attempting to hide.
+wait %wait1
+HM1:
+event macro 13 21
+wait %wait1
+if H notin #charstatus && %ht < 5
+{
+	set %ht %ht + 1
+	menu delete status
+	menu font color yellow
+	menu text status 50 5 Hiding failed! Retrying.. ( , %ht , )
+	menu font color lime
+	wait 12s
+	goto HM1
+}
+if H notin #charstatus
+{
+	menu delete status
+	menu font color red
+	menu text status 50 5 Hiding failed, you suck at hiding.
+	menu font color lime
+	wait 12s
+	set %hideme #false
+	return #false
+}
+menu delete status
+menu text status 50 5 Hidden, waiting 12 seconds.
+wait 12s
+return #true
+
+sub initmenu
+if %initializing
+	gosub fadeout
+menu clear
+;menu font transparent #true
+set %menusizey 340
+menu window size 300 %menusizey
+menu window title CEOTurboTinker %version
+menu window color black
+menu font bgcolor BLACK
+menu font color red
+menu show %menu_windowx %menu_windowy
+menu font size 9
+menu text hstatus 10 5 Status:
+menu text h1 10 20 Elapsed Time:
+menu text h1 10 35 Currently Making:
+menu shape myshape1 3 53 294 1 3 7 5 blue 3 white
+menu shape myshape1 3 218 294 1 3 7 5 blue 3 white
+menu shape myshape1 3 308 294 1 3 7 5 blue 3 white
+set #menubutton N/A
+menu font size 11
+menu font color white
+menu font style ub
+menu text h1 85 55 Resource Statistics
+menu text h1 85 220 Tinker Statistics
+menu font size 9
+menu font color fuchsia
+menu font style b
+menu font size 8
+menu text h1 115 75 This
+menu text h1 170 75 Last
+menu font style bu
+menu text h1 115 90 Gain
+menu text h1 170 90 Gain
+menu text h1 235 90 Total
+menu font style n
+menu font size 8
+menu font color yellow
+menu text h1 5 105 Attempts
+menu font color white
+menu text h1 100 105 :
+gosub displayStatDesc
+menu font size 8
+menu font color lime
+menu shape myshape1 3 120 94 1 3 7 5 yellow 3 white
+set %skilltoolx %x + 20
+menu font color silver
+menu text h1 10 %skilltoolx Tinker Tools:
+menu delete skilltoolsused
+menu text skilltoolsused 75 %skilltoolx %skilltoolsused
+menu font size 9
+menu font color blue
+menu font style b
+menu text h1 5 245 Last gain at:
+menu font size 8
+menu font color fuchsia
+menu font align right
+menu text h1 130 260 Total
+menu text h1 190 260 Current
+menu text h1 250 260 Gain
+menu font style bu
+menu text h2  130 275 Skill
+menu text h2  190 275 Gains
+menu text h2  250 275  Rate
+menu font style b
+menu font align left
+menu font color red
+menu font size 9
+menu text h3 35 290 Tinkering
+menu font color lime
+menu font style n
+if %firstmenu
+	gosub GainStats
+menu font align left
+gosub RedrawResourceStats
+gosub DisplayElapsedTime
+menu font align right
+menu font align left
+menu font color white
+menu font style u
+menu text h1 5 260 Skillcap
+menu text h1 7 70 Est. Cost
+menu font style n
+menu text h1 60 85 gp
+menu font align right
+gosub calctotalcosts
+menu font align left
+if %maxskillcap = N/A
+	menu text skillcap 13 275 %skillcap
+else
+	menu text skillcap 2 275 %skillcap , ( , %maxskillcap , )
+menu font color lime
+menu text making 107 35 %desc . %currentitem
+menu font bgcolor teal
+menu font color black
+menu button hide 5 315 60 20 Hide
+menu button pause 120 315 60 20 Pause
+menu button InitialSetup 235 315 60 20 Setup
+menu button resetstats 255 196 40 19 Reset
+menu button SkillChart 275 223 20 15 SC
+if %initializing
+{
+	menu show %menu_windowx %menu_windowy
+	wait 1
+	gosub fadein
+	set %initializing #false
+}
+menu show %menu_windowx %menu_windowy
+menu window transparent %menutransparency
+if ! %debug
+	menu hideeuo
+set %firstmenu #false
+menu font bgcolor black
+menu font color lime
+menu font style n
+;halt
+return
+
+sub calctotalcosts
+menu font color yellow
+set %tcosts 0
+for %i 1 %totalstats
+{
+ set %tcosts %tcosts + ( %stat_totals . %i * %stat_cost . %i )
+}
+menu delete tcost
+menu text tcost 55 85 %tcosts
+menu font color lime
+return
+
+sub ResetStats
+set #menubutton N/A
+Display YesNo Are you sure you want to erase all statistics and start over?
+if #dispres = no
+	return #false
+set %_totaletime 0
+set %startetime 0
+gosub putGlobalVar %gvar %scriptname #charid _totaletime
+set %skilltoolsused 0
+gosub putGlobalVar %gvar %scriptname #charid skilltoolsused
+for %i 0 %totalstats
+{
+	set %stat_thisgain . %i 0
+	set %stat_lastgain . %i 0
+	set %stat_totals . %i 0
+	gosub putGlobalVar %gvar %scriptname #charid stat_totals , %i
+}
+set %_startskill #skill
+gosub putGlobalVar %gvar %scriptname #charid  _startskill
+set #menubutton N/A
+set %lastehours N/A
+set %lastemins N/A
+set %lastesecs N/A
+set %firstmenu #true
+gosub initmenu
+return #true
+
+sub displayStatDesc
+menu font size 8
+for %i 1 %totalstats
+{
+	menu font color red
+	if %i = 1
+		menu font color silver
+	if %i = ( %currentitem + 1 )
+		menu font color lime
+	set %x 105 + ( %i * 15 )
+	menu delete %stat_desc . %i
+	menu text %stat_desc . %i 5 %x %stat_desc . %i
+	menu font color lime
+	menu text h1 100 %x :
+}
+menu font color lime
+menu font size 9
+return
+
+sub floatgain
+set #lpc 10
+menu delete pause
+menu delete hide
+menu delete InitialSetup
+menu delete resetstats
+menu delete SkillChart
+set %setupx #clixres / 2 - ( 600 / 2 )
+set %setupy #cliyres / 2 - ( 340 / 2 )
+menu window size 600 340
+menu Shape greybox 300 0 300 340 3 7 2 gray 7 black
+menu font style n
+menu font bgcolor teal
+menu font color black
+menu button closed 130 315  60 20 Exit
+menu font color lime
+set #menubutton N/A
+gosub begtext 305
+menu font size 25
+menu font bgcolor black
+set %wincount 0
+set %buttoncount 0
+menu show %setupx %setupy
+gm1:
+set %x #random % 590
+set %y #random % 295
+set %c1 #random % 255
+set %c2 #random % 255
+set %c3 #random % 255
+menu font color %c1 , %c2 , %c3
+set %wincount %wincount + 1
+if %wincount > 2
+{
+	set %c1 #random % 255
+	set %c2 #random % 255
+	set %c3 #random % 255
+	menu window color %c1 , %c2 , %c3
+	set %wincount 0
+	set %buttoncount %buttoncount + 1
+	menu font size 9
+	set %c1 #random % 255
+	set %c2 #random % 255
+	set %c3 #random % 255
+	menu font bgcolor %c1 , %c2 , %c3
+	menu font color white
+	if %buttoncount = 1
+		menu button closed 130 315  60 20 Exit
+	if %buttoncount = 2
+	{
+		set %buttoncount 0
+		menu button easyuo 455 225 90 20 Rate it now!
+	}
+	menu font bgcolor black
+}
+set %c1 #random % 30 + 10
+menu font size %c1
+menu delete gm
+menu font transparent #true
+menu text gm %x %y #skill
+wait 5
+if #menubutton = closed
+{
+	if %debug
+		halt
+	gosub paypalpopup
+	terminate euo
+}
+if #menubutton = easyuo
+	gosub runbrowser
+if #menubutton = donate
+   gosub PayPalExecute
+set #menubutton N/A
+goto gm1
+
+sub BegText
+menu font color red
+menu font bgcolor black
+menu font style b
+menu font size 15
+menu text h1 377 5 Congratulations!
+menu font size 9
+menu font style n
+menu font color lime
+if %maxskillcap <> N/A
+	menu text h1 %1 30 You've trained Tinkering from %_startskill to %maxskillcap , ! , ! , !
+else
+	menu text h1 %1 30 You've trained Tinkering from %_startskill to #skillcap , ! , ! , !
+menu font style i
+menu font color white
+menu text h1 %1 50 Now that CEOTurboTinker has done its job can
+menu text h1 %1 65 I ask a small favor of you?
+menu font style n
+menu font color yellow
+menu text h1 %1 90 I spent several hours of my time creating this
+menu text h1 %1 105 script. Can you please spend a few minutes and
+menu text h1 %1 120 visit the EasyUO website and drop me a message?
+menu text h1 %1 135 You may need to register, but it'll only take a few
+menu text h1 %1 150 moments.
+menu text h1 %1 170 I'd also appreciate it if you could post your stats
+menu text h1 %1 185 and rate the script. Doing so will bring me much
+menu text h1 %1 200 joy and will encourage more scripts like this one. :-)
+menu font size 12
+menu font color white
+menu font style b
+menu text h1 360 230 Thank You!
+menu font style n
+menu font size 9
+menu font bgcolor teal
+menu font color black
+if exec in #opts
+{
+	menu button easyuo 455 223 90 20 Rate it now!
+	menu button donate 455 245 90 20 Donate
+}
+menu font bgcolor black
+menu font color gray
+menu font size 8
+menu text h1 %1 265 This script is copyright by the author under the terms of
+menu text h1 %1 280 the CEO Public License (CPL) at:
+menu font color white
+menu text h1 %1 300 http://www.easyuo.com/forum/viewtopic.php?p=3585
+menu font color gray
+return
+
+;This script is copyright by CEO under the CEO Public License (CPL) at: http://www.easyuo.com/forum/viewtopic.php?p=3585
+
+sub runbrowser
+execute http://www.easyuo.com/forum/viewtopic.php?t= , %euotopic
+set #menubutton N/A
+return
+
+sub DisplayElapsedTime
+set %elaspedtime #scnt - %scriptstart
+set %totaletime %startetime  +  %elaspedtime
+set %_totaletime %totaletime
+gosub putGlobalVar %gvar %scriptname #charid _totaletime
+set %ehours %totaletime / 3600
+set %emins  ( %totaletime / 60 ) - ( %ehours * 60 )
+menu font color white
+if %lastehours <> %ehours
+{
+	set %lastehours %ehours
+	menu delete ehours
+	menu text ehours 95 20 %ehours , h
+}
+if %lastemins <> %emins
+{
+	set %lastemins %emins
+	menu delete emins
+	menu text emins 120 20 %emins , m
+}
+menu font color lime
+return ; remove this you want seconds display
+menu font color white
+set %esecs %totaletime % 60
+if %lastesecs <> %esecs
+{
+	set %lastesecs %esecs
+	menu delete esecs
+	menu text esecs 150 20 %esecs , s
+}
+menu font color lime
+return
+
+sub GainStats
+menu delete g1
+menu delete g2
+menu delete g3
+set %tinkeringgain #skill - %startskill
+set %time X , #time
+set %time1 #scnt
+set %rate %tinkeringgain * 3600 / ( #scnt - %scriptstart2  )
+menu font align right
+menu text g1 130 290 #skill
+menu text g2 190 290 %tinkeringgain
+menu text g3 250 290 %rate
+for %i 0 %totalstats
+{
+	set %stat_lastgain . %i %stat_thisgain . %i
+	set %stat_thisgain . %i 0
+	set %x 105 + ( %i * 15 )
+	menu delete stat_thisgain , %i
+	menu text stat_thisgain , %i 137 %x %stat_thisgain . %i
+	menu delete stat_lastgain , %i
+	menu text stat_lastgain , %i 192 %x %stat_lastgain . %i
+}
+menu font align left
+if %startskill <> %currentskill
+{
+	gosub FormatTime %time
+	menu delete time
+	menu text time 77 245 #result
+	set %egain %time1 - %gaintime
+	set %eghours %egain / 3600
+	set %egmins  ( %egain / 60 ) - ( %eghours * 60 )
+	set %egsecs %egain % 60
+	menu delete time2
+	menu text time2 130 245 ( , %eghours , h , #spc , %egmins , m , #spc , %egsecs , s , #spc , used)
+	set %gaintime %time1
+}
+return
+
+sub DisplayResourceStats
+menu font align right
+set %stat_thisgain0 %stat_thisgain0 + 1
+set %stat_totals0 %stat_totals0 + 1
+gosub putGlobalVar %gvar %scriptname #charid stat_totals0
+for %index 0 %totalstats
+{
+	if %lastdisplay . %index <> %stat_totals . %index
+	{
+		set %lastdisplay . %index %stat_totals . %index
+		set %x 105 + ( %index * 15 )
+		menu delete stat_thisgain , %index
+		menu text stat_thisgain , %index 137 %x %stat_thisgain . %index
+		menu delete stat_totals , %index
+		menu text stat_totals , %index 260 %x %stat_totals . %index
+	}
+}
+gosub calctotalcosts
+menu font align left
+return
+
+sub FormatTime
+str ins %1 : 4
+set %1 #strres
+str ins %1 : 7
+set %1 #strres
+str del %1 1 1
+set %1 #strres
+return %1
+
+sub hide
+set %hideme #true
+set #menubutton N/A
+return
+
+sub Pause
+PauseStart:
+sound
+menu font transparent #true
+menu font size 30
+menu font color red
+menu font style b
+menu text  ptext  85 120 Paused
+menu font size 9
+menu font style n
+menu font color lime
+menu font transparent #false
+if %sysmessages
+{
+	event sysmessage Paused. Press the resume button or toggle out
+	event sysmessage of warmode. If not in warmode, toggle to war/peace.
+}
+set %returnbywarmode #false
+if G in #charstatus
+{
+	menu delete status
+	menu font color yellow
+	menu text status 50 5 Paused via warmode.
+	menu font color green
+	set %returnbywarmode #true
+}
+menu delete pause
+menu font bgcolor teal
+menu font color black
+menu button resume 120 315 60 20 Resume
+menu delete hide
+menu delete InitialSetup
+menu delete resetstats
+set #menubutton N/A
+set %elaspedtime #scnt - %scriptstart
+set %totaletime %startetime  +  %elaspedtime
+set %_totaletime %totaletime
+gosub putGlobalVar %gvar %scriptname #charid _totaletime
+Pause1:
+gosub DisconnectCheck
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+if G in #charstatus
+	set %returnbywarmode #true
+if %returnbywarmode && G notin #charstatus
+      set #menubutton resume
+wait %shortwait
+if #menubutton = N/A
+	goto Pause1
+if #menubutton = skillchart
+{
+	gosub skillchart
+	goto pauseStart
+}
+menu delete ptext
+set %startetime %_totaletime
+set %scriptstart #scnt
+if #menubutton = closed
+	gosub closed
+menu delete resume
+menu font bgcolor teal
+menu font color black
+menu button pause 120 315 60 20 Pause
+menu button hide 5 315 60 20 Hide
+menu button InitialSetup 235 315 60 20 Setup
+menu button resetstats 255 196 40 19 Reset
+set #menubutton N/A
+set %retrycount 11
+menu font bgcolor black
+menu font color lime
+return
+
+sub closed
+set %elaspedtime #scnt - %scriptstart
+set %totaletime %startetime  +  %elaspedtime
+set %_totaletime %totaletime
+gosub putGlobalVar %gvar %scriptname #charid _totaletime
+if %exitonclose && ! %debug
+{
+	gosub paypalpopup
+	terminate euo
+}
+halt
+set #menubutton N/A
+return
+
+sub AutoSetup
+gosub gmcheck
+if %hideme = N/A && %hideskill > %hideskillreq
+	set %hideme #true
+if %hideme = N/A
+	set %hideme #false
+menu show
+gosub GetBackPackID
+menu show
+gosub GetPaperDollXY
+menu show
+menu delete pdwarning
+gosub calcmaxweight
+if %bankfound = N/A
+{
+	gosub checkforbank2
+	set %bankfound #result
+}
+
+if %atbank || %bankfound
+	gosub CheckForBank
+menu show
+if ! #result
+	gosub GetSecureContainer
+gosub GetResourceBag
+menu show
+return
+
+sub calcmaxweight
+set %maxweight #maxweight
+if #maxweight > 400
+	set %maxweight 400
+set %maxweight %maxweight  - ( %maxSkillTools * 2 ) - 5
+return
+
+sub CheckforBank2
+set %housesigns GNE_INE_SNE_UNE_ONE_QNE_AOE_QJE_
++COE_WNE_YNE_IOE_KOE_EOE_GOE_SJE_UJE_OJE_AKE_
++CKE_WJE_YJE_IKE_KKE_EKE_GKE_QKE_SKE_MKE_OKE_
++YKE_ALE_UKE_WKE_GLE_ILE_CLE_ELE_OLE_QLE_KLE_
++MLE_WLE_YLE_SLE_ULE_CRE_ERE_YQE_ARE_KRE_MRE_
++GRE_IRE_LRE_HKE_XJE
+CFB12:
+finditem %housesigns
+if #findkind <> -1
+{
+	event property #findid
+	wait %shortwait
+	if bank in #property || mint in #property || Atri-Aur in #property
+		return #true
+	ignoreitem #findid bankcheck
+	goto CFB12
+}
+set %pc 0
+CFB22:
+finditem HS_IS
+if #findkind <> -1
+{
+	set %pc %pc + 1
+	if #findrep = 7
+	{
+		event property #findid
+		if banker in #property || minter in #property || fortune in #property
+			return #true
+		ignoreitem #findid bankcheck
+		goto CFB22
+	}
+	ignoreitem #findid bankcheck
+	goto CFB22
+}
+if %pc > 10
+	return #true
+return #false
+
+
+sub CheckForBank
+if ! %bankfound
+	return #false
+menu delete status
+menu text status 50 5 Checking for bank.
+wait %shortwait
+gosub resetjournal
+CFB1:
+nextcpos %bank_securex %bank_securey
+gosub Openbank
+wait %longwait
+gosub FindJournalMessage Bank_Container
+if #result
+{
+	set %atbank #true
+	menu delete status
+	menu text status 50 5 Looks like you're at a bank.
+	contpos %bank_securex %bank_securey
+	wait %wait1
+	set %securecontainerid N/A
+	if #contsize = 180_240
+	{
+		set %securecontainerid #contid
+		gosub putGlobalVar %gvar %scriptname #charid securecontainerid
+	}
+	if %securecontainerid = N/A
+		goto CFB1
+	if %adjusttimer <> 0
+	{
+		menu delete status
+		menu text status 50 5 Adjust your bank box now.
+		if %sysmessages
+		event SysMessage Adjust your bank box now, you have , #spc , %adjusttimer , #spc , seconds.
+		gosub waittimer %adjusttimer
+		if #contid = %securecontainerid && ( #contposx <> %bank_securex || #contposy <> %bank_securey )
+		{
+			set %bank_securex #contposx
+			set %bank_securey #contposy
+			gosub putGlobalVar %gvar %scriptname #charid bank_securex
+			gosub putGlobalVar %gvar %scriptname #charid bank_securey
+		}
+	}
+	menu delete status
+	return #true
+}
+return #false
+
+sub GetSecureContainer
+set %securecontainerid N/A
+gosub getGlobalVar %gvar %scriptname #charid securecontainerid
+GSC1:
+if %securecontainerid  <> N/A
+{
+	menu delete status
+	menu text status 50 5 Re-opening secure container.
+	wait %shortwait
+	set %blinkmsg #true
+	goto GSC3
+}
+set %adjusttimer 8
+menu font color white
+menu delete status
+menu text status 50 5 Target your SECURE container now!
+set %blinkmsg #true
+set %blinktime #scnt2 + 5
+set #targcurs 1
+wait %wait1
+if %sysmessages
+	event SysMessage Target your SECURE container now!
+looptgt2:
+wait 3
+if %blinktime < #scnt2
+{
+	set %blinktime #scnt2 + 5
+	if %blinkmsg
+	{
+		menu delete status
+		set %blinkmsg #false
+		goto GSC2
+	}
+	menu text status 50 5 Target your SECURE container now!
+	set %blinkmsg #true
+}
+GSC2:
+if #targcurs = 1
+     goto looptgt2
+wait %wait1
+finditem #ltargetid G_2
+if ( #findkind = -1 || #finddist > 2 ) || ( #findkind <> -1 && #findtype in %badcontainers )
+{
+	menu font color red
+	menu delete status
+	menu text status 50 5 Invalid container. Try again.
+	menu font color white
+	if %sysmessages
+		event SysMessage container. Try Again.
+	wait 3s
+display ok The container you identified is not a valid$
++container. It is two far away or an invalid type( , #findtype , ).$$
++Please use a standard wooden or metal$
++chest within 2 paces of your character.$
+	set #targcurs 1
+	wait %wait1
+	goto looptgt2
+}
+set #lobjectid #ltargetid
+event macro 17
+wait %wait2
+if  #contname <> container_gump  || #contid <> #lobjectid
+{
+	menu font color red
+	menu delete status
+	menu text status 50 5 Invalid container. Try again.
+	menu font color white
+	if %sysmessages
+		event SysMessage container. Try Again.
+	wait 3s
+display ok The object you identified with type: #findtype , #spc , does$
++not show as being a container according to$
++EasyUO's Container Info variables.$$
++Please use a standard wooden or metal$
++chest within 2 paces of your character.$
+	set #targcurs 1
+	wait %wait1
+	goto looptgt2
+}
+set %securecontainerid  #ltargetid
+GSC3:
+finditem %securecontainerid G_2
+if #findkind = -1
+{
+	menu font color red
+	menu delete status
+	menu text status 50 5 SECURE container not found.
+	menu font color white
+	if %sysmessages
+		event SysMessage SECURE container not found.
+	wait 3s
+	set %securecontainerid N/A
+	gosub putGlobalVar %gvar %scriptname #charid securecontainerid
+	set %resourcebagid N/A
+	gosub putGlobalVar %gvar %scriptname #charid resourcebagid
+	set %adjusttimer 8
+	goto GSC1
+}
+gosub putGlobalVar %gvar %scriptname #charid securecontainerid
+menu font color lime
+nextcpos %bank_securex %bank_securey
+set #lobjectid %securecontainerid
+GSC4:
+gosub resetjournal
+wait %wait2
+event macro 17 0
+wait %wait1
+gosub FindJournalMessage must_wait
+if #result
+{
+	menu delete status
+	menu text status 50 5 Retrying Secure box open.
+	if %sysmessages
+		event SysMessage Retrying Secure box open.
+	wait %wait2
+	wait %longwait
+	goto GSC4
+}
+if #contid = %securecontainerid
+	contpos %bank_securex %bank_securey
+if %adjusttimer <> 0
+{
+	menu delete status
+	menu text status 50 5 Adjust secure bag now.
+	if %sysmessages
+		event SysMessage Adjust secure bag now, you have , #spc , %adjusttimer , #spc ,  seconds.
+	gosub waittimer %adjusttimer
+	if #contid = %securecontainerid && ( #contposx <> %bank_securex || #contposy <> %bank_securey )
+	{
+		set %bank_securex #contposx
+		set %bank_securey #contposy
+		gosub putGlobalVar %gvar %scriptname #charid bank_securex
+		gosub putGlobalVar %gvar %scriptname #charid bank_securey
+	}
+}
+menu delete status
+wait %longwait
+return
+
+sub RemoveNonEssentials
+gosub ClearMenuGump
+set %cleanup #true
+for %ni 1 4
+{
+	finditem %product . %ni C_ , %backpackid
+	if #findkind <> -1
+	{
+		if ! %discardTrashBarrel . %ni
+			gosub MaterialsToResource %product . %ni %desc . %ni
+		if %discardTrashBarrel . %ni
+			gosub DumpProducts %product . %ni %desc . %ni
+	}
+}
+set %cleanup #false
+return
+
+sub SetUpSkills
+chooseskill hiding
+wait 5
+set %hideskill #skill
+chooseskill tinkering
+wait 5
+set %tinkerskill #skill
+chooseskill tinkering
+wait 5
+if #skillLock <> up
+{
+	menu delete status
+	menu text status 50 5 Tinkering Skill is down or locked.
+	display ok Your Tinkering skill is down! $Pointless to run this script don't you think?$
+	halt
+}
+if #skill < 250 && ! %debug
+{
+	menu delete status
+	menu text status 50 5 Go buy some Tinkering skill!
+	display ok This script requires that you go buy your Tinkering$skill up to at least 25 or train manually.$$
++Please do so and restart the script, thank you.
+	menu hide
+	halt
+}
+gosub getGlobalVar %gvar %scriptname #charid  _startskill
+if ! #result || %_startskill = N/A
+{
+	set %_startskill #skill
+	gosub putGlobalVar %gvar %scriptname #charid  _startskill
+}
+set %startskill #skill
+set %currentskill #skill
+set %skillcap #skillcap
+gosub SetupSkillTable
+return
+
+;=================================================
+;         Skill table stuff
+;=================================================
+sub SetupSkillTable
+set %_lpc #lpc
+set #lpc 1000
+if %train_method = N/A
+	set %train_method 1
+if %train_method = %ud1 || %train_method = %ud2
+{
+	set %skillTableSize N/A
+	set %fnum %train_method - %totalTrainingMethods
+	call tinker , %fnum , .txt
+	if %skillTableSize = N/A
+	{
+		menu hide
+		menu hideeuo
+		display ok tinker , %fnum , .txt is an invalid format. Changing to$
++Method 1 instead.
+		menu show
+		set %tm 1
+		set %train_method 1
+		gosub Train_ , %train . %train_method
+		gosub putGlobalVar %gvar %scriptname #charid train_method
+		goto SST_Done
+	}
+	gosub setResource
+	goto SST_Done
+}
+gosub Train_ , %train . %train_method
+SST_Done:
+set %desc30 Lady, , #spc , you , #spc , are , #spc , done!
+if #sex = 0
+	set %desc30 Lord, , #spc , you , #spc , are , #spc , done!
+set #lpc %_lpc
+gosub SelectItemToMake
+set %currentitem #result
+return
+
+sub TRAIN_CEO1
+set %skillTableSize 4
+set %runuo #false
+;
+;
+; 0-25 Train from NPC Tinkering 0-25 Agility
+; 25-45 Gears
+; 45-95 Lockpicks
+; 95-100 Heating Stands
+set %desc1 Gears
+set %resource1 %ironingots
+set %needed1 2
+set %product1 RCG
+set %category1 5
+set %selection1 1
+set %nextpage1 0
+set %statindex1 2
+set %discardTrashBarrel1 #false
+set %low1 250
+set %high1 499
+; 
+set %desc2 Clock_Parts
+set %resource2 %ironingots
+set %needed2 1
+set %product2 FCG
+set %category2 5
+set %selection2 2
+set %nextpage2 0
+set %statindex2 3
+set %discardTrashBarrel2 #false
+set %low2 %high1 + 1
+set %high2 649
+; 
+set %desc3 Lockpicks
+set %resource3 %ironingots
+set %needed3 1
+set %product3 NWH
+set %category3 4
+set %selection3 8
+set %nextpage3 1
+set %statindex3 4
+set %discardTrashBarrel3 #false
+set %low3 %high2 + 1
+set %high3 899
+;
+set %desc4 Heating_stands
+set %resource4 %ironingots
+set %needed4 4
+set %product4 BDJ_EDJ
+set %category4 7
+set %selection4 8
+set %nextpage4 0
+set %statindex4 5
+set %discardTrashBarrel4 #true
+set %low4 %high3 + 1
+set %high4 1000
+return
+
+sub TRAIN_RUNUO1
+set %skillTableSize 4
+set %runuo #true
+; 0-25 Train from NPC Tinkering 0-25 Agility
+; 25-45 Gears
+; 45-95 Lockpicks
+; 95-100 Heating Stands
+set %desc1 Gears
+set %resource1 %ironingots
+set %needed1 2
+set %product1 RCG_ZVH
+set %category1 4
+set %selection1 1
+set %nextpage1 0
+set %statindex1 2
+set %discardTrashBarrel1 #false
+set %low1 250
+set %high1 499
+; 
+set %desc2 Clock_Parts
+set %resource2 %ironingots
+set %needed2 1
+set %product2 FCG_ZVH
+set %category2 4
+set %selection2 2
+set %nextpage2 0
+set %statindex2 3
+set %discardTrashBarrel2 #false
+set %low2 %high1 + 1
+set %high2 649
+; 
+set %desc3 Lockpicks
+set %resource3 %ironingots
+set %needed3 1
+set %product3 NWH_IWH
+set %category3 3
+set %selection3 8
+set %nextpage3 1
+set %statindex3 4
+set %discardTrashBarrel3 #false
+set %low3 %high2 + 1
+set %high3 899
+;
+set %desc4 Heating_stands
+set %resource4 %ironingots
+set %needed4 4
+set %product4 BDJ_EDJ
+set %category4 6
+set %selection4 8
+set %nextpage4 0
+set %statindex4 5
+set %discardTrashBarrel4 #true
+set %low4 %high3 + 1
+set %high4 1000
+return
+
+sub TRAIN_RUNUO2
+set %skillTableSize 4
+set %runuo #true
+; 0-25 Train from NPC Tinkering 0-25 Agility
+; 25-45 Gears
+; 45-95 Lockpicks
+; 95-100 Heating Stands
+set %desc1 Gears
+set %resource1 %ironingots
+set %needed1 2
+set %product1 RCG
+set %category1 4
+set %selection1 1
+set %nextpage1 0
+set %statindex1 2
+set %discardTrashBarrel1 #false
+set %low1 250
+set %high1 499
+;
+set %desc2 Clock_Parts
+set %resource2 %ironingots
+set %needed2 1
+set %product2 FCG
+set %category2 4
+set %selection2 2
+set %nextpage2 0
+set %statindex2 3
+set %discardTrashBarrel2 #false
+set %low2 %high1 + 1
+set %high2 649
+;
+set %desc3 Lockpicks
+set %resource3 %ironingots
+set %needed3 1
+set %product3 NWH_IWH
+set %category3 3
+set %selection3 8
+set %nextpage3 1
+set %statindex3 4
+set %discardTrashBarrel3 #false
+set %low3 %high2 + 1
+set %high3 899
+;
+set %desc4 Heating_stands
+set %resource4 %ironingots
+set %needed4 4
+set %product4 BDJ_EDJ
+set %category4 6
+set %selection4 8
+set %nextpage4 0
+set %statindex4 5
+set %discardTrashBarrel4 #true
+set %low4 %high3 + 1
+set %high4 1000
+return
+
+sub SelectItemToMake
+for %i 1 %skillTableSize
+{
+	if %low . %i <= %currentskill && %currentskill <= %high . %i
+		return %i
+}
+return %skillTableSize
+
+
+sub StatusBarUp
+gosub DisconnectCheck
+;purpose - make sure the status bar is up on the char
+	IF #charname = N/A
+	{
+		Event Macro 8 2
+		wait %wait2
+	}
+return
+
+sub SkillChart
+set %tm %train_method
+display ok Please note: When choosing a skill table,  if you play on$
++an EA/OSI shard DO NOT select a RunUO table. These$
++tables are designed for users playing on freeshards$
++and will not work correctly on EA/OSI shards.
+sc1:
+menu clear
+menu window transparent 100
+set %windowsizey 135 + ( %skillTableSize * 15 )
+set %windowsizex 370
+menu window size %windowsizex %windowsizey
+menu window title CEOTurboTinker %version
+menu window color black
+menu font bgcolor BLACK
+menu font color yellow
+menu show %menu_windowx %menu_windowy
+menu shape myshape1 3 62 345 1 3 7 5 blue 3 white
+menu font size 12
+menu font style bu
+menu text h1 135 5 Skill Chart
+menu font style n
+menu font size 9
+menu font color yellow
+menu text h1 5 30 Current Skill Level
+menu text h1 5 45 Skillcap
+menu text h1 110 30 :
+menu text h1 110 45 :
+if %maxskillcap <> N/A
+	menu text h1 175 45 Max Skillcap:
+menu font align right
+menu text h1 200 65 Ingots
+menu font style u
+menu text h1 200 80 Needed
+menu text h1 280 80 Low
+menu text h1 333 80 High
+menu font align left
+menu text h1 25 80 Item to Make
+menu font style n
+menu font color lime
+menu font align right
+menu text h1 145 30 %currentskill
+menu text h1 145 45 %skillcap
+if %maxskillcap <> N/A
+	menu text h1 275 45 %maxskillcap
+menu font align left
+menu font style ub
+menu text h1 250 10 Method
+menu font color silver
+menu font style n
+menu font bgcolor silver
+menu font color blue
+menu combo create trainmethod 175 25 170
+for %z 1 %totalTrainingMethods
+{
+	menu combo add trainmethod %z , #dot , %train . %z
+}
+menu combo add trainmethod %ud1 , #dot , User Defined tinker1.txt
+menu combo add trainmethod %ud2 , #dot , User Defined tinerk2.txt
+menu Combo Select trainmethod %train_method
+menu font align left
+menu font color white
+menu font bgcolor black
+menu font size 8
+for %sc 1 %skillTableSize
+{
+	set %y 80 +  %sc * 15
+	if %low . %sc <= %currentskill && %currentskill <= %high . %sc
+	{
+		menu font bgcolor $222277
+		menu Shape sc 9 %y 328 15 3 1 1 white 7 $222277
+	}
+	menu text skill 10 %y %desc . %sc
+	menu font align right
+	menu text rname 200 %y %needed . %sc
+	menu text lowswitch  280 %y %low . %sc
+	menu text highswitch  335 %y %high . %sc
+	menu font align left
+	menu font bgcolor black
+}
+set %y  %y + 25
+set #menubutton N/A
+menu font bgcolor teal
+menu font color black
+menu button Return 120 %y 120 20 Return to Tinkering
+sc2:
+wait %shortwait
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+wait 5
+if #menubutton = n/a
+{
+       	menu get trainmethod
+	if %tm <> #menures
+	{
+		set %train_method #menures
+		set %tm %train_method
+		gosub putGlobalVar %gvar %scriptname #charid train_method
+		menu font size 30
+		menu font style b
+		menu font bgcolor silver
+		menu font color black
+		set %y %windowsizey / 2 - 30
+		set %x %windowsizex / 2 - 100
+		menu text  gtext  %x %y Please Wait
+		wait 2
+		sound
+		menu font size 9
+		menu font style n
+		menu font bgcolor black
+		menu font color lime
+		set %bpmsgon #false
+		if %backpackid = n/a
+		{
+			set %adjusttimer 0
+			set %backpackid #backpackid
+		}
+		gosub ClearMenuGump
+		gosub statusbarup
+		gosub SetUpSkills
+		menu delete gtext
+		set %bpmsgon #true
+		set %firstattempt #true
+		goto SC1
+	}
+	goto SC2
+}
+if #menubutton <> return && #menubutton <> closed
+	goto sc2
+set #menubutton N/A
+set %lastehours N/A
+set %lastemins N/A
+set %lastesecs N/A
+menu font bgcolor black
+menu font color lime
+set %firstmenu #true
+gosub initmenu
+gosub RedrawResourceStats
+menu font align right
+menu delete g1
+menu delete g2
+menu delete g3
+set %tinkeringgain #skill - %startskill
+set %rate %tinkeringgain * 3600 / ( #scnt - %scriptstart2  )
+menu font align right
+menu text g1 130 290 #skill
+menu text g2 190 290 %tinkeringgain
+menu text g3 250 290 %rate
+menu font align left
+return
+
+sub WaitTimer
+set %timer #scnt + %1
+WT1:
+set %countdown %timer - #scnt
+menu delete timer
+menu text timer 200 5 ( , %countdown , )
+wait 5
+if #scnt < %timer
+	goto WT1
+menu delete timer
+return
+
+sub countresource
+; %1 = resourcetype
+set %_resourcetype %1
+set %resourcestack 0
+set %totalstacks 0
+if %2
+{
+	finditem %_resourcetype c_ , %backpackID
+	return #findcnt
+}
+CR1:
+finditem %_resourcetype c_ , %backpackID
+if #findkind <> -1
+{
+	set %resourcestack %resourcestack + #findstack
+	set %totalstacks %totalstacks + 1
+	ignoreitem #findid resourcestack
+	goto CR1
+}
+ignoreitem reset resourcestack
+return %resourcestack
+
+sub skillchangedisplay
+for %scd 1 30
+{
+	set %c1 #random % 255
+	set %c2 #random % 255
+	set %c3 #random % 255
+	menu window color %c1 , %c2 , %c3
+	wait 2
+}
+menu window color red
+wait 5
+menu window color black
+return
+
+sub setupStats
+set %stat_desc0 Attempts
+set %stat_desc1 Ingots
+set %stat_cost1 10
+set %stat_desc2 %desc1
+set %stat_cost2 0
+set %stat_desc3 %desc2
+set %stat_cost3 0
+set %stat_desc4 %desc3
+set %stat_cost4 0
+set %stat_desc5 %desc4
+set %stat_cost5 0
+;set %stat_totals4 12
+;	gosub putGlobalVar %gvar %scriptname #charid stat_totals4
+;pause
+set %totalstats 5
+for %i 0 %totalstats
+{
+	set %stat_thisgain . %i 0
+	set %stat_lastgain . %i 0
+	gosub getGlobalVar %gvar %scriptname #charid stat_totals , %i NOLOCK
+	if ! #result
+	{
+		set %stat_totals . %i 0
+		gosub putGlobalVar %gvar %scriptname #charid stat_totals , %i
+	}
+}
+return
+
+sub RedrawResourceStats
+menu font align right
+for %i 0 %totalstats
+{
+	set %x 105 + ( %i * 15 )
+	menu delete stat_thisgain , %i
+	menu text stat_thisgain , %i 137 %x %stat_thisgain . %i
+	menu delete stat_lastgain , %i
+	menu text stat_lastgain , %i 192 %x %stat_lastgain . %i
+	menu delete stat_totals , %i
+	menu text stat_totals , %i 260 %x %stat_totals . %i
+	set %lastdisplay . %i %stats_totals . %i
+}
+menu font align left
+return
+
+sub ClearMenuGump
+if %cleanup
+	return
+gosub bringGumpForward
+set %waittime #scnt + 2
+CMG1:
+wait 5
+if #contname <> generic_gump && %waittime > #scnt
+	goto CMG1
+if #contname <> generic_gump
+	return
+CMG2:
+gosub makefirstitem %exitbutton 99
+set %retrycount 11
+wait %wait1
+return
+
+sub bringGumpForward
+set %forwardx %gumpx + 5
+set %forwardy %gumpy + 5
+savePix %forwardx %forwardy 1
+if #pixcol = 7568251
+{
+	click %forwardx %forwardy f ; bring the gump forward if it's not already
+	return
+}
+set %forwardx %gumpx + 5
+set %forwardy %gumpy + 426
+savePix %forwardx %forwardy 1
+if #pixcol = 7568251
+{
+	click %forwardx %forwardy f ; bring the gump forward if it's not already
+	return
+}
+set %forwardx %gumpx + 522
+set %forwardy %gumpy + 431
+savePix %forwardx %forwardy 1
+if #pixcol = 7568251
+{
+	click %forwardx %forwardy f ; bring the gump forward if it's not already
+	return
+}
+set %forwardx %gumpx + 523
+set %forwardy %gumpy + 5
+savePix %forwardx %forwardy 1
+if #pixcol = 7568251
+{
+	click %forwardx %forwardy f ; bring the gump forward if it's not already
+	return
+}
+return
+
+sub SelectIron
+menu delete status
+menu text status 50 5 Selecting iron ingots.
+gosub makefirstitem 16 1
+set %ironselected #true
+return
+
+
+sub CheckEUOVersion
+; the.wza's version check from the boards. Modified a little....
+if ! %versioncheck
+	return #true
+   nameSpace push
+   nameSpace Local CheckEUOVersion
+   set !VerMajor %1
+   set !VerMinor %2
+   set !VerBuild %3
+	set !params %0
+   gosub _getStringBeforeUnderscore #euoVer
+   set !euoMajor #result
+   gosub _getStringBeforeUnderscore #strRes
+   set !euoMinor #result
+   set !euoBuild #strRes
+	if !params = 6
+	{
+		set % . %4 !euoMajor
+		set % . %5 !euoMinor
+		gosub converthex !euobuild
+		set % . %6 #result
+	}
+   set %0 !euoMajor > !VerMajor ||
+      + ( !euoMajor = !VerMajor && !euoMinor > !VerMinor ) ||
+      + ( !euoMajor = !VerMajor && !euoMinor = !VerMinor && !euoBuild >= !VerBuild )
+   nameSpace clear
+   nameSpace pop
+return %0
+
+; in : xxx_yyy 
+; out : #result = xxx 
+;       #strRes = yyy 
+sub _getStringBeforeUnderscore
+   str Pos %1 _
+   set !len #strRes - 1
+   str Left %1 !len
+   set %0 #strRes
+   set !len !len + 1
+   str Del %1 1 !len
+return %0
+
+sub converthex
+; assumes the normal max of 4 hex digits in build format.
+set %decimal %1
+set %_h0 0
+set %_h1 1
+set %_h2 2
+set %_h3 3
+set %_h4 4
+set %_h5 5
+set %_h6 6
+set %_h7 7
+set %_h8 8
+set %_h9 9
+set %_h10 a
+set %_h11 b
+set %_h12 c
+set %_h13 d
+set %_h14 e
+set %_h15 f
+set %h1 %decimal / 4096
+if %h1 <> 0
+	set %decimal %decimal - ( %h1 * 4096 )
+set %h2 %decimal / 256
+if %h2 <> 0
+	set %decimal %decimal - ( %h2 * 256 )
+set %h3 %decimal / 16
+if %h3 <> 0
+	set %decimal %decimal - ( %h3 * 16 )
+set %h4 %decimal % 16
+set %hex x , %_h . %h1 , %_h . %h2 , %_h . %h3 , %_h . %h4
+return %hex
+
+sub displaydiagnostics
+display ok %1 , #spc ,  %2  $ %3 , #spc ,  %4  $ %5 , #spc , %6
+return
+
+sub PositionWindow
+set %count #scnt + 25
+menu font color white
+menu delete status
+menu window title  Positioning EasyUO window.
+set %count2 %count - #scnt
+PW1:
+wait 5
+menu text status 50 5  Hold [Esc] key down when done.
+set %count2 %count - #scnt
+menu show #cursorx #cursory
+onhotkey ESC
+      set %count #scnt - 1
+wait 5
+menu delete status
+if #scnt < %count
+	goto PW1
+set %menu_windowx #cursorx
+set %menu_windowy #cursory
+gosub putGlobalVar %gvar %scriptname #charid menu_windowx
+gosub putGlobalVar %gvar %scriptname #charid menu_windowy
+menu window title CEOTurboTinker %version
+menu delete status
+menu font color lime
+return
+
+sub InitialSetup
+set #menubutton N/A
+set %retrycount 11
+display okcancel Running setup for %scriptname , #dot $
++Press OK, and we'll take care of$some configuration stuff.
+if #dispres = cancel
+	return #false
+set %setuptmethod %train_method
+gosub skillchart
+set %menu_windowx #cursorx
+set %menu_windowy #cursory
+set %lastehours N/A
+set %lastemins N/A
+set %lastesecs N/A
+gosub initmenu
+gosub PositionWindow
+wait %wait2
+set %hideme #true
+display yesno Would you like to always try to hide your character?
+if #dispres = no
+	set %hideme #false
+gosub putGlobalVar %gvar %scriptname #charid hideme
+set %adjusttimer 10
+display OK  You will now be adjusting your backpack, secure (or bankbox),$
++and resource container. None of these containers should be$blocked by anything,
++ including the tinkering menu.$$Press OK to continue.$
+set %securecontainerid N/A
+set %resourcebagid  N/A
+gosub putGlobalVar %gvar %scriptname #charid securecontainerid
+gosub putGlobalVar %gvar %scriptname #charid resourcebagid
+gosub AutoSetup
+if %stat_totals0 <> 0
+	gosub ResetStats
+menu delete status
+menu text status 50 5  Setup done.
+set %adjusttimer 0
+set #menubutton N/A
+return #true
+
+;==================================== 
+; Subs Specific to training tinkering
+;====================================
+sub displayIngotCount
+menu font size 8
+if %ingotcount > 250
+{
+	menu font color silver
+	goto DIC1
+}
+if %ingotcount > 100
+{
+	menu font color black
+	menu font bgcolor yellow
+	goto DIC1
+}
+menu font color black
+menu font bgcolor red
+DIC1:
+menu delete ingotcount
+menu font align right
+menu text ingotcount 97 121 %ingotcount
+menu font align left
+menu font size 9
+menu font color lime
+menu font bgcolor black
+return
+
+sub CheckTinkerKits
+if %NoEventProperty
+{
+	gosub CountTinkerKits #false
+	if #result <= 1
+	{
+		gosub GetMoreSkillTools
+		set %min_uses 999
+		return
+	}
+	return
+}
+if %min_uses <> 999
+{
+	set %min_uses %min_uses - 1
+	if %min_uses < 10
+	{
+			gosub CountTinkerKits #false
+			if ( #result = 0 ) || ( #result = 1 && %min_uses < 10 )
+			{
+				gosub GetMoreSkillTools
+				set %min_uses 999
+			}
+	}
+	return
+}
+gosub CountTinkerKits #false
+if ( #result = 0 ) || ( #result = 1 && %min_uses < 10 )
+	gosub GetMoreSkillTools
+return
+
+sub CheckTimeToDump
+if %discardTrashBarrel . %currentitem
+{
+	gosub countresource %product . %currentitem #true
+	if #result > %maxtokeep || #result > 100
+		gosub DumpProducts %product . %currentitem %desc . %currentitem
+}
+return
+
+
+sub LocateTheDump
+if %discardTrashBarrel . %currentitem
+{
+	if ! %atbank
+		gosub FindDumpster
+
+	if %atbank
+		gosub FindTrashCan 15
+}
+return
+
+sub DumpProducts
+set %_dp1 %1
+set %_dp2 %2
+wait %wait2
+gosub ClearMenuGump
+if ! %atbank
+{
+	gosub FindDumpster
+	nextcpos %trash_barrelx %trash_barrely
+	set #lobjectid %trashcanid
+	wait %wait2
+	event macro 17 0
+	wait %longwait
+	if #contid = %trashcanid
+		contpos %trash_barrelx %trash_barrely
+	wait %wait1
+	set %trash_clickx %trash_barrelx + 30
+	set %trash_clicky %trash_barrely + 160
+	gosub MoveProductstoTrash %_dp1 %_dp2
+}
+if %atbank
+{
+	set %charposx #charposx
+	set %charposy #charposy
+	gosub FindTrashCan 15
+;set %rdist ( #random % 2 ) + 1
+set %dpb 0
+DPBank1:
+	if %runuo
+		gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+	gosub moveCharacter #findx #findy 1 %trashcanid
+	gosub FindTrashCan 2
+	nextcpos %trash_barrelx %trash_barrely
+	set #lobjectid %trashcanid
+	wait %wait2
+	event macro 17 0
+	wait %longwait
+	if #contid <> %trashcanid
+	{
+		set %dpb %dpb + 1
+		if %dbp < 3
+			goto DPBank1
+		display ok There seems to be a problem getting to or opening$
++the bank trashcan. Pausing script.
+		gosub pause
+		set %dbp 0
+		goto DPBank1
+	}
+	if #contid = %trashcanid
+		contpos %trash_barrelx %trash_barrely
+	set %trash_clickx  %trash_barrelx + 90
+	set %trash_clicky %trash_barrely + 150
+	gosub hideme
+	gosub MoveProductstoTrash %_dp1 %_dp2
+	gosub moveCharacter %charposx %charposy 0 N/A
+	gosub hideme
+	gosub CheckForBank
+	gosub GetResourceBag
+}
+return
+
+sub moveCharacter
+; %1=x, %2=y, %3=tolerance
+set %_charx %1
+set %_chary %2
+set %_tolerance %3
+set %_target %4
+set %mc1 0
+msg $
+set %waittime #scnt + 10
+MC1:
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+gosub waitForGate
+move %_charx %_chary %_tolerance 1s
+if %_tolerance = 0 && ( #charposx  = %_charx && #charposy = %_chary )
+	return
+if %_target <> N/A
+{
+	finditem %_target
+	if #findkind <> -1 && ( #finddist <= %_tolerance )
+		return
+}
+if %waittime > #scnt
+	goto MC1
+if %_tolerance = 0 && ( #charposx <> %_charx || #charposy <> %_chary )
+{
+	set %mc1 %mc1 + 1
+	if %mc1 < 3
+		goto MC1
+	event pathfind %_charx %_chary #charposz
+	wait 2s 2s
+}
+return
+
+sub waitForGate
+WFG1:
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+wait 5
+finditem %moongates G_12
+if #findkind <> -1
+{
+	menu delete status
+	menu text status 50 5 Waiting for gate to disappear.
+	set #waittime #scnt + 5
+	goto WFG1
+}
+return
+
+
+sub MoveProductstoTrash
+set %_mpt1 %1
+set %_mpt2 %2
+gosub resetjournal
+wait %wait1
+MBT1:
+if %runuo
+	gosub CEOWorldSaveChecker save_in_1_minute world_is_saving world_save_complete 45 120
+if #menubutton = pause
+	gosub pause
+finditem %_mpt1 C_ , %backpackid
+if #findkind <> -1
+{
+	str lower %_mpt2
+	menu delete status
+	menu text status 50 5 Dumping #strres , ( , #findcnt , ).
+	event drag #findid
+	if #findstack > 1
+	{
+		wait %wait1 5
+		msg $
+	}
+	set %mbt2 0
+MBT2:
+     if #lliftedkind = 0
+        goto MBT2
+	wait 5
+	click %trash_clickx %trash_clicky p
+	wait 5
+	if #lliftedkind <> 0
+	{
+		set %mbt2 %mbt2 + 1
+		if %mbt2 > 5
+		{
+			if %mbt2 > 9
+			{
+				menu delete status
+				menu text status 50 5 Aborting dump.
+				str lower %_mpt2
+				display ok There is a problem transferring #strres to your trashcan.$You will need to do it manually.$Pausing script.$
+				gosub pause
+				return
+			}
+			menu delete status
+			menu text status 50 5 Dump Problems, Trying again...
+			set #lobjectid %trashcanid
+			event macro 17 0
+			wait %wait1
+			if #contid = %trashcanid
+				contpos %trash_barrelx %trash_barrely
+			goto MBT2
+		}
+		goto MBT2
+	}
+	wait %wait1
+	set %mbt2 0
+	if ! %talkietalkie || H in #charstatus
+		goto MBT1
+	scanjournal 1
+	if burp in #journal && ( ( #random % 15 ) = 1 )
+		msg burp.$
+	if salt in #journal && ( ( #random % 30 ) = 1 )
+		msg got a lemon?$
+	if tasty in #journal && ( ( #random % 50 ) = 1 )
+		msg lots more where that came from!$
+	if mmm in #journal && ( ( #random % 100 ) = 1 )
+		msg Campbell soup is mmm good!$
+	if stink in #journal && (  #random  = 1 )
+		msg Roadkill doesn't taste good!$
+	goto MBT1
+}
+return
+
+
+sub FindDumpster
+FD1:
+menu delete status
+menu text status 50 5 Locating dumpster.
+set %trash_clickx 0
+set %trash_clicky 0
+finditem %trashbarreltype G_2
+if #findkind <> -1
+{
+	set %trashcanid #findid
+	return #true
+}
+gosub NoDumpster
+goto FD1
+return #false
+
+
+sub NoDumpster
+sound
+menu font bgcolor red
+menu font color black
+menu delete status
+menu text status 50 5 You're not near a trash barrel!
+menu font bgcolor black
+menu font color lime
+set #menubutton pause
+gosub pause
+return
+
+sub FindTrashCan
+set %_distance %1
+FTC1:
+menu delete status
+menu text status 50 5 Locating trashcan.
+set %trashx 0
+set %trashy 0
+finditem %bankgarbage G_ , %_distance
+if #findkind <> -1
+{
+	if ! %NoEventProperty
+	{
+		event property #findid
+		if %trashcantext notin #property
+		{
+			ignoreitem #findid badtrash
+			goto FTC1
+		}
+	}
+	if abs ( #findz - #charposz ) > 10
+	{
+		ignoreitem #findid badtrash
+		goto FTC1
+	}
+	set %trashcanid #findid
+	return #true
+}
+gosub NoTrashCan %_distance
+goto FTC1
+return #false
+
+
+sub NoTrashCan
+sound
+menu font bgcolor red
+menu font color black
+menu delete status
+menu text status 50 5 You're not %1 paces from a Bank trash can!
+menu font bgcolor black
+menu font color lime
+set #menubutton pause
+gosub pause
+return
+
+;check if Event Property works
+sub CheckEventProperty
+str len #charname
+set %charlen #strres
+event property #charid
+wait 5
+if #property = $
+	return #false
+str len #property
+if #strres < %charlen
+	return #false
+return #true
+
+;==================================
+;===         End of CEOTurboTinker          ==
+;================================== 
+;==================================
+; Script Name:  CEO's * variable management subs (pseudo filesystem)
+; Author: CEO
+; Version: 1.1
+; Client Tested with: 4.0.1b
+; EUO version tested with: 1_41_103
+; Shard OSI / FS: OSI
+; Revision Date: 040219
+; Public Release: 040219
+; Globals Used: User specified (2 total)
+; Purpose: Allows you to use a * variable as a pseudo-filesystem
+;=======================================
+; CEO's global variable management subs:
+;      getGlobalVar  . putGlobalVar  . delGlobalVar
+;=======================================
+;
+;ver 1.1
+;changed the lock file to use *variablename_lock so it'll work with any named *variable
+;
+Sub getGlobalVar
+
+;ver 1.0 posted 19Feb04 by CEO
+;purpose: Allows you to store multiple variables in one global variable unique to
+;             each player and script. getGlobaVar retrieves a value from a global variable.
+;@returns: #result = #false if variable not found, #true if found
+;            % . %3 contains variable value
+;%1 is the global/persistant variable to use ( %1 + 1 is used for locking)
+;%2 is the script identifer or pseudo filename
+;%3 is #charid or pseudo filename
+;%4 is the variable to search for and return in %. %3
+;%5 is for lock control. By default getGlobalVar uses a lock to return a value. In some cases you may want to
+;       retrieve a variable (mostly for speed) without needing a lock as long as you are aware of
+      any potentional conflicts, that very rarely may occur. Set this param to NOLOCK to access
+      global storage without a lock.
+;sample usage:
+;               gosub getGlobalVar 50 MyScript #charid backpackid
+; Using global var *50 finds the variable labeled MyScript#charidbackpackid and returns it in %backpackid
+;
+;               gosub getGlobalVar 50 MyScript #charid clothstat NOLOCK
+; Using global var *50 find the variable labeled MyScript#charidclothstat and returns it in %clothstat without using a lock
+; Warning: do not use *1000. * %1 + 1 is used for locking and there is no *1001!
+nameSpace push
+nameSpace local #systime , _ , %2 , _ , %3 , _ , %4 , _ , GET
+set !lpc #lpc
+set #lpc 1000
+set !lock %1 , _lock
+if ( %0 = 5 ) && ( %5 = NOLOCK )
+   goto getGlobalVar_skiplock
+set !lockcount 0
+getGlobalVar_waitforlock:
+if * . !lock <> N/A && * . !lock <> #nsname
+{
+   wait 1 4
+   set !lockcount !lockcount + 1
+   if !lockcount < 10
+      goto getGlobalVar_waitforlock
+   if * . !lock <> N/A
+   {
+      set !currentlock * . !lock
+      if !currentlock = N/A
+         goto getGlobalVar_waitforlock
+      str pos !currentlock _
+      set !strres #strres - 1
+      str left !currentlock !strres
+      set !systime #systime - #strres
+      if !systime < 10000 ; if over 10 seconds assume a broken lock and take it
+      {
+         set !lockcount 0
+         goto getGlobalVar_waitforlock
+      }
+   }
+}
+set * . !lock #nsname
+wait 3 2
+if  * . !lock <> #nsname
+{
+   set !lockcount 0
+   goto getGlobalVar_waitforlock
+}
+getGlobalVar_skiplock:
+set !global * . %1
+set !varName %2 , ^ , %3 , ^ , %4 , |
+str pos !global !varName
+set #result #strres <> 0
+if #result
+{
+   set !varNamePos #strres
+   str len !varName
+   set !delString !varNamePos + #strres - 1
+   str del !global 1 !delString
+   set !global #strres
+   str pos !global |
+   set !varNamePos #strres - 1
+   str left !global !varNamePos
+   set % . %4 #strres
+}
+if ( %0 < 5 || %5 <> NOLOCK ) && * . !lock = #nsname
+   set * . !lock N/A
+set #lpc !lpc
+nameSpace Clear
+nameSpace Pop
+return #result
+
+Sub putGlobalVar
+;ver 1.0 posted 19Feb04 by CEO
+;purpose: Allows you to store multiple variables in one global variable unique to
+;             each player and script. putGlobaVar stores a value into a global variable.
+
+;@returns: #result = #false if variable not found, #true if found
+;            % . %3 contains variable
+;%1 is the global/persistant variable to use
+;%2 is the script identifer or pseudo filename
+;%3 #charid or other identifier
+;%4 is the variable name of the variable to save into the* variable identified in %1
+;sample usage:
+;               gosub putGlovalVar 50 MyScript #chardid backpackid
+; Using global var *50 stores/updates the variable labeled MyScript#charidbackpackid  with %backpackid
+; Warning: do not use *1000. * %1 + 1 is used for locking and there is no *1001!
+nameSpace push
+nameSpace local #systime , _ , %2 , _ , %3 , _ , %4 , _  , PUT
+set !lpc #lpc
+set #lpc 1000
+set !lock %1 , _lock
+set !lockcount 0
+putGlobalVar_waitforlock:
+if * . !lock <> N/A && * . !lock <> #nsname
+{
+   wait 1 4
+   set !lockcount !lockcount + 1
+   if !lockcount < 10
+      goto putGlobalVar_waitforlock
+   if * . !lock <> N/A
+   {
+      set !currentlock * . !lock
+      if !currentlock = N/A
+         goto putGlobalVar_waitforlock
+      str pos !currentlock _
+      set !strres #strres - 1
+      str left !currentlock !strres
+      set !systime #systime - #strres
+      if !systime < 10000 ; if over 10 seconds assume a hung lock and take it
+      {
+         set !lockcount 0
+         goto putGlobalVar_waitforlock
+      }
+   }
+}
+set * . !lock #nsname
+wait 4
+set !global * . %1
+set !varName %2 , ^ , %3 , ^ , %4 , |
+str pos !global !varName
+if #strres = 0
+{
+   if  * . !lock <> #nsname
+   {
+      set !lockcount 0
+      goto putGlobalVar_waitforlock
+   }
+   if  |CEO*FILESYSTEM| notin !global
+      set !global |CEO*FILESYSTEM|
+   set * . %1 !global , !varName , % . %4 , |
+   set * . !lock N/A
+   set #lpc !lpc
+   nameSpace clear
+   nameSpace pop
+   return #true
+}
+set !varNamePos #strres
+str len !varName
+set !splitString !varNamePos + #strres - 1
+str left !global !splitstring
+set !globalPart1 #strres
+str del !global 1 !splitString
+set !global #strres
+str len !global
+set !globalLen #strres
+str pos !global |
+set !splitString !globalLen - #strres + 1
+str right !global !splitstring
+set !global #strres
+if  * . !lock <> #nsname
+{
+   set !lockcount 0
+   goto putGlobalVar_waitforlock
+}
+set * . %1 !globalPart1 , % . %4 , !global
+set * . !lock N/A
+set #lpc !lpc
+nameSpace clear
+nameSpace pop
+return #true
+
+
+Sub delGlobalVar
+;ver 1.0 posted 19Feb04 by CEO
+;purpose: Allows you to delete a variable out of the globalvar pool unique to
+;             each player and script. delGlobaVar deletes a global variable in a * variable.
+
+;@returns: #result = #false if variable not found, #true if  deleted
+;
+;%1 is the global/persistant variable to use
+;%2 is the script identifer or pseudo filename
+;%3 is #charid or other identifier
+;%4 is the variable name of the variable to save into the* variable identified in %1
+;sample usage:
+;               gosub delGlovalVar 50 MyScript #charid backpackid
+; Using global var *50 deletes  the variable label MyScript#charidbackpackid  and it's associated value.
+; Warning: do not use *1000. * %1 + 1 is used for locking and there is no *1001!
+nameSpace push
+nameSpace local #systime , _ , %2 , _ , %3 , _ , %4 , _ , DEL
+set !lpc #lpc
+set #lpc 1000
+set !lock %1 , _lock
+set !lockcount 0
+delGlobalVar_waitforlock:
+if * . !lock <> N/A && * . !lock <> #nsname
+{
+   wait 1 4
+   set !lockcount !lockcount + 1
+   if !lockcount <  10
+      goto delGlobalVar_waitforlock
+
+   if * . !lock <> N/A
+   {
+      set !currentlock * . !lock
+      if !currentlock = N/A
+         goto delGlobalVar_waitforlock
+      str pos !currentlock _
+      set !strres #strres - 1
+      str left !currentlock !strres
+      set !systime #systime - #strres
+      if !systime < 10000 ; if over 10 seconds assume a broken lock and take it
+      {
+         set !lockcount 0
+         goto delGlobalVar_waitforlock
+      }
+   }
+
+}
+set * . !lock #nsname
+wait 4
+set !global * . %1
+set !varName %2 , ^ , %3 , ^ , %4 , |
+str pos !global !varName
+set #result #strres <> 0
+if #result
+{
+   set !varNamePos #strres
+   str len !varName
+   set !splitString !varNamePos + #strres - 1
+   set !delString !varNamePos - 1
+   str left !global !delString
+   set !globalPart1 #strres
+   str del !global 1 !splitString
+   set !global #strres
+   str pos !global |
+   set !delString #strres
+   str del !global 1 !delString
+   if  * . !lock <> #nsname
+   {
+      set !lockcount 0
+      goto delGlobalVar_waitforlock
+   }
+   set * . %1 !globalPart1 , #strres
+}
+if  * . !lock = #nsname
+   set * . !lock N/A
+set #lpc !lpc
+nameSpace clear
+nameSpace pop
+return #result
+
+;
+;----------------------------------- End CEOStarFileSystem
+
+sub CleanoutPack
+finditem %bodbooks , _ , %bagtypes  C_ , %backpackid
+if #findkind <> -1
+{
+	display YesNo In order for this script to make Heating Stands$
++reliably your backpack must be empty of bodbooks$
++and other packs filled with items.$$Bods and/or other packs detected.$$
++Move them to your resource container now?
+	if #dispres = no
+		return
+	gosub MaterialsToResource %bodbooks Bod_Books
+	gosub MaterialsToResource %bagtypes Subpacks
+}
+return
+
+sub GetMaxtoKeep
+if %NoEventProperty
+{
+GMTK1:
+	finditem * C_ , %backpackid
+	set %maxtokeep 110 - #findcnt  - %maxskilltools
+	return
+}
+event property %backpackid
+str pos #property $
+if #strres = 0
+	goto GMTK1
+str del #property 1 #strres
+set %_property #strres
+str pos %_property #spc
+if #strres = 0
+	goto GMTK1
+set %_pos #strres - 1
+str mid %_property 1 %_pos
+set %num #strres
+set %maxtokeep 110 - %num - %maxskilltools
+if %maxtokeep <= 0
+	goto GMTK1
+return
+
+sub PayPalPopup
+menu clear
+menu window size 365 425
+menu window title PayPal Request
+menu window color black
+menu font color white
+menu font bgcolor black
+menu font size 15
+menu font style bu
+menu text  paypal1 20 0 Please consider a paypal donation.
+menu font style n
+menu font size 9
+menu text paypal2 10 25 Many people have ask me if they could donate cash as a way
+menu text paypal2 10 40 to thank me for the hundreds of hours I've spent working on my
+menu text paypal2 10 55 TurboScripts. And think of all the TIME I've SAVED you, especially
+menu text paypal2 10 70 all the clicking! Let's face it EA charges 29.95usd to raise some
+menu text paypal2 10 85  of your skills to 85 max! My TurboScripts can GM+ nearly any
+menu text paypal5 10 100 crafting skill in under a day! What's that worth to you? Please
+menu text paypal5 10 115 support my efforts by making a small donation! Thank you!
+set %y 130
+menu font bgcolor black
+menu font color lime
+menu font style n
+gosub getHistoryStats
+menu font color lime
+menu font size 8
+set %y %y + 20
+menu font color yellow
+menu font style i
+menu text  sug 10 %y Suggested donation:
+menu font color lime
+menu font style n
+menu text sug 115 %y Under 5 skills(1 or 2 USD), 5-10 Skills(3 to 5 USD),
+set %y %y + 15
+menu text sug 115 %y Over 10 skills(you decide what that's worth!).
+menu font style b
+set %exitx 150
+set %y %y + 15
+menu font size 8
+menu font style b
+menu font bgcolor gray
+menu font color blue
+menu text nosend 5 %y Visit the script's thread or see the Paypal link in my sig please!
+set %y %y + 14
+if send in #opts
+{
+	menu text send 5 %y Or click here:
+	menu font bgcolor teal
+	menu font color black
+	menu font size 12
+	menu button PayPal 80 %y 150 20 PayPal Donation
+	menu font bgcolor black
+	menu font color lime
+	set %exitx 250
+}
+menu font size 12
+menu font style b
+menu font bgcolor teal
+menu font color black
+menu button exit %exitx %y 60 20 Exit
+menu font bgcolor gray
+set %y 385
+menu shape myshape1 3 %y 359 1 3 7 5 red 3 white
+menu font size 9
+set %y %y + 7
+menu shape myshape1 2 %y 361 30 3 7 5 gray 7 gray
+menu text freeshard 5 %y Don't forget to try the Alexandria freeshard, the official EASYUO
+set %y %y + 14
+menu text freeshard 5 %y shard where macroing is ALLOWED! http://www.easyuo.com
+set %setupx #clixres / 2 - ( 365 / 2 )
+set %setupy #cliyres / 2 - ( 425 / 2 )
+menu window transparent 100
+menu show %setupx %setupy
+set #menubutton N/A
+PopupWait:
+wait 5
+if #menubutton = n/a
+	goto PopupWait
+if #menubutton = PayPal
+{
+	gosub PayPalExecute
+	set #menubutton n/a
+	goto PopupWait
+}
+return
+
+sub PayPalExecute
+set %paypalURL https://www.paypal.com/xclick/business=ceo%40easyuo%2ecom&item_name=CEO's%20TurboEncouragement( , %scriptname , )%20fund!&no_shipping=0&no_note=1
+execute %paypalURL
+return
+
+sub getHistoryStats
+set %turbo1 Tailor
+set %turbo2 Smithy
+set %turbo3 Tinker
+set %turbo4 Alchemy
+set %turbo5 Carpenter
+set %turbo6 Fletcher
+set %turbo7 Inscription
+set %turbo8 Cartography
+set %turbo9 Cooking
+menu font bgcolor transparent
+menu font color yellow
+menu font size 15
+menu font style bu
+set %y1 %y + 15
+menu text stats 10 %y Turbo Statistics
+menu text stats 230 %y Other
+set %othery %y + 25
+menu font style n
+menu font color white
+menu font size 10
+for %i 1 9
+{
+	gosub getGlobalVar TURBOSTATS  CEOTurbo , %turbo . %i STATS total NOLOCK
+	if ! #result
+	{
+		set %total 0
+		gosub putGlobalVar TURBOSTATS  CEOTurbo , %turbo . %i STATS total
+
+	}
+	set %total . %i %total
+	set %y %i * 15 + %y1
+	menu text stats 10 %y %turbo . %i
+	menu font align right
+	menu text stats 157 %y %total
+	menu font align left
+	set %gmtotal %gmtotal + %total
+}
+menu font align right
+set %y %y + 20
+menu font style b
+menu font color red
+menu text stats 157 %y %gmtotal
+menu font align left
+menu text stats 10 %y Total Skills Worked:
+menu font style n
+menu font color white
+gosub getGlobalVar STATS spellbooks STATS total NOLOCK
+if ! #result
+{
+	set %total 0
+	gosub putGlobalVar  STATS spellboks STATS total
+
+}
+menu text stats 195 %othery Spellbooks(Full)
+menu font align right
+menu text stats 315 %othery %total
+menu font align left
+set %othery %othery + 16
+menu text stats 195 %othery Kegs Filled(Full)
+gosub getGlobalVar STATS KEGS STATS total NOLOCK
+if ! #result
+{
+	set %total 0
+	gosub putGlobalVar  STATS KEGS STATS total
+
+}
+menu font align right
+menu text stats 315 %othery %total
+menu font align left
+set %othery %othery + 16
+menu text stats 195 %othery Animal Lore
+gosub getGlobalVar STATS CEOANIMALLORE STATS total NOLOCK
+if ! #result
+{
+	set %total 0
+	gosub putGlobalVar  STATS CEOANIMALLORE STATS total
+
+}
+menu font align right
+menu text stats 315 %othery %total
+menu font align left
+set %othery %othery + 16
+menu text stats 195 %othery Veternary
+gosub getGlobalVar STATS CEOONEPETVET STATS total NOLOCK
+if ! #result
+{
+	set %total 0
+	gosub putGlobalVar  STATS CEOONEPETVET STATS total
+
+}
+menu font align right
+menu text stats 315 %othery %total
+menu font align left
+set %othery %othery + 20
+menu font color aqua
+menu font size 8
+menu text stat 210 %othery And don't forget these
+set %othery %othery + 13
+menu font style u
+menu text stat 200 %othery other popular CEO Scripts
+menu font style n
+menu font color white
+set %othery %othery + 13
+menu text stats 170 %othery CEOMedic,
+menu font color olive
+menu text stats 224 %othery CEOSuitBuilder,
+menu font color red
+menu text stats 300 %othery CEOAlerter,
+set %othery %othery + 13
+menu font color $4488bb
+menu text stats 170 %othery CEOBookcopier,
+menu font color gray
+menu text stats 249 %othery CEOLeatherandBones,
+set %othery %othery + 13
+menu font color green
+menu text stats 170 %othery CEOWoolandFeathers,
+menu font color purple
+menu text stats 281 %othery CEORailRunner,
+set %othery %othery + 13
+menu font color maroon
+menu text stats 170 %othery CEOAutoRailWriter,
+menu font color skyblue
+menu text stats 267 %othery CEOAutoTither,
+set %othery %othery + 13
+menu font color white
+menu text stats 170 %othery CEOSnowballFun,
+menu font color lime
+menu text stats 263 %othery AND MANY MORE!!!
+return
+
+sub recordTurboStats
+gosub getGlobalVar TURBOSTATS  %scriptname #charid charname NOLOCK
+if ! #result
+{
+	gosub getGlobalVar TURBOSTATS  %scriptname STATS total NOLOCK
+	if ! #result
+	{
+		set %total 0
+		gosub putGlobalVar TURBOSTATS  %scriptname STATS total
+	}
+	set %total %total + 1
+	gosub putGlobalVar TURBOSTATS  %scriptname STATS total
+	set %charname #charname
+	gosub putGlobalVar TURBOSTATS  %scriptname #charid charname
+}
+return
+
+sub Initializing
+menu window transparent 100
+menu clear
+menu window size 240 150
+menu window title %scriptname %version
+set %skill_windowx ( #clixres - 240 ) / 2
+set %skill_windowy ( #cliyres - 150 ) / 2
+menu window color gray
+menu font bgcolor gray
+menu show %skill_windowx %skill_windowy
+if ! %debug
+	menu hideeuo
+gosub popuptext
+menu font color black
+menu font size 10
+menu font style b
+menu text i1 5 5 Welcome to CEOTurboTinker!
+menu font size 8
+menu font style n
+menu font color navy
+menu text h1 5 25 This script is copyright by the author under the
+menu text h1 5 40 terms of the CEO Public License (CPL) at:
+menu font color white
+menu font size 7
+menu text h1 5 60 http://www.easyuo.com/forum/viewtopic.php?p=3585
+menu font size 15
+menu font color yellow
+menu text i1 15 90 Initializing, Please wait...
+menu font bgcolor black
+menu font color lime
+gosub fadein
+return
+
+sub popuptext
+for %i 1 17
+{
+	wait 1
+	menu font size %i
+	set %textposy 130 / 2 + %i / 2 - %i
+	set %textposx 250 / 2 - ( 5 * %i ) - %i / 2
+	menu delete p1
+	menu text p1 %textposx %textposy CEOTurboTinker!
+}
+wait 20
+set %a10 aaaaaa
+set %a11 bbbbbb
+set %a12 ccccccc
+set %a13 dddddd
+set %a14 eeeeee
+set %a15 ffffff
+for %i  0 15
+{
+	wait 2
+	menu font color  $ , %i , %i , %i , %i , %i , %i
+	if %i > 9
+		menu font color $ , %a . %i
+	menu text p1 %textposx %textposy CEOTurboTinker!
+}
+wait 30
+gosub fadeout
+menu delete p1
+return
+
+sub fadeout
+for %i  100 1
+{
+	wait 1
+	set %i %i - 5
+  	menu window transparent %i
+}
+menu window transparent 0
+return
+
+sub fadein
+menu window transparent 0
+menu show
+for %i  1 100
+{
+	wait 1
+	set %i %i + 5
+  	menu window transparent %i
+}
+menu window transparent 100
+return
+
+sub Openbank
+if %runuo
+{
+	msg bank$
+	return
+}
+msg #smc , #spc , bank$
+return
+
+sub CEOWorldSaveChecker
+; sub to pause a script during a RunUO world save.
+set %_text1 %1
+set %_text2 %2
+set %_text3 %3
+if %_worldsaveupcoming
+{
+	if %_worldsavetimer < #scnt
+	{
+		set %_worldsavetimer #scnt + %5
+		gosub popupworldsave 85 blue
+		goto _WSC_WAIT1
+	}
+	return
+}
+_WSC1:
+if %_worldsavejournalindex > #jindex
+	return
+scanjournal %_worldsavejournalindex
+if %_text1  in #journal
+{
+	set %_worldsaveupcoming #true
+	set %_worldsavetimer #scnt + %4
+	set %_worldsavejournalindex  %_worldsavejournalindex + 1
+	return
+}
+set %_worldsavejournalindex  %_worldsavejournalindex + 1
+goto _WSC1
+_WSC_WAIT1:
+if %_worldsavetimer < #scnt
+	goto _WSC_Complete
+wait 5
+set *_WorldSaving #true
+if %_worldsavejournalindex > #jindex
+	goto _WSC_WAIT1
+scanjournal %_worldsavejournalindex
+if %_text2 in #journal
+{
+	gosub popupworldsave 85 yellow
+	set %_worldsavejournalindex  %_worldsavejournalindex + 1
+	goto _WSC_WAIT2
+}
+set %_worldsavejournalindex  %_worldsavejournalindex + 1
+goto _WSC_WAIT1
+_WSC_WAIT2:
+if %_worldsavetimer < #scnt
+	goto _WSC_Complete
+wait 5
+if %_worldsavejournalindex > #jindex
+	goto _WSC_WAIT2
+scanjournal %_worldsavejournalindex
+if %_text3 notin #journal
+{
+	set %_worldsavejournalindex  %_worldsavejournalindex + 1
+	goto _WSC_WAIT2
+}
+_WSC_Complete:
+set %_worldsavejournalindex  #jindex
+set %_worldsaveupcoming #false
+set *_WorldSaving #false
+set *save2 *save2 + 1
+menu delete worldsave
+return
+
+sub popupworldsave
+set %x %1
+set %worldcolor %2
+menu shape worldsave %x 70 125 125 1 7 2 olive 7 %worldcolor
+menu font bgcolor %worldcolor
+menu font color black
+menu font type b
+menu font size 15
+set %x %x + 30
+menu text worldsave %x 100 World
+set %x %x + 15
+menu text worldsave %x 120 Save
+set %x %x + 15
+menu text worldsave %x 140 Wait
+menu font size 9
+menu font bgcolor black
+menu font type n
+return
+
+sub DisconnectCheck
+if #contname <> waiting_gump || #contsize <> 203_121
+	return
+sound
+menu font transparent #true
+menu font size 30
+menu font color red
+menu font style b
+if %menusizey = n/a
+	set %menusizey 400
+set %y %menusizey / 2 - 80
+menu delete hide
+menu delete InitialSetup
+menu delete resetstats
+menu delete skillchart
+menu delete pause
+menu delete resume
+menu delete ptext
+menu text ptext  20 %y Disconnected
+set %y %y + 40
+gosub FormatTime x , #time
+menu text ptext 40 %y @ #result  , #dot
+set %y %y + 40
+menu text ptext 85 %y Halted.
+halt
+
+sub shardType
+;Shards 0,1,2,3 anything higher we'll assume it has to be EA
+if Alexandria in #shard
+  set %Alexandria #true
+else
+  set %Alexandria #false
+if  Atlantic in #shard || Lake , #spc , Superior in #shard ||  Pacific in #shard
++ || Great , #spc , Lakes in #shard || Baja in #shard
+return #true
+if #lshard > 3
+return #true
+return #false

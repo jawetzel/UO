@@ -1,0 +1,51 @@
+display target fishsteak on floor$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %steak #ltargetid
+display target poison pot in secure$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %pot #ltargetid
+
+
+
+
+
+main:
+if C in #charstatus
+ {
+ finditem NUF C
+ set #lobjectid #findid
+ event macro 17
+ wait 20
+ }
+finditem %steak G_2
+event property #findid
+if Locked in #property
+ {
+ msg i wish to release this$
+ target
+ set #ltargetid #findid
+ event macro 22
+ wait 5
+ set #ltargetid %pot
+ event macro 13 30
+ target
+ event macro 22
+ set #ltargetid %steak
+ target
+ event macro 22
+ wait 5
+ }
+msg i wish to secure this$
+set #ltargetid %steak
+target
+event macro 22
+wait 15
+goto main

@@ -1,0 +1,44 @@
+#contname
+
+set %loot ICHB_YCHB
+main:
+onhotkey 0
+ {
+ finditem YFM G_1
+ if #findkind > -1
+  {
+  event property #findid
+  if A , #spc , Corpse in #property
+   {
+   ignoreitem #findid
+   goto main
+   }
+  set %contid #contid
+  set #scnt 0
+  set #lobjectid #findid
+  set %corpse #findid
+  event macro 17
+  repeat
+   {
+   wait 1
+   }
+  until #contid <> %contid || #scnt > 2
+  set %cont #contid
+  while #scnt < 1
+   {
+   wait 1
+   }
+  repeat
+   {
+   finditem %loot C_ , %cont
+   if #findkind > -1
+    {
+    exevent drag #findid #findstack
+    exevent dropc #backpackid
+    wait 20
+    }
+   }
+  until #findkind = -1
+  ignoreitem %corpse
+  }
+ }

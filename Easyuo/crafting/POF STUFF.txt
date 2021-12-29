@@ -1,0 +1,31 @@
+set %box #lobjectid
+
+main:
+finditem * C_ , %box
+if #findkind = -1
+ {
+ halt
+ }
+set %item #findid
+repeat
+ {
+ finditem KEG C_
+ if #findbagid <> #backpackid
+ {
+ exevent drag #findid #findstack
+ exevent dropc #backpackid
+ wait 25
+ }
+ set #lobjectid #findid
+ set #ltargetkind 1
+ set #ltargetid %item
+ event macro 17
+ target
+ event macro 22
+ wait 25
+ finditem %item
+ event property #findid
+ }
+until 255 in #property
+ignoreitem %item
+goto main

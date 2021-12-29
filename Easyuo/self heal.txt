@@ -1,0 +1,14 @@
+set %1 0
+
+main:
+if #hits < 110 && #scnt > %1
+ {
+ finditem ZLF C_ , #backpackid
+ set #lobjectid #findid
+ event macro 17
+ target
+ event macro 23
+ set %1 12 - ( #dex / 12 )
+ set #scnt 0
+ }
+goto main

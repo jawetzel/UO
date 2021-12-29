@@ -1,0 +1,16 @@
+display move mouse over button$
+set %x #cursorx
+set %y #cursory
+savepix %x %y 1
+
+main:
+if #mana > 6
+{
+cmppix 1 t
+ {
+ event macro 15 149
+ wait 5
+ }
+}
+
+goto main

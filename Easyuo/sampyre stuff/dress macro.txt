@@ -1,0 +1,37 @@
+start:
+set %items MKNPPTD_LEQGMTD_WDNGNSD_SLAXJSD_IGBTFSD_UGOVBSD_KUJJURD_ZVVHURD_MUNHURD_CVPNKRD_DQEIBRD_VQPHBRD_IICURQD_THTCGQD_XVSMHOD_VVSMHOD_FWRYWND
+goto main
+event macro 8 1
+wait 10
+set %paper #contid
+repeat
+ {
+ finditem * C_ , #contid
+ set %items %items , _ , #findid
+ ignoreitem #findid
+ }
+until #findkind = -1
+execute cmd.exe /c echo %items >>suit.txt
+display suit saved! $
+ignoreitem reset
+
+main:
+onhotkey 0
+ {
+ event macro 8 1
+ wait 20
+ event macro 8 7
+ wait 20
+ repeat
+  {
+  finditem %items C_ , #backpackid
+  if #findkind > -1
+   {
+   exevent drag #findid #findstack
+   exevent droppd
+   wait 20
+   }
+  }
+ until #findkind = -1
+ }
+goto main

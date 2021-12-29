@@ -1,0 +1,214 @@
+;Below are Skills you can train, place them in the slots of
+;      skill1-3 for which will train and order to train in
+;skills: Necro, Chiv, Mage, Myst, Resist
+
+set %med True ;True or False
+
+set %NumberOfSkills 1
+
+set %skill1 Resist
+set %skill1Cap 1200
+
+set %skill2 Necro
+set %skill2Cap 1000
+
+set %skill3 Necro
+set %skill3Cap 1000
+
+set %skill4 Necro
+set %skill4Cap 1000
+;=======================================================
+;Below this line is setup===============================
+;=======================================================
+setup:
+if %NumberOfSkills => 1
+{
+Chooseskill %skill1
+if #skill < %skill1Cap
+ {
+ set %skill %skill1
+ set %skillCap %skill1Cap
+ goto main
+ }
+}
+if %NumberOfSkills => 2
+{
+Chooseskill %skill2
+if #skill < %skill2Cap
+ {
+ set %skill %skill2
+ set %skillCap %skill2Cap
+ goto main
+ }
+halt
+}
+if %NumberOfSkills => 3
+{
+Chooseskill %skill3
+if #skill < %skill3Cap
+ {
+ set %skill %skill3
+ set %skillCap %skill3Cap
+ goto main
+ }
+halt
+}
+if %NumberOfSkills => 4
+{
+Chooseskill %skill4
+if #skill < %skill4Cap
+ {
+ set %skill %skill4
+ set %skillCap %skill4Cap
+ goto main
+ }
+halt
+}
+;=======================================================
+;Above this line is setup===============================
+;=======================================================
+
+;=======================================================
+;Below this line is main code===========================
+;=======================================================
+main:
+;gosub spellSetup (SkillStart) (SkillEnd) (SpellNumber) (ManaCost) (SelfCast)
+;gosub spellSetup 0 0 0 0 0
+if %skill = Necro
+ {
+   chooseskill Necro
+   while #skill < %skillCap
+    {
+    gosub spellSetup 0 400 116 17 1     ;wraith form
+    gosub spellSetup 400 650 112 11 1   ;summ fam
+    gosub spellSetup 650 800 115 17 1   ;wither
+    gosub spellSetup 800 1050 107 23 1  ;lich form
+    gosub spellSetup 1050 1200 113 23 1 ;vamp form
+    }
+   goto setup
+ }
+ 
+if %skill = Chiv
+ {
+   Chooseskill Chiv
+   while #skill < %skillCap
+    {
+    gosub spellSetup 0 300 203 10 1     ;cond wep
+    gosub spellSetup 300 500 205 15 1   ;divine fury
+    gosub spellSetup 500 650 206 20 1   ;enemy of one
+    gosub spellSetup 650 750 207 10 1   ;holy light
+    gosub spellSetup 750 1200 208 20 1  ;noble sac
+    }
+ }
+
+if %skill = Mage
+ {
+   Chooseskill Mage
+   while #skill < %skillcap
+    {
+    gosub spellSetup 0 250 6 5 1        ;reactavate armor
+    gosub spellSetup 250 350 15 10 0    ;Strength
+    gosub spellSetup 350 450 23 15 0    ;Wall of Stone
+    gosub spellSetup 450 600 28 20 0    ;Greater Heal
+    gosub spellSetup 600 700 35 20 1    ;Magic Reflect
+    gosub spellSetup 700 800 43 25 0    ;Invisibility
+    gosub spellSetup 800 900 53 30 0    ;Mass Dispell
+    gosub spellSetup 900 1200 56 35 1   ;EarthQuake
+    }
+ }
+ 
+if %skill = Myst
+ {
+   Chooseskill Myst
+   while #skill < %skillcap
+    {
+    gosub spellSetup 0 380 681 10 1     ;Enchant
+    gosub spellSetup 380 500 685 15 1   ;Stone Form
+    gosub spellSetup 500 700 687 20 0   ;Mass Sleep
+    gosub spellSetup 700 800 688 25 0   ;Cleanse Wind
+    gosub spellSetup 800 950 691 45 0   ;Hail Storm
+    gosub spellSetup 950 1200 692 55 0  ;Nether Cyclone
+    }
+ }
+
+if %skill = Resist
+ {
+   Chooseskill Resist
+   while #skill < %skillcap
+    {
+    gosub spellSetup 0 1200 0 10 0     ;Enchant
+    gosub spellSetup 0 1200 2 10 0   ;Stone Form
+    gosub spellSetup 0 1200 7 10 0   ;Mass Sleep
+    }
+ }
+ 
+goto main
+;=======================================================
+;Above this line is main code===========================
+;=======================================================
+
+;=======================================================
+;Below this line are subs===============================
+;=======================================================
+sub spellSetup
+if #skill => %1 && #skill < %2
+    {
+    if %5 = 1
+     {
+     gosub CastNoTarget %3 %4
+     }
+    else
+     {
+     gosub CastTarget %3 %4
+     }
+    }
+return
+
+sub CastNoTarget
+if #mana > %2
+   {
+   event macro 15 %1
+   event macro 18
+   wait 5
+   }
+else
+   {
+   if %med = True
+      {
+      repeat
+        {
+        wait 3s
+        event macro 13 46
+        }
+      until #mana => ( #maxmana - 10 )
+      }
+   }
+return
+
+sub CastTarget
+if #mana > %2
+   {
+   event macro 15 %1
+   target 3s
+   set #ltargetkind 1
+   event macro 23
+   }
+else
+   {
+   if %med = True
+     {
+      repeat
+       {
+       wait 3s
+       event macro 13 46
+       }
+      until #mana => ( #maxmana - 10 )
+     }
+   }
+return
+;=======================================================
+;above this line are subs===============================
+;=======================================================
+
+
+

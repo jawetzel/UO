@@ -1,0 +1,8 @@
+finditem KEG C_ , #backpackid
+if #findkind = -1
+ {
+ halt
+ }
+exevent drag #findid #findstack
+exevent dropc #lobjectid
+wait 20

@@ -1,0 +1,131 @@
+;==================================
+; Script Name: Scroll binding
+; Author: jawetzel
+; Version: 1.00
+; EUO version tested with: 1.5 Version 241
+; Shard OSI / FS: OSI
+; Revision Date: 5/3/13
+; Public Release: 5/3/13
+; Purpose: Binds 105, 110, and 115 scrolls
+;
+; Requierments:
+;    1. bag of empty binders
+;    2. bag for 105 partialy full binders
+;    3. bag for 110 partialy full binders
+;    4. bag for 115 partialy full binders
+;    5. Container with scrolls you intent to bind
+;==================================
+
+;set following to type of scroll binding
+set %kind 110
+
+;====================================
+set #lpc 1000
+set #ltargetkind 1
+set %21 0
+display target empty binder bag$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %emptys #ltargetid
+set #lobjectid #ltargetid
+event macro 17
+wait 25
+display target partialy filled binders bag$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %partial #ltargetid
+set #lobjectid #ltargetid
+event macro 17
+wait 25
+display target powerscrolls bag$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %source #ltargetid
+set #lobjectid #ltargetid
+event macro 17
+wait 25
+
+start:
+finditem TVH C_ , %source
+if #findkind = -1
+ {
+ display done$
+ halt
+ }
+set %scrollid #findid
+event property #findid
+wait 5
+if %kind notin #property
+ {
+ ignoreitem #findid
+ goto start
+ }
+exevent drag #findid #findstack
+exevent dropc #backpackid
+wait 25
+if %kind = 110 || %kind = 115
+ {
+ str len #property
+ set %1 #strres
+ set %2 %1 - 57
+ str del #property 1 21
+ str left #strres %2
+ set %prop #strres
+ }
+if %kind = 105
+ {
+ str len #property
+ set %1 #strres
+ set %2 %1 - 50
+ str del #property 1 21
+ str left #strres %2
+ }
+repeat
+ {
+ finditem TVH C_ , %partial
+ event property #findid
+ if %prop in #property && Binder in #property
+  {
+  set %21 1
+  set #lobjectid #findid
+  set #ltargetid %scrollid
+  event macro 17
+  target
+  event macro 22
+  wait 25
+  }
+ else
+  {
+  ignoreitem #findid
+  }
+ }
+until #findkind = -1 || %21 = 1
+set %21 0
+if #findkind = -1
+ {
+ finditem TVH C_ , %emptys
+ if #findkind = -1
+  {
+  halt
+  }
+ exevent drag #findid #findstack
+ exevent dropc %partial
+ wait 25
+ set #lobjectid #findid
+ set #ltargetid %scrollid
+ event macro 17
+ target
+ event macro 22
+ wait 25
+ }
+ignoreitem reset
+goto start

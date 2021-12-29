@@ -1,0 +1,186 @@
+    ;==================================
+    ; Script Name: jawetzels tamer
+    ; Author: jawetzel
+    ; Version: 3.00
+    ; EUO version tested with: 1.5 Version 146
+    ; Shard OSI / FS: OSI
+    ; Revision Date: 1/1/09
+    ; Public Release: 1/1/09
+    ; Purpose: trains taming with bulls to about 110+
+    ;          at the jeholem bull pin
+    ;
+    ; For pet users!!
+    ;  Your pet must be mountable and it needs to be a
+    ;  pet you can control 100%of the time, like once
+    ;  you hit the higher lvls using a mare or something
+    ;
+    ; update 3.0 changed it to use all kill method as
+    ;            well as mage :P
+    ;==================================
+    set %killmethod 2 ;set to 1 for pet kill, 2 for mage
+
+    if %killmethod = 1
+    {
+    display target pet$
+    set #targcurs 1
+    repeat
+     {
+     }
+    until #targcurs = 0
+    set %pet #ltargetid
+    set #lobjectid #ltargetid
+    event macro 17
+    wait 20
+    }
+
+    set %anim XG_YG ;Bulls
+    main:
+    ;ignoreitem reset
+    gosub rail 1121 3576 #charposz ;bulls
+    gosub rail 1134 3576 #charposz
+    gosub Rail 1134 3589 #charposz
+    gosub Rail 1124 3589 #charposz ;bulls
+    goto main
+    ;--------------------------------
+    sub rail
+    repeat
+     {
+     event pathfind %1 %2 %3
+     wait 20
+     }
+    until #charposx = %1 && #charposy = %2
+    finditem %anim G_12
+    if #findz = #charposz
+     {
+     if #findkind > -1
+      {
+      gosub tame
+      }
+     }
+    else
+     {
+     ignoreitem #findid
+     }
+    return
+    l----------------------------------
+    sub tame
+    retry:
+    event property #findid
+    if Tame in #property
+     {
+     gosub kill
+     }
+    else
+     {
+     repeat
+      {
+      finditem #findid
+      if #findkind = -1
+       {
+       goto moveon1
+       }
+      event pathfind #findx #findy #findz
+      wait 10
+      }
+     until #finddist < 2
+     set #ltargetkind 1
+     set #ltargetid #findid
+     event macro 13 35
+     target
+     event macro 22
+     set %time #scnt + 13
+     repeat
+      {
+      finditem #findid
+      if #findkind = -1
+       {
+       goto moveon1
+       }
+      event pathfind #findx #findy #findz
+      wait 10
+      }
+     until #scnt > %time
+     moveon1:
+     event property #findid
+     if Tame in #property && #findkind > -1
+      {
+      gosub kill
+      }
+     else
+      {
+      if #findkind > -1
+       {
+       goto retry
+       }
+      }
+     }
+    return
+    ;------------------------------
+    sub kill
+    rekill:
+    event property #findid
+    if Tame in #property
+     {
+     msg all follow me$
+     exevent renamepet #findid Null
+     msg Null Release$
+     }
+    set #ltargetid #findid
+    if #finddist > 5
+     {
+     repeat
+      {
+      finditem #findid
+      if #findkind = -1
+       {
+       goto moveon2
+       }
+      event pathfind #findx #findy #findz
+      wait 10
+      }
+     until #finddist < 5
+     }
+    if %killmethod = 1
+     {
+     set #lobjectid #charid
+     event macro 17
+     wait 10
+     msg all kill$
+     target 4s
+     event macro 22
+     set %32 0
+     repeat
+      {
+      finditem #findid
+      wait 20
+      set %32 %32 + 1
+      if %32 => 20
+       {
+       ignoreitem #findid
+       goto moveon2
+       }
+      }
+     until #findkind = -1
+     msg all follow me$
+     wait 20
+     set #lobjectid %pet
+     event macro 17
+     wait 20
+     }
+    else
+     {
+     event macro 15 36
+     target 4s
+     event macro 22
+     wait 10
+     }
+    moveon2:
+    finditem #findid
+    if #findkind > -1
+     {
+     goto rekill
+     }
+    event pathfind 1128 3584 #charposz
+    wait 30
+    return
+    ;------------------------------

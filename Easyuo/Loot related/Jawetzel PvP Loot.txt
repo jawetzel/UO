@@ -1,0 +1,129 @@
+;==================================
+; Script Name: Jawetzel PvP Loot
+; Author: jawetzel
+; Version: 1.00
+; EUO version tested with: 1.5 Version 239
+; Shard OSI / FS: OSI
+; Revision Date: 4/22/13
+; Public Release: 4/22/13
+; Purpose: Loots corpses in pvp on hotkey, picks
+;          up bolas off the floor, and puts resources
+;          away on hotkey with anti-overweight
+;
+; Looting hotkey = 0
+; Deposit recource hotkey = 9
+;==================================
+set %weight 480
+;change %weight to the max weight to stop looting
+set %t1 CBS_KTO_KKF_ZTD_OUF_CKF_TVH
+;apples, bolas, trapbox, trapbox, conflags, Bags
+set %t2 NUF_UTL_WTL_UUF_YUF_XUF_ZLF_ZUF_RFG_TUF_RAS
+;curepot, telescroll, recallscroll, curepot, dexpot, strpot, bandage, refreshpot, orangepetal, shatterpot, grapeswrath
+;===================================
+set #lpc 100
+set %t3 %t1 , _ , %t2
+set %t3 %t3 , _WUF
+set %done 2
+main:
+IF %weight > #weight && %done = 1
+ {
+ set %done 2
+ }
+onhotkey 0
+ {
+ gosub loot
+ }
+onhotkey 9
+ {
+ gosub dump
+ }
+goto main
+
+sub loot
+finditem YFM_QNF G_1
+if #findkind > -1
+ {
+ set %corpse #findid
+ event property #findid
+ if Corpse , #spc , Of in #property
+  {
+  set #lobjectid #findid
+  event macro 17
+  repeat
+   {
+   }
+  until #contsize = 144_212
+  set %cont #contid
+  repeat
+   {
+   finditem %t1 c_ , %cont
+   exevent drag #findid #findstack
+   wait 5
+   if #weight => %weight
+    {
+    exevent dropc %cont
+    wait 15
+    set %done 1
+    }
+   else
+    {
+    exevent dropc #backpackid
+    wait 15
+    }
+   }
+  until #findkind = -1 || %done = 1
+  if %done <> 1
+   {
+   repeat
+    {
+    finditem %t2 c_ , %cont
+    exevent drag #findid #findstack
+    if #weight => %weight
+     {
+     exevent dropc %cont
+     wait 20
+     set %done 1
+     }
+    else
+     {
+     exevent dropc #backpackid
+     wait 20
+     }
+    }
+   until #findkind = -1 || %done = 1
+   }
+  }
+ ignoreitem %corpse
+ }
+return
+
+sub dump
+display target dump container$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %box #ltargetid
+set #lobjectid #ltargetid
+event macro 17
+wait 20
+repeat
+ {
+ finditem %t3 C_ , #backpackid
+ if #findkind > -1
+  {
+  exevent drag #findid #findstack
+  exevent dropc %box
+  wait 20
+  }
+ ]
+until #findkind = -1
+set %done 2
+return
+
+
+
+
+
+

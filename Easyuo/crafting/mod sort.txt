@@ -1,0 +1,31 @@
+07 12 03 11 08 20lrc 6lmc 3hpr 4mr
+
+set %prop1 Reagent , #spc , Cost , 20%
+set %proo2 Mana , #spc , Cost 8%
+set %prop3 Mana , #spc , Regeneration , #spc , 4$
+set %prop4 Hit , #spc , Point , #spc , Regeneration , #spc , 3$
+
+main:
+finditem * C_ , #lobjectid
+if #findkind = -1
+ {
+ halt
+ }
+set #property $
+event property #findid
+repeat
+ {
+ wait 1
+ }
+until #property <> $
+if %prop1 in #property && %prop2 in #property && %prop3 in #property && %prop4 in #property
+ {
+ exevent drag #findid #findstack
+ exevent dropc #backpackid
+ wait 25
+ }
+else
+ {
+ ignoreitem #findid
+ }
+goto main

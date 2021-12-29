@@ -1,0 +1,63 @@
+set %corpsecont 0
+set %corpseid 0
+set %loot POF_KCR_CCR_OCR_GCR_ZBR_NCR_LCR_JCR_ACR_ICR_UCR_HCR_DCR_FCR
+set %lastenemy 0
+
+main:
+finditem UE G_7
+if #findid <> %lastenemy
+ {
+ set %lastenemy #findid
+ set #ltargetid #findid
+ event macro 49 1
+ target
+ event macro 22
+ event macro 27
+ }
+
+finditem YFM G_2
+if #findkind > -1
+ {
+ set %corpseid #findid
+ set #lobjectid #findid
+ event macro 17
+ set #scnt 0
+ repeat
+  {
+  }
+ until #contsize = 144_212 && #contid <> %corpsecont || #scnt > 3
+ set %corpsecont #contid
+ if #scnt > 3
+  {
+  ignoreitem %corpseid
+  goto main
+  }
+ repeat
+  {
+  }
+ until #scnt > 1
+ repeat
+  {
+  finditem %loot C_ , %corpsecont
+  if #findkind > -1
+   {
+   exevent drag #findid #findstack
+   exevent dropc #backpackid
+   wait 20
+   }
+  }
+ until #findkind = -1
+ ignoreitem %corpseid
+ finditem POF C_ , #backpackid
+ if #findstack > 54000
+  {
+  set #ltargetid #findid
+  finditem CKF C_ , #backpackid
+  set #lobjectid #findid
+  event macro 17
+  target
+  event macro 22
+  wait 20
+  }
+ }
+goto main

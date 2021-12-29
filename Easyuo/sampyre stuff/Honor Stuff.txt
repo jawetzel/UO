@@ -1,0 +1,15 @@
+main:
+if #enemyhits = 100
+{
+ finditem #enemyid G_3
+ if #findkind > -1
+  {
+    set #ltargetid #enemyid
+    event macro 49 1
+    target
+    event macro 22
+    wait 5
+    ignoreitem #findid
+  }
+}
+goto main

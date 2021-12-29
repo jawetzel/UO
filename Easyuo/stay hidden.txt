@@ -1,0 +1,15 @@
+main:
+if H notin #charstatus
+ {
+ repeat
+  {
+  wait 1
+  }
+ until #scnt > 12
+ event macro 13 21
+ wait 5
+ set #scnt 0
+ goto main
+ }
+event macro 18
+wait 45s

@@ -1,0 +1,23 @@
+
+31 23
+218 67
+
+set %x 31
+set %y 23
+main:
+for %a 1 10
+ {
+ finditem TVH C_ , #lobjectid
+ if #findkind = -1
+  {
+  halt
+  }
+ exevent drag #findid #findstack
+ exevent dropc #lobjectid %x %y
+ wait 30
+ set %x %x + 18
+ ignoreitem #findid
+ }
+set %x 31
+set %y %y + 22
+goto main

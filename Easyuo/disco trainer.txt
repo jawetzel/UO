@@ -1,0 +1,106 @@
+; #########################################################
+; Script Name: Jawetzels Disco Trainer
+; Author: Jawetzel
+; Version: 1
+; EUO version tested with: 1.6.0.333
+; Shard OSI / FS: OSI Servers
+; Revision Date: 12/14/2018
+; Public Release: 12/14/2018
+; Purpose: Train discord from in a house with tamed and
+;          released monsters.
+; Guide: 0-50 Create Char
+;        50-75 Gamans
+;        75-90 Lesser Hiryu
+;        90-120 Hiryu
+; #########################################################
+
+;This config is setup for drums, lesser hiryus, and ending at 90
+;Change this as needed
+set %inst MQF       ;Define instrument types
+set %mobs HH        ;Define monster types
+set %endSkill 900   ;Define stopping point
+
+gosub findInstrument
+
+main:
+
+gosub checkSkill
+gosub checkTool
+gosub checkMob
+gosub disoFound
+gosub waitTimeout
+
+goto main
+
+sub checkSkill
+  chooseskill discor real
+  if #skill = %endSkill
+  {
+   halt
+  }
+return
+
+sub findInstrument
+  finditem %inst C_ , #backpackid
+  set #lobjectid #findid
+  event macro 17
+  wait 20
+  set %tool #findid
+return
+
+sub invis
+  repeat
+    {
+    event macro 15 43
+    target
+    event macro 23
+    wait 20
+    }
+  until H in #charstatus
+  wait 15s
+  ignoreitem reset
+return
+
+sub disoFound
+  set #ltargetid #findid
+  event macro 13 15
+  target
+  set #ltargetkind 1
+  event macro 22
+  wait 10
+return
+
+sub waitTimeout
+  if already in #sysmsg
+   {
+   ignoreitem #findid
+   goto main
+   }
+  if suppress in #sysmsg
+   {
+   ignoreitem #findid
+   wait 9s
+   goto main
+   }
+  if fail in #sysmsg
+   {
+   wait 6s
+   goto main
+   }
+return
+
+sub checkTool
+  finditem %tool C
+  if #findkind = -1
+   {
+   gosub findInstrument
+   }
+return
+
+sub checkMob
+  finditem %mobs G_7
+  if #findkind = -1
+   {
+   gosub invis
+   }
+return

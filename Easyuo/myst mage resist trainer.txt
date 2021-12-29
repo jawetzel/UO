@@ -1,0 +1,319 @@
+;==================================
+; Script Name: Jawetzels Myst/Mage/Resist trainer
+; Author: jawetzel
+; Version: 1.00
+; EUO version tested with: 1.5 Version 210
+; Shard OSI / FS: OSI
+; Revision Date: 2/7/12
+; Public Release: 2/7/12
+; Purpose: Trains mage/myst/resist to specified cap
+;          with active med
+; Note: this is Designed for 2/6 casting and 100lrc
+;==================================
+;
+;Set mage/myst/resist to your desired level
+;set them to 0 to not train it
+set %mage 1200
+set %myst 0
+set %resist 0
+;
+;Set to the ammount of mana you want to use
+;meditation at
+set %med 30
+
+
+
+;Scrypt start point-------
+;
+;Before start-------------
+set #ltargetkind 1
+if %mage > 0
+ {
+ finditem MPF C_ , #backpackid
+ if #findkind = -1
+  {
+  display No mage book, get one before starting$
+  halt
+  }
+ }
+if %myst > 0
+ {
+ finditem RJR c_ , #backpackid
+ if #findkind = -1
+  {
+  display No myst book, get one before starting$
+  }
+ }
+;-------------------------
+;Skillpicker--------------
+skillpicker:
+chooseskill Magery
+if #skill < %mage && #skill < #skillcap && %mage > 0
+ {
+ finditem
+ goto magemain
+ }
+if #skill < %mage && #skill = #skillcap
+ {
+ display ur curently capped on mage, but its set to go higher, get a ps or fix the settings$
+ }
+chooseskill myst
+if #skill < %myst && #skill < #skillcap && %myst > 0
+ {
+ goto myststartup
+ }
+if #skill < %myst && #skill = #skillcap
+ {
+ display ur curently capped on myst, but its set to go higher, get a ps or fix the settings$
+ }
+chooseskill resist
+if #skill < %resist && #skill < #skillcap && %resist > 0
+ {
+ goto resistmain
+ }
+if #skill < %resist && #skill = #skillcap
+ {
+ display ur curently capped on resist, but its set to go higher, get a ps or fix the settings$
+ }
+display Done$
+halt
+;-------------------------
+
+;mage main----------------
+magemain:
+chooseskill Magery
+set %skillcap %mage
+if #skill = #skillcap || #skill => %skillcap
+ {
+ set %skillcap x
+ goto skillpicker
+ }
+if #skill => 0 && #skill < 150
+ {
+ gosub magecasttarg 2 2s
+ }
+if #skill => 150 && #skill < 300
+ {
+ gosub magecastself 10 2s
+ }
+if #skill => 300 && #skill < 400
+ {
+ gosub magecastself 16 2s
+ }
+if #skill => 400 && #skill < 500
+ {
+ gosub magecastself 24 3s
+ }
+if #skill => 500 && #skill < 600
+ {
+ gosub magecasttarg 29 3s
+ }
+if #skill => 600 && #skill < 750
+ {
+ gosub magecastself 43 3s
+ }
+if #skill => 750 && #skill < 900
+ {
+ gosub magecasttarg 50 4s
+ }
+if #skill => 900 && #skill < #skillcap
+ {
+ gosub magecasting 56 60
+ }
+goto magemain
+;-------------------------
+
+;myst startup-------------
+myststartup:
+finditem RJR C_ , #backpackid
+if #findkind = -1
+ {
+ display cant find ur myst book$
+ halt
+ }
+event property #findid
+if Mysticism notin #property
+ {
+ ignoreitem #findid
+ goto startup
+ }
+set #lobjectid #findid
+event macro 17
+wait 10
+contpos  0 0
+click 77 59 D
+Wait 10
+click 38 43 R
+goto mystmain
+;-------------------------
+
+;myst main----------------
+mystmain:
+chooseskill myst
+set %skillcap %myst
+if #skill = #skillcap || #skill => %skillcap
+ {
+ goto skillpicker
+ }
+if #skill => 0 && #skill < 240
+ {
+ set #lspell 166
+ gosub mystcasttarg 2s
+ }
+if #skill => 240 && #skill < 380
+ {
+ set #lspell 170
+ gosub mystcastself 2s
+ }
+if #skill => 380 && #skill < 500
+ {
+ set #lspell 173
+ gosub mystcasting 60
+ }
+if #skill => 500 && #skill < 630
+ {
+ set #lspell 175
+ gosub mystcastself 3s
+ }
+if #skill => 630 && #skill < 760
+ {
+ set #lspell 176
+ gosub mystcastself 3s
+ }
+if #skill => 760 && #skill < 900
+ {
+ set #lspell 179
+ gosub mystcastself 4s
+ }
+if #skill => 900 && #skill < #skillcap
+ {
+ set #lspell 180
+ gosub mystcastself 4s
+ }
+goto mystmain
+;-------------------------
+resistmain:
+chooseskill resisting
+set %skillcap %resist
+if #skill = #skillcap || #skill => %skillcap
+ {
+ set %skillcap x
+ goto skillpicker
+ }
+if %med > #mana
+ {
+ gosub med
+ }
+event macro 15
+target
+event macro 23
+if #skill = #skillcap || #skill => %skillcap
+ {
+ set %skillcap x
+ goto skillpicker
+ }
+if %med > #mana
+ {
+ gosub med
+ }
+event macro 15 2
+target
+event macro 23
+if #skill = #skillcap || #skill => %skillcap
+ {
+ set %skillcap x
+ goto skillpicker
+ }
+if %med > #mana
+ {
+ gosub med
+ }
+event macro 15 7
+target
+event macro 23
+goto resistmain:
+
+;myst subs----------------
+sub mystcasting
+if %med > #mana
+ {
+ gosub med
+ }
+event macro 16
+wait %1
+event macro 18
+return
+
+sub mystcastself
+if %med > #mana
+ {
+ gosub med
+ }
+event macro 16
+target %1
+event macro 23
+wait 5
+return
+
+sub mystcasttarg
+if %med > #mana
+ {
+ gosub med
+ }
+finditem RJR C_ , #backpackid
+set #ltargetid #findid
+event macro 16
+target %1
+event macro 22
+wait 5
+return
+;-------------------------
+
+;mage subs----------------
+sub magecasting
+if %med > #mana
+ {
+ gosub med
+ }
+event macro 15 %1
+wait %2
+event macro 18
+return
+
+sub magecastself
+if %med > #mana
+ {
+ gosub med
+ }
+event macro 15 %1
+target %2
+event macro 23
+wait 5
+return
+
+sub magecasttarg
+if %med > #mana
+ {
+ gosub med
+ }
+finditem MPF C_ , #backpackid
+set #ltargetid #findid
+event macro 15 %1
+target %2
+event macro 22
+wait 5
+return
+;-------------------------
+
+;meditation---------------
+sub med
+set %maxmana #maxmana - 5
+repeat
+ {
+ event macro 13 46
+ wait 40
+ }
+until #mana => %maxmana
+return
+;-------------------------
+

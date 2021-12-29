@@ -1,0 +1,2037 @@
+;===================================================
+; Script Name:  s7BodFiller
+; Author:  snicker7
+; Version: 2.6.1c
+; Client Tested with: 7.0.1.1
+; EUO version tested with: 1.5
+; Shard OSI / FS:  OSI / FS
+; Revision Date:  04/25/10
+; Public Release:  09/23/05
+; Global Variables Used: no
+; Purpose:  Fills all smith and tailor large BODs and small BODs. Extremely easy setup, automatic. Also callable to fill a specific BOD from within another script should you so wish to do that. Works flawlessly on both EA shards AND RunUO Post-AOS freeshards!! Packy support and dropping finished BODs to a container or BOD book.
+;====================================================
+; Bugfixes in 2.6.1c:
+; =- Works with new SA changes on EA shards. Should remain fully functional on freeshards.
+; =- Script now comes with 2 versions of craftInfo.txt because of the major changes on EA shards.
+; =- Big thanks to sciondal on the EUO forums for updating craftInfo.txt for EA shards.
+; =- Tool making subroutine now looks up categories and selections on the craft menu from craftInfo.txt. Ensures accuracy.
+; =- Fixed one missing BOD gump size that would cause occasional hangs.
+; =- Some optimizations and other crap.
+; =- Updated some mess for UO Legends freeshard.
+; =- Adjusted gump sizes for recent EA shard changes.
+;====================================================
+set %pathlib #pathlib
+if 1_5 in #euover
+	set %pathlib
+
+; ===================================================================== ;
+; ----------------------Do Not Edit Beyond Here------------------------ ;
+; ===================================================================== ;
+namespace push
+namespace local _s7BFiller
+set #lpc 60
+set %debugMode #false
+;thankin RK for the below:
+set %freeshard _ , #shard , _ notin _TC1_origin_pacific_sonoma_baja_legends_atlantic_chesapeake_catskills_lake , #spc , austin_napa , #spc , valley_lake , #spc , superior_great , #spc , lakes_siege , #spc , perilous_europa_drachenfels_oceania_wakoku_formosa_arirang_balhae_asuka_yamato_mugen_hokuto_misuho_izumo_sakura_
+set %nonSEFreeshard _ , #shard , _ in _Defiance , #spc , AOS_ABC , #spc , UO_
+set %craftinfo craftInfo.txt
+set %craftinfo_FS craftInfo_FS.txt
+if %0 > 0
+{
+	if %1 = exists 2
+		set #result #true
+		exit
+	set %s7BFCalled #true
+	gosub getEUOVer
+	set %s7BFBodID %1
+	set %s7BFSecureID %2
+	set %freeshard %3
+	if %freeshard
+		set %craftinfo %craftInfo_FS
+	gosub craftInfoCheck
+	gosub checkSBar
+	set %maxweight #maxweight
+	if %maxweight > 420
+		set %maxweight 420
+	for !fillbod 1 1
+	{
+		set !fillbod 0
+		gosub s7GetBODData
+		gosub getBodName %s7BFBodID
+		set %s7BF_BodName #result
+		if %s7BFBodAmountToMake = 0 2
+			namespace pop
+			exit
+		repeat
+		{
+			gosub MakeItems
+			menu set s7BFMenuStatus Filling %s7BF_BodName BOD...
+			gosub FillBod
+		}
+		until #result
+		wait 20
+		;gosub closeGump generic_gump %craftgumpx %craftgumpy
+		gosub returnResources
+		namespace pop
+		exit
+	}
+}
+if %0 = 0 || %0 = N/A
+{
+	set %s7BFCalled #false
+	gosub getEUOVer
+	gosub craftInfoCheck
+	gosub initMenu
+	menu get chkFreeshard
+	set %freeshard #menures
+	if %freeshard
+		set %craftinfo %craftInfo_FS
+	menu get chkFillLbods
+	set %filllbods #menures
+	gosub checkSBar
+	set %maxweight #maxweight
+	if %maxweight > 420
+		set %maxweight 420
+	gosub makingMenu
+	if %euoVer < 15000 || %debugMode
+	{
+		finditem %s7BFSecureID C
+		set %returnResources #false
+		if #findbagID <> X && ( #findbagID <> #charid || %s7BFSecureID = #backpackid )
+		{
+			set %returnResources #true
+			set %s7BFMotherSecure #findbagid
+			set #lobjectid %s7BFMotherSecure
+			menu set s7BFMenuStatus Opening Mother Secure...
+			gosub s7WaitForAction 12
+			event macro 17 0
+			gosub s7WaitForVars contid = %s7BFMotherSecure 5
+			if #result
+				contpos 400 500
+			if ! #result
+			{
+				display ok The mother secure was unable to be opened correctly.$$The script may still continue provided that the secure opens correctly (which it probably won't) but resource returning will not function properly.
+				set %returnResources #false
+			}
+		}
+	}
+	set #lobjectid %s7BFSecureID
+	menu set s7BFMenuStatus Opening secure...
+	gosub s7WaitForAction 12
+	event macro 17 0
+	gosub s7WaitForVars contid = %s7BFSecureID 5
+	if #result
+		contpos 0 500
+	if ! #result
+		display ok The secure was unable to be opened.$$The script may still continue if you have some resources in your backpack, but most likely you're going to get an out of resources error.
+	if %fillall 2
+		finditem EYM C_ , #backpackid
+		set %s7BF_Bods2FillCnt #findcnt
+	set %s7BF_Bods2FillCnt2 %s7BF_Bods2FillCnt
+	set %bodi2 0
+	for %BODi 1 %s7BF_Bods2FillCnt
+	{
+		set %bodi2 %bodi2 + 1
+		set %s7BFBodID %s7BF_BodID . %BODi
+		if %fillall 2
+			finditem EYM %bodi c_ , #backpackid
+			set %s7BFBodID #findid
+		gosub getBodName %s7BFBodID
+		set %s7BF_BodName #result
+		menu set s7BFMenuStatus Getting bod data for %s7BF_BodName BOD # , %bodi2 of %s7BF_Bods2FillCnt2
+		gosub s7GetBODData
+		if ! #result
+		{
+			if %s7BFLBodIDs <> N/A
+				set %s7BFLBodIDs %s7BFLBodIDs , _ , %s7BFBodID
+			if %s7BFLBodIDs = N/A
+				set %s7BFLBodIDs %s7BFBodID
+		}
+		if #result && %s7BFBodAmountToMake > 0
+		{
+			repeat
+			{
+				gosub MakeItems
+				menu set s7BFMenuStatus Filling %s7BF_BodName BOD...
+				gosub FillBod
+			}
+			until #result
+		}
+		if %s7BFFBodContainer <> N/A
+		{
+			if %fillall
+				set %bodI %bodI - 1
+			if %fillAll && %bodi2 = %s7BF_Bods2FillCnt
+				set %bodI %s7BF_Bods2FillCnt
+			finditem %s7BFFBodContainer
+			set %s7BFBodContType #findtype
+			gosub s7MoveToCont %s7BFBodID %s7BFFBodContainer #findbagID 12_24
+			if %s7BFBodContType = dym
+			{
+				gosub s7WaitForVars contsize = !bodGumpContSize contname = generic_gump 2
+				if #result
+				{
+					set %cx #contposx + 10
+					set %cy #contposy + 10
+					click %cx %cy f r dmc
+				}
+			}
+			wait 10
+		}
+		gosub returnResources
+	}
+	if %s7BFLBodIDs <> N/A && %fillLbods
+	{
+		finditem %s7BFLBodIDs C_ , #backpackid
+		set %totallbods #findcnt
+		set %totallbods2 #findcnt
+		set %bodi2 0
+		for %BODi 1 %totallbods2
+		{
+			set %bodi2 %bodi2 + 1
+			finditem %s7BFLBodIDs %bodi C_ , #backpackid
+			menu set s7BFMenuStatus Getting LBOD data for LBOD %bodI2 of %totallbods
+			set %s7BFBodID #findid
+			gosub s7GetLBodData
+			if %S7BFLBODPIECES > 0
+			{
+				menu set s7BFMenuStatus Filling LBOD, could take a few seconds...
+				gosub s7FillLBod
+				if %s7BFFBodContainer <> N/A
+				{
+					wait 20
+					gosub s7GetLBodData
+					if %s7BFLBodPieces = 0
+					{
+						set %bodi %bodi - 1
+						set %totallbods2 %totallbods2 - 1
+						finditem %s7BFFBodContainer
+						gosub s7MoveToCont %s7BFBodID %s7BFFBodContainer #findbagID 12_24
+					}
+				}
+			}
+		}
+	}
+	;gosub closeGump generic_gump %craftgumpx %craftgumpy
+	menu set s7BFMenuStatus ALL DONE!!	
+	halt
+}
+
+sub returnResources
+	if ( ! %returnResources && %euoVer < 15000 ) || %s7BFSecureID = #backpackid
+		return
+	set %resourceTypes CUI_BUI_AUI_DUI_FUI_GUI_ENK_JJG_GUF
+	for %_RR 1 1
+	{
+		finditem %resourceTypes C_ , #backpackid
+		if #findkind <> -1
+		{
+			set %_RR 0
+			gosub s7MoveToCont #findid %s7BFSecureID %s7BFMotherSecure 12_24
+		}
+	}
+return
+
+sub checkSbar
+	if #charname = N/A
+	{
+		event macro 8 2
+		gosub s7WaitForVars contsize = 432_184 contname = status_gump 2
+		if #result
+		{
+			set %tVar #contposx , _ , #contposy
+			event macro 10 2
+			for %i 1 40
+			{
+				wait 1
+				if #contposx , _ , #contposy <> %tvar
+					set %i 40
+			}
+			contpos 0 #cliyRes
+		}
+	}
+return
+
+sub craftInfoCheck
+	set !cgiItemName N/A
+	call %pathlib , %craftInfo wsf
+	if !cgiItemName <> dagger
+	{
+		display ok ERROR:$
+			+ , %craftInfo , #spc , is an incorrect version or$
+			+was not located. The correct location for$
+			+ , %craftInfo , #spc , should be:$ , #curpath , $
+			+so please make sure that , #spc , %craftInfo , #spc , is$
+			+in that location and the latest version.
+		halt
+	}
+return
+
+sub makingMenu
+	menu clear
+	menu window size 300 20
+	menu window color black
+	menu window title s7BODFiller
+	menu font color lime
+	menu font bgcolor black
+	menu font name arial
+	menu font size 8
+	menu text s7BFMenuStatus 2 2 Initializing...
+	set %menux #clileft
+	set %menuy #clitop + #cliyres
+	menu show %menux %menuy
+return
+
+sub initMenu
+	set #lpc 75
+	menu clear
+	menu window size 260 180
+	menu window color black
+	menu window title s7BodFiller
+	menu font color lime
+	menu font bgcolor black
+	menu font name Arial
+	menu font size 12
+	menu font style u
+	menu text title 2 2 s 7 B o d F i l l e r
+	menu font style
+	menu font size 8
+	menu text lblSelectedBods 4 24 Selected BODs:
+	menu list create lstSelectedBods 4 40 130 100
+	menu check chkFreeShard 136 40 100 14 %freeshard Freeshard?
+	menu check chkFillLBods 136 58 150 18 #true Fill Large Bods?
+	menu button btnChooseSecure 136 76 120 20 Choose Secure
+	menu button btnChooseContainer 136 98 120 20 Store finished BODs?
+	menu button btnBodAdd 4 142 31 20 add
+	menu button btnBodAddAll 37 142 31 20 all
+	menu button btnBodDel 70 142 31 20 del
+	menu button btnBodClr 103 142 31 20 clr
+	menu text s7BFMenuStatus 4 164 Please select the BODs and secure container...
+	set %readyToGoAll #false
+	set %readyToGo #false
+	set #menubutton N/A
+	menu show
+	for %_menu 1 1
+	{
+		set %_menu 0
+		if #menubutton <> N/A
+		{
+			if btnFill in #menubutton
+			{
+				set %fillall #false
+				if all in #menubutton 2
+					set %fillall #true
+					set %_menu 1
+				if all notin #menubutton && %readyToGo
+					set %_menu 1
+			}
+			if btnFill notin #menubutton
+			{
+				str del #menubutton 1 3
+				gosub #strRes
+			}
+			set #menubutton N/A
+		}
+		if %s7BFSecureID <> N/A && %s7BF_Bods2FillCnt > 0 && ! %readyToGo 2
+			menu button btnFill 196 142 60 20 Fill
+			set %readyToGo #true
+		if ( %s7BFSecureID = N/A || %s7BF_Bods2FillCnt = 0 ) && %readyToGo 2
+			menu delete btnFill
+			set %readyToGo #false
+		if %s7BFSecureID <> N/A && ! %readyToGoAll 2
+			menu button btnFillAll 196 120 60 20 Fill All
+			set %readyToGoAll #true
+		if %s7BFSecureID = N/A && %readyToGoAll 2
+			menu delete btnFillAll
+			set %readyToGoAll #false
+		wait 1
+	}
+	set #lpc 10
+return
+
+sub chooseContainer
+	menu set s7BFMenuStatus Please target your BOD book or container:
+	gosub s7GetTarget
+	set %s7BFFBodContainer #result
+	gosub s7GetProperty #result
+	str pos #property $
+	set #strRes #strres - 1
+	str left #property #strres
+	set %strres #strres
+	str len %strres
+	if #strres > 14
+	{
+		str left %strRes 14
+		str ins #strRes ... 15
+		set %strRes #strRes
+	}
+	str lower %strRes
+	menu set btnChooseContainer Drop: #strRes
+	menu set s7BFMenuStatus You have chosen " , #strRes , " as your drop.
+return
+
+sub chooseSecure
+	menu set s7BFMenuStatus Please target your secure:
+	gosub s7GetTarget
+	set %s7BFTargetedSecure #result
+	set %s7BFPackAnimalID N/A
+	finditem %s7BFTargetedSecure
+	if #findtype in bo_wn_zgb
+	{
+		if %euoVer < 15000 2
+			menu set s7BFMenuStatus Pack animals are only supported in EUO 1.5+.
+			return
+		menu set s7BFMenuStatus Pack animal targeted. Opening pack...
+		set %s7BFPackAnimalID %s7BFTargetedSecure
+		set %_tCont #contid
+		exevent popup %s7BFPackAnimalID 11
+		gosub s7WaitForVars contid <> %_tCont conttype = zjf 4
+		if ! #result 2
+			menu set s7BFMenuStatus Failed to open pack animal pack.
+			return
+		set %s7BFSecureID #contid
+	}
+	if #findtype notin bo_wn_zgb
+		set %s7BFSecureID %s7BFTargetedSecure
+	if %s7BFPackAnimalID <> N/A
+		gosub s7GetProperty %s7BFPAckAnimalID
+	if %s7BFPackAnimalID = N/A
+		gosub s7GetProperty %s7BFSecureID
+	str pos #property $
+	set #strRes #strres - 1
+	str left #property #strres
+	str lower #strRes
+	menu set btnChooseSecure Secure: #strRes
+	menu set s7BFMenuStatus You have chosen " , #strRes , " as your secure.
+return
+
+sub BodClr
+	set %s7BF_Bods2FillCnt 0
+	menu delete lstSelectedBods
+	menu list create lstSelectedBods 4 40 130 100
+return
+
+sub BodDel
+	menu get lstSelectedBods
+	for %b2fI #menures %s7BF_Bods2FillCnt
+	{
+			set %b2fioffset %b2fi + 1
+			set %s7BF_BodID . %b2fi %s7BF_BodID . %b2fioffset
+			set %s7BF_BodName . %b2fi %s7BF_BodName . %b2fioffset
+	}
+	set %s7BF_Bods2FillCnt %s7BF_Bods2FillCnt - 1
+	if %s7BF_Bods2FillCnt < 0
+		set %s7BF_Bods2FillCnt 0
+	menu delete lstSelectedBods
+	menu list create lstSelectedBods 4 40 130 100
+	if %s7BF_Bods2FillCnt > 0
+	{
+		for %b2fi 1 %s7BF_Bods2FillCnt
+		{
+			str lower %s7BF_BodName . %b2fi
+			menu list add lstSelectedBods #strRes
+		}
+	}
+return
+
+sub BodAddAll
+	finditem EYM C_ , #backpackid
+	if #findkind = -1 2
+		menu set s7BFMenuStatus No BODs found in backpack...
+		return
+	for %b2fi 1 1
+	{
+		finditem EYM C_ , #backpackid
+		if #findkind <> -1
+		{
+			gosub BodAdd #findid
+			ignoreitem #findid BODIgnore
+			set %b2fi 0
+		}
+	}
+	ignoreitem reset BODIgnore
+return		
+
+sub BODAdd
+	set %bodtype EYM
+	if %0 = 0
+	{
+		menu set s7BFMenuStatus Please target the BOD to add...
+		gosub s7GetTarget
+	}
+	if %0 > 0
+		set #result %1
+	finditem #result
+	if #findtype <> %bodtype
+	{
+		menu set s7BFMenuStatus That is not a BOD!
+		return
+	}
+	if %s7BF_Bods2FillCnt <> 0
+	{
+		for %BBI 1 %s7BF_Bods2FillCnt
+		{
+			if #findid = %s7BF_BodID . %BBI
+			{
+				menu set s7BFMenuStatus That BOD is already in the list.
+				return	
+			}
+		}
+	}
+	set %s7BF_Bods2FillCnt %s7BF_Bods2FillCnt + 1
+	set %s7BF_BodID . %s7BF_Bods2FillCnt #findid
+	gosub getBodName #findid
+	set %s7BF_BodName . %s7BF_Bods2FillCnt #result
+	str lower %s7BF_BodName . %s7BF_Bods2FillCnt
+	menu list add lstSelectedBods #strRes
+	menu delete status
+return
+
+;===================================;
+;= PARSING SUBS ====================;
+;===================================;
+
+sub getBodName
+	gosub s7GetProperty %1 A , #spc , Bulk , #spc , Order , #spc , Deed$
+	set %s7BFLbodExceptional n
+	if exceptional in #property
+		set %s7BFLbodExceptional x
+	str pos #property make:
+	set %pos #strRes + 3
+	str del #property 1 %pos
+	set %s7BFItemString #strRes
+	str pos %s7BFItemString :
+	set %pos #strRes + 1
+	str pos %s7BFItemString $
+	set %len #strRes - %pos
+	str mid %s7BFItemString %pos %len
+	set %s7BFLBodCnt #strRes
+	str del %s7BFItemString 1 5
+	set %s7BFItemString #strRes
+	str pos %s7BFItemString :
+	set #strres #strres - 1
+	str left %s7BFItemString #strRes
+	set !gbi_item1 #strRes
+	if large , #spc , bulk in #property
+	{
+		if cutlass in !gbi_item1 || katana in !gbi_item1 || scimitar in !gbi_item1 || broad in !gbi_item1 || longsword in !gbi_item1 || viking in !gbi_item1
+			set %lbod Swords
+		if kryss in !gbi_item1 || spear in !gbi_item1 || warfork in !gbi_item1 || dagger in !gbi_item1
+			set %lbod Piercing
+		if axe in !gbi_item1 && war notin !gbi_item1
+			set %lbod Axes
+		if mace in !gbi_item1 || maul in !gbi_item1 || hammer in !gbi_item1 || war , #spc , axe in !gbi_item1
+			set %lbod Bashing
+		if bardiche in !gbi_item1 || halberd in !gbi_item1
+			set %lbod Polearms
+		if chainmail in !gbi_item1
+			set %lbod Chainmail
+		if ringmail in !gbi_item1
+			set %lbod Ringmail
+		if gorget in !gbi_item1
+			set %lbod Studded , #spc , Set
+		if plate in !gbi_item1 || plate in !gbi_item 
+			set %lbod Platemail
+		if sandals in !gbi_item1
+			set %lbod Footwear , #spc , Set
+		if gorget in !gbi_item1
+			set %lbod Leather , #spc , Set
+		if skirt in !gbi_item1
+			set %lbod Female , #spc , Set
+		if bone in !gbi_item1
+			set %lbod Bone , #spc , AR
+		if bandana in !gbi_item1
+			set %lbod The , #spc , Gypsy
+		if skullcap in !gbi_item1
+			set %lbod The , #spc , Pirate
+		if straw in !gbi_item1
+			set %lbod The , #spc , Farmer
+		if wizard in !gbi_item1
+			set %lbod The , #spc , Wizard
+		if floppy in !gbi_item1
+			set %lbod Fishergirl
+		if feathered in !gbi_item1
+			set %lbod Town , #spc , Crier
+		if bonnet in !gbi_item1
+			set %lbod The , #spc , Lady
+		if jester in !gbi_item1
+			set %lbod The , #spc , Jester
+		if tricorne in !gbi_item1
+			set %lbod The , #spc , Hat-Set
+		return %s7BFLbodCnt , %s7bflbodexceptional , #spc , large , #spc , bod , #spc , " , %lbod , "
+	}
+	if small , #spc , bulk in #property
+	return %s7BFLbodCnt , %s7BFLBodExceptional , #spc , !gbi_item1
+
+;///////////////////////////////////;
+; getYContsize
+; gets the height of a gump, used for clicking the combine button
+;///////////////////////////////////;
+sub getYContsize
+	str len #contsize
+	set %CSL #strRes
+	str pos #contsize _
+	set %CSFR %CSL - #strRes
+	str right #contsize %CSFR
+return #strRes
+
+;///////////////////////////////////;
+; s7GetBodData
+; parses the property of the bod and makes a call to Kal's craftinfo.txt to get the information about the item.
+;///////////////////////////////////;
+sub s7GetBODData
+	finditem %s7BFBodID C_ , #backpackid
+	gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+	if large , #spc , bulk in #property
+		return #false
+	if #findcol = 1155
+	{
+		set %s7BFBodType Tailor
+		set %s7BFBodMaterial 0
+		set %s7BFBodMatFindCol N/A
+		if boots in #property || shoes in #property || sandals in #property || leather in #property || studded in #property 2
+			set %s7BFBodMatFindCol 0
+			set %s7BFBodMaterial 1
+		if cloth in #property 
+			set %s7BFBodMaterial 0
+		if normal , #spc , leather in #property || bone in #property 2
+			set %s7BFBodMatFindCol 0
+			set %s7BFBodMaterial 1 
+		if spined , #spc , leather in #property 2
+			set %s7BFBodMatFindCol 2220
+			set %s7BFBodMaterial 2 
+		if horned , #spc , leather in #property 2
+			set %s7BFBodMatFindCol 2117
+			set %s7BFBodMaterial 3
+		if barbed , #spc , leather in #property 2
+			set %s7BFBodMatFindCol 2129
+			set %s7BFBodMaterial 4 
+	}
+	if #findcol = 1102
+	{
+		set %s7BFBodType Smith
+		set %s7BFBodMaterial 1
+		set %s7BFBodMatFindCol 0
+		if iron , #spc , ingots in #property && shadow notin #property 2
+			set %s7BFBodMatFindCol 0
+			set %s7BFBodMaterial 1
+		if dull , #spc , copper , #spc , ingots in #property 2
+			set %s7BFBodMatFindCol 2419
+			set %s7BFBodMaterial 2
+		if shadow , #spc , ingots in #property 2
+			set %s7BFBodMatFindCol 2406
+			set %s7BFBodMaterial 3 
+		if shadow , #spc , iron , #spc , ingots in #property 2
+			set %s7BFBodMatFindCol 2406
+			set %s7BFBodMaterial 3 
+		if copper , #spc , ingots in #property && dull , #spc , copper notin #property 2
+			set %s7BFBodMatFindCol 2413
+			set %s7BFBodMaterial 4 
+		if bronze , #spc , ingots in #property 2
+			set %s7BFBodMatFindCol 2418
+			set %s7BFBodMaterial 5 
+		if gold , #spc , ingots in #property 2
+			set %s7BFBodMatFindCol 2213
+			set %s7BFBodMaterial 6 
+		if agapite , #spc , ingots in #property 2
+			set %s7BFBodMatFindCol 2425
+			set %s7BFBodMaterial 7 
+		if verite , #spc , ingots in #property 2
+			set %s7BFBodMatFindCol 2207
+			set %s7BFBodMaterial 8 
+		if valorite , #spc , ingots in #property 2
+			set %s7BFBodMatFindCol 2219
+			set %s7BFBodMaterial 9
+	}
+	set %s7BFBodExceptional #false
+	if exceptional in #property
+		set %s7BFBodExceptional #true
+	if make: , #spc , 10 in #property 
+		set %s7BFBodAmount 10
+	if make: , #spc , 15 in #property 
+		set %s7BFBodAmount 15
+	if make: , #spc , 20 in #property 
+		set %s7BFBodAmount 20
+	str pos #property make:
+	set %pos #strRes + 8
+	str del #property 1 %pos
+	set %s7BFItemString #strRes
+	str pos %s7BFItemString :
+	set %pos #strRes - 1
+	str left %s7BFItemString %pos
+	set %s7BFBodItem #strRes
+	gosub s7GetBodAmountMade
+	set %s7BFBodAmountToMake %s7BFBodAmount - %s7BFBodAmountMade
+	set !CGIMATERIALNAME2 N/A
+	call %pathlib , %craftInfo %s7BFBodItem
+	;====
+	;category/selection exceptions
+	;====
+	if %freeshard && %s7BFBodType = Tailor && #shard <> Alexandria
+		set !cgiCategory !cgiCategory - 1
+	if %freeshard && %nonSEFreeshard && %s7BFBodType = Tailor && !cgiCategory = 5
+		set !cgiSelection !cgiSelection - 2
+	;if ! %freeshard && %s7BFBodType = Tailor && !cgiCategory = 7
+	;	set !cgiSelection !cgiSelection + 3
+	;if ! %freeshard && %s7BFBodType = Tailor && !cgiCategory = 6
+	;	set !cgiSelection !cgiSelection + 1
+	;====
+	;end category/selection exceptions
+	;====
+	set !cgiSelection !cgiSelection + 1
+	if !cgiMaterialName1 = Cloth 2
+		set %s7BFBodMatWeight 1
+		set %s7BFBodMatType cui_bui_AUI_DUI_FUI_GUI
+	if !cgiMaterialName1 = Leather 2
+		set %s7BFBodMatWeight 10
+		set %s7BFBodMatType JJG
+	if !cgiMaterialName1 = ingots 2
+		set %s7BFBodMatWeight 1
+		set %s7BFBodMatType ENK
+return #true
+
+;///////////////////////////////////;
+; s7GetBodAmountMade
+; sub to get the number of pieces already in the bod ie 15/20, 15
+;///////////////////////////////////;
+sub s7GetBodAmountMade
+	set #lpc 100
+	str pos #property make:
+	set %pos #strRes + 8
+	str del #property 1 %pos
+	set %s7BFItemString #strRes
+	str pos %s7BFItemString :
+	set %pos #strRes + 1
+	str pos %s7BFItemString $
+	set %len #strRes - %pos
+	str mid %s7BFItemString %pos %len
+	set %s7BFBodAmountMade #strRes
+	set #lpc 10
+return
+
+;///////////////////////////////////;
+; s7GetLBodData
+; parses the lbod property and extracts number of items, names of items, and count/quality of items.
+;///////////////////////////////////;
+sub s7GetLBodData
+	set #lpc 100
+	finditem %s7BFBodID C_ , #backpackid
+	gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+	set %s7BFLbodExceptional #false
+	if exceptional in #property
+		set %s7BFLbodExceptional #true
+	set %s7BFLBodMaterial 0
+	set %s7BFLBodProperty #property
+	str pos #property make:
+	set %pos #strRes + 3
+	str del #property 1 %pos
+	set %s7BFItemString #strRes
+	str pos %s7BFItemString :
+	set %pos #strRes + 1
+	str pos %s7BFItemString $
+	set %len #strRes - %pos
+	str mid %s7BFItemString %pos %len
+	set %s7BFLBodCnt #strRes
+	str del %s7BFItemString 1 5
+	set %s7BFItemString #strRes
+	set %s7BFLBodPieces 0
+	for %_ 1 1
+	{
+		str pos %s7BFItemString $
+		if #strRes > 0
+		{
+			set %_ 0
+			str pos %s7BFItemString :
+			set %pos #strRes + 2
+			str pos %s7BFItemString $
+			set %len #strRes - %pos
+			str mid %s7BFItemString %pos %len
+			if #strres = 0
+			{
+				set %s7BFLBodPieces %s7BFLBodPieces + 1
+				str pos %s7BFItemString :
+				set #strres #strRes - 1
+				str left %s7BFItemString #strRes
+				set %s7BFLBodPiece . %s7BFLBodPieces #strRes
+			}
+			str pos %s7BFITemString $
+			str del %s7BFItemString 1 #strRes
+			set %s7bfitemstring #strres
+		}
+	}
+	set #lpc 10
+return
+
+
+sub getEUOVer
+	set %euoVer #euover
+	for %_ 1 1
+	{
+		str pos %euoVer _
+		if #strRes > 0 3
+			set %_ 0
+			str del %euoVer #strRes 1
+			set %euoVer #strRes
+	}
+return
+
+;===================================;
+;= FILLING SUBS ====================;
+;===================================;
+
+;///////////////////////////////////;
+; FillBod
+; opens current bod, clicks combine, targets items in pack
+;///////////////////////////////////;
+sub FillBod
+	set %s7FB_PreLPC #lpc
+	set #lpc 200
+	ignoreitem reset
+	gosub OpenBod %s7BFBodID target
+	gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+	gosub s7GetBodAmountMade
+	finditem !cgiItemType C_ , #backpackid
+	if #findcnt > 0 && %s7BFBodAmountMade < %s7BFBodAmount
+	{
+		for #findindex 1 #findcnt
+		{
+			if #findcol <> %s7BFBODMATFINDCOL && %s7BFBODMatFindCol <> N/A
+				continue
+			if %s7BFBodExceptional
+			{
+				gosub s7GetProperty #findid
+				if exceptional notin #property
+					continue
+			}
+			set #ltargetid #findid
+			set #ltargetkind 1
+			gosub s7WaitForVars targCurs = 1 2
+			if #result
+				event macro 22 0
+			if ! #result
+			{
+				gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+				gosub s7GetBodAmountMade
+				if %s7BFBodAmountMade < %s7BFBodAmount
+				{
+					gosub OpenBod %s7BFBodID target	
+					set #findindex #findindex - 1
+				}
+			}
+			if #findindex < 1
+				set #findindex 1
+		}
+		wait 15
+		gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+		gosub s7GetBodAmountMade
+	}
+	click %tx %ty f r dmc
+	set #lpc %S7BF_FBPreLPC
+return %s7BFBodAmountMade >= %s7BFBodAmount
+
+;///////////////////////////////////;
+; OpenBod
+; opens bod with ID passed as %1,
+; clicks combine if %2 = "target"
+;///////////////////////////////////;
+sub OpenBod
+	set #lobjectid %1
+	set %two %2
+	gosub s7WaitForAction 12
+	event macro 17 0
+	gosub s7WaitForVars contsize in 510_275_510_230_510_275_510_254_510_395_510_347_510_371_510_323_510_182_510_302_510_326_510_350_524_275 contname = generic_gump 4
+	if %two = target && #result
+	{
+		gosub getycontsize
+		set %tx #contposx + 140 
+		set %ty #contposy + #result - 75
+		if ! %freeshard
+			set %ty %ty + 25
+		click %tx %ty 		
+	}
+return #result
+
+sub FillBodOLD
+	ignoreitem reset
+	set #lobjectid %s7BFBodID
+	set %s7BF_FBSuccess #true
+	gosub s7WaitForAction 12
+	event macro 17 0
+	gosub s7WaitForVars contsize in 510_275_510_230_510_275_510_254_510_395_510_347_510_371_510_323_510_182_510_302_510_326_510_350 contname = generic_gump 4
+	gosub getycontsize
+	set %tx #contposx + 140 
+	set %ty #contposy + #result - 75
+	if ! %freeshard
+		set %ty %ty + 25
+	click %tx %ty 
+	wait 10
+	targeting:
+	gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+	gosub s7GetBodAmountMade
+	finditem !cgiItemType C_ , #backpackid
+	if #findcnt > 0 && %s7BFBodAmountMade < %s7BFBodAmount
+	{
+		if %s7BFBodExceptional
+		{
+			gosub s7GetProperty #findid
+			if exceptional notin #property || ( #findcol <> %s7BFBODMATFINDCOL && %s7BFBODMatFindCol <> N/A )
+			{
+				set %s7BF_FBSuccess #false
+				ignoreitem #findid
+				goto targeting
+			}
+		}
+		ignoreitem #findid
+		set #ltargetid #findid
+		set #ltargetkind 1
+		gosub s7WaitForVars targCurs = 1 2
+		if #result 2
+			event macro 22 0
+			goto targeting
+		if ! #result
+		{
+			set #lobjectid %s7BFBodID
+			gosub s7WaitForAction 12
+			event macro 17 0
+			gosub s7WaitForVars contsize in 510_275_510_230_510_275_510_254_510_395_510_347_510_371_510_323_510_182_510_302_510_326_510_350 contname = generic_gump 4
+			gosub getycontsize
+			set %tx #contposx + 140 
+			set %ty #contposy + #result - 75
+			if ! %freeshard
+				set %ty %ty + 25
+			click %tx %ty 
+			wait 10
+			ignoreitem reset
+			goto targeting		
+		}
+	}
+	else if #findcnt = 0
+	{
+		wait 10
+		gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+		gosub s7GetBodAmountMade
+		if %s7BFBODAmountMade < %s7BFBODAmount
+			set %s7BF_FBSuccess #false
+	}
+	wait 10
+	click %tx %ty f r dmc
+return %s7BF_FBSuccess
+
+;///////////////////////////////////;
+; findTrashCan
+; looks for the nearest circular filing cabinet
+;///////////////////////////////////;
+sub findTrashCan
+	gosub s7FindNamedItem BKF_HIF_IKF G_2 trash
+	if #result = #false
+		return #false
+	set %trashid #result
+return #true
+
+;///////////////////////////////////;
+; openTrashCan
+; opens the can and places it in a nice place for dropping items.
+;///////////////////////////////////;
+sub openTrashCan
+	set #lobjectid %trashid
+	gosub s7waitforaction 13
+	event macro 17 0
+	gosub s7waitforvars contid = %trashid 5
+	if ! #result
+		return #false
+	wait 10
+	contpos 250 500
+	set %trashx 270
+	set %trashy 530
+	wait 10
+return #true
+
+;///////////////////////////////////;
+; s7FindSBod
+; finds a filled sbod in backpack by name, quantity, and quality
+;///////////////////////////////////;
+sub s7FindSBod
+	set %FSBProp %2
+	set %FSBcnt %1
+	finditem EYM C_ , #backpackid
+	set %FSBfindcnt #findcnt
+	for %FSBfindI 1 %FSBfindcnt
+	{
+		finditem EYM %FSBfindI C_ , #backpackid
+		gosub s7GetProperty #findid A , #spc , Bulk , #spc , Order , #spc , Deed$
+		if %FSBProp in #property && large , #spc , bulk notin #property && ( ( %s7BFLbodExceptional && exceptional in #property ) || ( ! %s7BFLbodExceptional && exceptional notin #property ) )
+		{
+			gosub s7GetBodAmountMade
+			if %s7BFBodAmountMade = %FSBCnt && barbed notin %s7BFLBodProperty && horned notin %s7BFLBodProperty && spined notin %s7BFLBodProperty && shadow notin %s7BFLBodProperty && copper notin %s7BFLBodProperty && bronze notin %s7BFLBodProperty && gold notin %s7BFLBodProperty && agapite notin %s7BFLBodProperty && verite notin %s7BFLBodProperty && valorite notin %s7BFLBodProperty && barbed notin #property && horned notin #property && spined notin #property && shadow notin #property && copper notin #property && bronze notin #property && gold notin #property && agapite notin #property && verite notin #property && valorite notin #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && spined in %s7BFLBodProperty && spined in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && horned in %s7BFLBodProperty && horned in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && barbed in %s7BFLBodProperty && barbed in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && dull , #spc , copper in %s7BFLBodProperty && dull , #spc , copper in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && shadow , #spc , iron in %s7BFLBodProperty && shadow , #spc , iron in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && copper in %s7BFLBodProperty && dull notin %s7BFLBodProperty && copper in #property && dull notin #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && bronze in %s7BFLBodProperty && bronze in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && gold in %s7BFLBodProperty && gold in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && agapite in %s7BFLBodProperty && agapite in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && verite in %s7BFLBodProperty && verite in #property
+				return #true
+			if %s7BFBodAmountMade = %FSBCnt && valorite in %s7BFLBodProperty && valorite in #property
+				return #true
+		}
+	}
+return #false
+
+;///////////////////////////////////;
+; s7FillLBod
+; opens large bod, clicks combine, searches for the correct sbods to combine
+;///////////////////////////////////;
+sub s7FillLBod
+	set #lpc 60
+	set #lobjectid %s7BFBodID
+	gosub s7WaitForAction 12
+	event macro 17 0
+	gosub s7WaitForVars contsize in 510_275_510_230_510_275_510_254_510_395_510_347_510_371_510_323_510_182_510_302_510_326_510_350 contname = generic_gump 4
+	gosub getycontsize
+	set %tx #contposx + 140 
+	set %ty #contposy + #result - 75
+	if ! %freeshard
+		set %ty %ty + 25
+	click %tx %ty 
+	wait 10
+	for %sbodNum 1 %s7BFLBodPieces
+	{
+		if %s7BFLbodExceptional
+			menu set s7BFMenuStatus Looking for filled smallbod %s7BFLBodCnt , x %s7BFLBodPiece . %sbodNum ...
+		if ! %s7BFLbodExceptional
+			menu set s7BFMenuStatus Looking for filled smallbod %s7BFLBodCnt , n %s7BFLBodPiece . %sbodNum ...
+		gosub s7FindSbod %s7BFLBodCnt %s7BFLBodPiece . %sbodNum
+		if #result
+		{
+			set #ltargetid #findid
+			set #ltargetkind 1
+			for %_ 1 1
+			{
+				gosub s7WaitForVars targCurs = 1 2
+				if #result
+					event macro 22 0
+				if ! #result
+				{
+					set #lobjectid %s7BFBodID
+					gosub s7WaitForAction 12
+					event macro 17 0
+					gosub s7WaitForVars contsize in 510_275_510_230_510_275_510_254_510_395_510_347_510_371_510_323_510_182_510_302_510_326_510_350 contname = generic_gump 4
+					gosub getycontsize
+					set %tx #contposx + 140 
+					set %ty #contposy + #result - 75
+					if ! %freeshard
+						set %ty %ty + 25
+					click %tx %ty 
+					wait 10
+					set %_ 0	
+				}
+			}
+		}
+	}
+	wait 10
+	click %tx %ty f r dmc
+	set #lpc 10
+return
+
+;===================================;
+;= CRAFTING SUBS ===================;
+;===================================;
+
+;///////////////////////////////////;
+; MakeItems
+; loops through crafting the required amount of items for the current bod
+;///////////////////////////////////;
+sub MakeItems
+	set %s7BFMaterialSelected #false
+	gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+	gosub s7GetBodAmountMade
+	set %s7BFBodAmountToMake %s7BFBodAmount - %s7BFBodAmountMade
+	set %s7BFBodMadeCnt 0
+	set %craftAttempts 0
+	for %MIi 1 1
+	{
+		finditem !cgiItemType C_ , #backpackid
+		set %MIItemFindCnt #findcnt
+		if #findkind <> -1
+		{
+			for %MIItemFindI 1 %MIItemFindCnt
+			{
+				finditem !cgiItemType C_ , #backpackid
+				if #findkind <> -1
+				{
+					set %MIItemFindID #findid
+					set %MiItemFindKind #findkind
+					set %s7BFBodMadeCnt %s7BFBodMadeCnt + 1
+					set %MIItemIgnore #true
+					if %s7BFBODMatFindCol <> N/A && #findcol <> %S7BFBODMATFINDCOL
+					{
+						set %s7BFBodMadeCnt %s7BFBodMadeCnt - 1
+						set %MIItemIgnore #false
+						ignoreitem #findid MIWrongColoredItems
+					}
+					if %s7BFBodExceptional && ( #findcol = %S7BFBODMATFINDCOL || %s7BFBODMatFindCol = N/A )
+					{
+						gosub s7GetProperty %MiItemFindID
+						if exceptional notin #property
+						{
+							set %s7BFBodMadeCnt %s7BFBodMadeCnt - 1
+							if %s7BFBodType = tailor
+							{
+								if bone in !CGICATEGORYNAME
+								{
+									gosub findTrashCan
+									if ! #result
+									{
+										display ok no trashcan found!!! halt.ing.
+										halt
+									}
+									if %euoVer < 15000
+									{
+										set %gumpcx #contposx + 10
+										set %gumpcy #contposy + 10
+										for %trashopen 1 1
+										{
+											click %trashx %trashy
+											wait 1
+											if #contid <> %trashID || %trashID = N/A 2
+												gosub openTrashcan
+												set %trashopen 0
+										}
+										gosub s7waitforaction 13
+										gosub s7MoveToPos %MIItemFindID %trashx %trashy 3
+										wait 10
+										click %gumpcx %gumpcy
+									}
+									else
+									{
+										gosub findTrashCan
+										gosub s7WaitForAction 13
+										gosub s7MoveToCont %MIItemFindID %trashID
+									}
+								}
+								if bone notin !CGICATEGORYNAME
+								{
+									set #ltargetid %MiItemFindID
+									set #ltargetkind 1
+									finditem JAG_KAG C
+									if #findkind = -1 2
+										display ok No scissors found! Get some!
+										halt
+									set #lobjectid #findid
+									gosub s7WaitForAction 12
+									event macro 17 0
+									target 2s
+									event macro 22 0
+								}
+							}
+							if %s7BFBodType = smith
+							{
+								gosub s7MakeAnything Smith Smelt %MIItemfindid
+								if ! #result
+								{
+									ignoreitem reset MICraftedItems
+									gosub MakeNewTool
+									set %s7BFBodMadeCnt 0
+								}
+							}
+							set %MIi 0
+							set %MIItemIgnore #false
+						}
+					}
+					if %MIItemIgnore
+						ignoreitem %MIItemFindID MICraftedItems
+				}
+			}
+		}
+		if %craftAttempts >= 2 && %s7BFBodMadeCnt = 0
+		{
+			namespace push
+			namespace local _s7MakeAnything
+			set !2 N/A
+			set !1 N/A
+			namespace pop
+			set %craftAttempts 0
+			set %s7BFMaterialSelected #false
+		}
+		if %MIi <> 0 && #weight > ( %maxweight - 5 - ( !cgiItemWeight * 2 ) )
+		{
+			ignoreitem reset MICraftedItems
+			finditem !cgiItemType C_ , #backpackid
+			if #findkind = -1 2
+				display ok We have a major problem. You are getting close to being overweight, yet you havent crafted any items to fill the BODs with. Please make some room in your pack, and restart the script.
+				halt
+			gosub FillBod
+			wait 3s
+			gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+			gosub s7GetBodAmountMade
+			set %s7BFBodAmountToMake %s7BFBodAmount - %s7BFBodAmountMade
+			set %s7BFBodMadeCnt 0
+			set %craftAttempts 0
+			set %MIi 0
+		}
+		set %menucnt %s7bfbodamountmade + %s7bfbodmadecnt
+		if ! %s7BFCalled
+			menu set s7BFMenuStatus Making item %menucnt of %s7bfbodamount for %s7BF_BodName BOD %bodi2 of %s7BF_Bods2FillCnt2
+		if %s7BFCalled
+			menu set s7BFMenuStatus Making item %menucnt of %s7bfbodamount for %s7BF_BodName BOD
+		if %s7BFBodMadeCnt < %s7BFBodAmountToMake && %MIi <> 0
+		{
+			if ! %s7BFMaterialSelected && !CGIMATERIALNAME1 <> Cloth
+			{
+				gosub s7MakeAnything %s7BFBodType SelectMaterial %s7BFBodMaterial
+				set %s7BFMaterialSelected #true
+				if ! #result
+				{
+					ignoreitem reset MICraftedItems
+					gosub MakeNewTool
+					set %s7BFBodMadeCnt 0
+					set %s7BFMaterialSelected #false
+				}
+			}
+			if !CGIMATERIALNAME1 = INGOTS || !CGIMATERIALNAME1 = CLOTH
+				set %grabAmt ( %maxweight - #weight - 15 ) * 10
+			if !CGIMATERIALNAME1 = LEATHER
+				set %grabAmt ( %maxweight - #weight - 15 )
+			if %grabAmt > 250
+				set %grabAmt 250
+			if !cgiMaterialValue1 > %grabAmt
+				set %grabAmt !cgiMaterialValue1
+			if !CGIMATERIALNAME2 = BONES
+			{
+				set %boneGrabAmt 50
+				if %grabAmt - %boneGrabAmt < 0
+					set %boneGrabAmt !cgiMaterialValue2
+				if %grabAmt - %boneGrabAmt < 0 2
+					display ok You have too much extra weight on you to be able to grab enough bones and leather to make one more item. Please lose some weight and restart the script.
+					halt
+				set %grabAmt %grabAmt - %boneGrabAmt
+			}
+			gosub s7ResourceCheck %s7BFBodMatType %s7BFBodMatFindCol !cgiMaterialValue1 %grabAmt #true %s7BFSecureID
+			if !CGIMATERIALNAME2 = BONES && #result
+				gosub s7ResourceCheck GUF 0 !cgiMaterialValue2 %boneGrabAmt #true %s7BFSecureID
+			set %result #result
+			if ! %result
+			{
+				ignoreitem reset MICraftedItems
+				set %s7BFBodMadeCnt 0
+				finditem !cgiItemType C_ , #backpackid
+				if #findkind <> -1
+				{
+					gosub FillBod
+					wait 3s
+					gosub s7GetProperty %s7BFBodID A , #spc , Bulk , #spc , Order , #spc , Deed$
+					gosub s7GetBodAmountMade
+					set %s7BFBodAmountToMake %s7BFBodAmount - %s7BFBodAmountMade
+					set %craftAttempts 0
+				}
+				display ok You seem to lack materials! Pausing!
+				pause
+			}
+			if %result
+			{
+				gosub s7MakeAnything %s7BFBodType !CGICategory !CGISelection
+				if #result
+				{
+					namespace push
+					namespace local _s7MakeAnything
+					set %craftGumpx !CraftContPosX + 60
+					set %craftGumpy !CraftContPosY + 60
+					namespace pop
+					set %craftAttempts %craftAttempts + 1
+				}
+				if ! #result
+				{
+					ignoreitem reset MICraftedItems
+					gosub MakeNewTool
+					set %s7BFBodMadeCnt 0
+				}
+				if %s7BFBodMadeCnt >= ( %s7BFBodAmountToMake - 3 )
+				{
+					wait 3s
+				}
+			}
+			set %MIi 0
+		}
+		if ( %s7BFBodMadeCnt >= %s7BFBodAmountToMake && %MIi <> 0 ) || ( %s7BFBodAmountMade >= %s7BFBodAmount )
+		{
+			ignoreitem reset MIWrongColoredItems
+			ignoreitem reset MICraftedItems
+			gosub closeCraftGump
+			return #true
+		}
+		set %MIi 0
+	}
+
+sub closeCraftGump
+	set %_CGt #systime
+	repeat
+		wait 1
+	until %_CGt + 500 < #systime || ( #contname = generic_gump && #contsize = !craftGumpContSize )
+	if #contname = generic_gump && #contsize = !craftGumpContSize
+	{
+		namespace push
+		namespace local _s7MakeAnything
+		set %cx !CraftContPosX + 30
+		set %cy !CraftContPosY + 415
+		click %cx %cy dmc
+		namespace pop
+	}
+return
+	
+sub closeGump
+	click %2 %3
+	set %_CGt #systime
+	for %_CG 1 1
+	{
+		if %_CGt + 400 < #systime
+			return
+		if #contname <> %1
+			set %_CG 0
+	}
+	click %2 %3 r
+return
+
+;///////////////////////////////////;
+; MakeNewTool
+; makes a new tool. duh
+;///////////////////////////////////;
+sub MakeNewTool
+	namespace push
+	namespace local _s7BF_MakeNewTool
+	if !_s7BF_MNT_Init = N/A
+	{
+		set !_s7BF_MNT_Init #true
+		call %pathlib , %craftinfo HAG
+		set !tailorCat !cgiCategory
+		set !tailorSel !cgiSelection + 1
+		call %pathlib , %craftinfo tongs
+		set !smithCat !cgiCategory
+		set !smithSel !cgiSelection + 1
+		call %pathlib , %craftinfo tinker's_tools
+		set !tinkerCat !cgiCategory
+		set !tinkerSel !cgiSelection + 1
+	}
+	makeNewTool:
+	set %MNTCat !tailorCat
+	set %MNTSel !tailorSel
+	set %MNTTool HAG
+	ignoreitem reset
+	if %s7BFBodType = Smith
+	{
+		set %MNTCat !smithCat
+		set %MNTSel !smithSel
+		set %MNTTool OBG_TBG_TLH
+	}
+	gosub s7ResourceCheck %MNTTool 0 1 1 #false %s7BFSecureID
+	if ! #result
+	{
+		gosub s7ResourceCheck ENK 0 10 10 #true %s7BFSecureID
+		if ! #result 2
+			display ok You ran out of materials while crafting a tool$because you ran out of tools. pausing.$(upon your return please make sure you have 10 iron ingots in your pack.)
+			pause
+		if #result
+		{
+			finditem JTL_KTL_GTL C_ , #backpackid
+			if #findcnt = 0 2
+				display ok You ran out of tinker tools.. how are you going to craft tinker tools without more tinker tools?
+				halt
+			if #findcnt < 2
+			{
+				if %MNTMatSel = N/A || %MNTMatSel = #false
+				{
+					set %MNTMatSel #true
+					gosub s7MakeAnything Tinker SelectMaterial 1
+					if ! #result
+						set %MNTMatSel #false
+				}
+				gosub s7MakeAnything Tinker !tinkerCat !tinkerSel
+				wait 10
+				goto makeNewTool
+			}
+			gosub s7MakeAnything Tinker %MNTCat %MNTSel
+			if #result
+			{
+				gosub s7WaitForVars 530_ in #contsize contname = generic_gump 2
+				if #result
+				{
+					set %cx #contposx + 10
+					set %cy #contposy + 10
+					click %cx %cy f r dmc
+				}
+			}
+		}
+	}
+	namespace pop
+return
+
+
+
+; ===================================================================== ;
+; ///////////////////////////////////////////////////////////////////// ;
+; // EXCERPTS FROM S7SUBS.EUO ///////////////////////////////////////// ;
+; ///////////////////////////////////////////////////////////////////// ;
+; // Any reproduction of the subroutines below is strictly pro- /////// ;
+; // hibited without express written permission of the author ///////// ;
+; // (snicker7). Violation of the above will result in malicious ////// ;
+; // actions by the aforementioned author performed upon your person // ;
+; // including but not limited to: bodily harm, slander, maternal ///// ;
+; // insults, possible legal action, and callin' the five-oh. Thank /// ;
+; // you. ///////////////////////////////////////////////////////////// ;
+; ///////////////////////////////////////////////////////////////////// ;
+; ===================================================================== ;
+
+;----
+;* @name s7MoveToPos
+;* @author snicker7
+;* @ver 1.2 24Aug05
+;* @purpose Just Another Item Dragger.
+;* @params 	%1 is the item to be dragged
+;*		%2 is the x-coord to drop to
+;* 		%3 is the y-coord to drop to
+;*		%4 is the timeout in seconds
+;* 		%5 is the amount to be dragged (blank for all)
+;* @returns 	#true if drop was successful
+;*		#false on error (drop to backpack, insufficient params, failed to drag)
+;*		halt on critical error
+;* @notes moves any item to a position on the screen. Will
+;*	attempt to drop on character if drop fails. If character
+;*	drop fails, halts and error message to avoid crash.
+;* @dependencies	
+;*		s7WaitForAction
+;* @example: call s7Subs.euo s7MoveToPos #findid 7 9 4 77
+;* @status unknown
+sub s7MoveToPos
+	if %0 < 4
+		return #false
+	namespace Push
+	namespace Local _s7MvToPos
+	set !_ID %1
+	set !_x %2
+	set !_y %3
+	set !_tO %4
+	set !_Amt #spc
+	if %0 > 4
+		set !_Amt %5
+	set !_retry 0
+	_s7MvToPos_SD:
+	finditem !_ID
+	if #findkind = -1 2
+		namespace pop
+		return #false
+	gosub s7WaitForAction 13
+	event drag #findid
+	if #findstack > 1
+	{
+		set !_timeOut #scnt
+		for !_ 1 1
+		{
+			if #contname <> stack_gump && #contname <> drag_gump
+			{
+				wait 1
+				if !_timeOut + !_tO < #scnt
+				{
+					set !_retry !_retry + 1
+					if !_retry > 2 2
+						namespace pop
+						return #false
+					goto _s7MvToPos_SD
+				}
+				set !_ 0
+			}
+		}
+		if !_Amt > #findstack
+			set !_Amt #findstack
+		msg !_Amt , $
+	}
+	set !_retry 0
+	set !_timeOut #scnt
+	for !_ 1 1
+	{
+		if #lliftedkind <> 1
+		{
+			wait 1		
+			if !_timeOut + !_tO < #scnt
+			{
+				set !_retry !_retry + 1
+				if !_retry > 2 2
+					namespace pop
+					return #false
+				goto _s7MvToPos_SD
+			}
+			set !_ 0
+		}
+	}
+	set !_retry 0
+	click !_x !_y p
+	set !_timeout #scnt
+	for !_ 1 1
+	{
+		if #lliftedkind = 1
+		{
+			wait 1
+			if !_timeout + !_t0 < #scnt
+			{
+				set !_retry !_retry + 1
+				if !_retry = 1
+				{
+					set !_x #clixres / 2
+					set !_y ( #cliyres / 2 ) - 30
+					click !_x !_y p
+					set #result #false
+					set !_timeout #scnt
+				}
+				if !_retry = 2 2
+					display ok You have failed to drop an item to the correct position.$$The script is now halting to prevent a crash.
+					halt
+			}
+			set !_ 0
+		}
+	}
+	set #result #true
+	namespace pop
+return #result
+	
+;----
+;* @name s7MoveToCont
+;* @author snicker7
+;* @ver 1.2 24Aug05
+;* @purpose A wrapper for the sub s7MoveToPos for moving to containers.
+;* @params 	%1 is the item to be dragged
+;*		%2 is the container to drag to
+;*		%3 is the mother container in which %2 is contained
+;* 		%4 is the #findmod value for the container
+;* 		%5 is the amount to be dragged (blank for all)
+;* @returns none
+;* @notes this is mad basic. no error checking. That is up to you.
+;* @dependencies	s7MoveToPos
+;* @example: call s7Subs.euo s7MoveToCont #findid #backpackid #charid 140_220
+;* @status tested good
+sub s7MoveToCont
+	namespace Push
+	namespace Local _s7MoveToCont
+	set !_ID %1
+	set !_DCont %2
+	set !_MCont %3
+	set !_FMod %4
+	if %euover >= 15000
+	{
+		set !_Amt 65535
+		if %0 > 4
+			set !_Amt abs %5
+		finditem !_ID
+		if #findkind = -1 2
+			namespace pop
+			return #false
+		gosub s7WaitForAction 13
+		exevent drag #findid !_Amt
+		exevent dropc !_DCont
+		namespace pop
+		return #true
+	}
+	set !_Amt #spc
+	if %0 > 4
+		set !_Amt %5
+	set #result #true
+	set !_retry 0
+	for !_ 1 1
+	{
+		finditem !_DCont C_ , !_MCont
+		if #findkind = -1
+		{
+			set #lobjectid !_MCont
+			gosub s7WaitForAction 13
+			event macro 17 0
+			gosub s7WaitForVars contid = !_MCont 3
+			if ! #result
+			{
+				set !_retry !_retry + 1
+				if !_retry > 2 2
+					namespace pop
+					return #false
+			}
+			set !_ 0
+		}
+	}
+	set !_retry 0
+	set #findmod !_Fmod
+	for !_ 1 1
+	{
+		gosub s7MoveToPos !_ID #findx #findy 4 !_Amt
+		if ! #result
+		{
+			set !_retry !_retry + 1
+			if !_retry > 2 2
+				namespace pop
+				return #false
+			set !_ 0
+		}
+	}
+namespace Pop
+return #true
+
+;----
+;* @name s7WaitForAction
+;* @author snicker7
+;* @ver 1.1 31Jan05
+;* @purpose waits 1.3 seconds before continuing, useful for waiting to perform
+;*    another action
+;* @params 	none
+;* @returns none
+;* @notes probably not an original idea, but I need to use it frequently and it
+;*    was easier to write it myself than to try to look for it as written by 
+;*    someone else
+;* @example: call s7Subs.euo s7WaitForAction 13
+;* @status tested good
+sub s7WaitForAction
+	_s7WaitForAction:
+	if %_s7ActionTimer + %1 > #scnt2 2
+		wait 1
+		goto _s7WaitForAction
+	set %_s7ActionTimer #scnt2
+return
+
+;----
+;* @name s7WaitForVars
+;* @author snicker7, inspired by Quintok, and of course, Smertrios
+;* @ver 1.2 24Aug05
+;* @purpose Multiple input sysvar waiter.
+;* @params 	%1*n is the gump sysvar being checked
+;*		%2*n is the comparative operator (>, <, <>, =, etc)
+;*		%3*n is the desired value of the sysvar
+;*		%nfinal is the timeout in seconds
+;* @returns #false if it times out
+;*          #true if success
+;* @notes 	%1 does not require the preceding number sign
+;*		one line shorter than Q's, no disrespect son
+;*		originally written by Smertrios, included in Lexia
+;*		Multiple inputs by Quintok, Obfuscation and name-
+;*		spacing by snicker7!
+;* @example: call s7Subs.euo s7WaitForVars contID = #backpackID contSize = 7_9 3
+;* @status tested good
+sub s7WaitForVars
+	namespace Push
+	namespace Local _s7WFVs
+	set !C %0 / 3
+	set !T #scnt + 5
+	if ( %0 % 3 ) = 1
+		set !T #scnt + % . %0
+	for !i 1 !C
+	{
+		set !o 3 * !i - 2
+		set !p !o + 1
+		set !q !o + 2
+		if ! ( # . % . !o % . !p % . !q )
+			set !i 0
+		if #scnt > !T 2
+			namespace pop
+			return #false
+	}
+	namespace Pop
+return #true
+
+;----
+;* @name s7MakeAnything
+;* @author snicker7
+;* @ver 1.5 09Oct09
+;* @purpose Crafting sub capable of dealing with the
+;*	standard crafting gump for all crafting skills.
+;* @params 	%1	Crafting skill. Possible values are:
+;*			Tailor, Smith, Carpentry, Cooking,
+;*			Alchemy, Stonecrafting, Tinker,
+;*			Inscription, or Cartography
+;*		%2	Three possible options:
+;*			SelectMaterial: Selects the material to 
+;*				craft with (if avaliable) by 
+;*				index which is defined by %3.
+;*			Smelt/Cut: Only avaliable if %1 is
+;*				'Tailor' or 'Smith', respectively. 
+;*				Will cut or smelt the item passed
+;*				by ID as variable %3.
+;*			For Crafting: This should be a number
+;*				which corresponds to the category
+;*				on the crafting gump beginning
+;*				with the first category as 1.
+;*		%3	The material index for SelectMaterial, 
+;*			the ID of the item to be smelted/cut for
+;*			Smelt/Cut, or the selection number of the
+;*			item you wish to make on the crafting menu.
+;*		%4	(optional) ID of specific tool to use. If
+;*			%4 is defined, the sub will use this tool
+;*			only to craft with. Used for runic kits.
+;*			The sub will return #false if the tool is
+;*			not found. Slower, as the tool will be
+;*			opened every call of the script, rather
+;*			than just waiting for the gump to return,
+;*			ensuring that the tool menu is the right
+;*			tool.
+;* @returns 	#true	The sub executed successfully.
+;* 		#false	A tool was not found to perform the
+;*			necessary operations. Useful, if the sub
+;*			returns #false, simply call it again to
+;*			make the correct tool.
+;* @notes	This sub automatically determines when to "Make Last."
+;*		If you call the sub twice in a row with the same 
+;*		options, the second time it will click make last
+;*		instead of clicking through the whole menu.
+;* @example:	call s7subs.euo s7MakeAnything Smith 7 10 ;Make a warfork
+;*		call s7subs.euo s7MakeAnything Stonecrafting SelectMaterial 2 ;select dullcopper granite
+;*		call s7subs.euo s7MakeAnything Tailor Cut DFKLSED ;cuts the item with ID DFKLSED
+;*		call s7subs.euo s7MakeAnything Smith 7 10 EASUSPS ;makes a warfork using the tool with ID EASUSPS
+;* @status almost done. still need to put in the cartotool type and find all types for all tools.
+;----
+sub s7MakeAnything
+	if %0 < 3
+		return #false
+	namespace push
+	namespace local _s7MakeAnything
+	if !s7MA_Init = N/A
+	{
+		set !s7MA_Init #true
+		set !freeshard abs ( _ , #shard , _ notin origin_pacific_sonoma_baja_legends_atlantic_chesapeake_catskills_lake , #spc , austin_napa , #spc , valley_lake , #spc , superior_great , #spc , lakes_siege , #spc , perilous_europa_drachenfels_oceania_wakoku_formosa_arirang_balhae_asuka_yamato_mugen_hokuto_misuho_izumo_sakura_TC1_ )
+		if %freeshard <> N/A
+			set !freeshard abs ( %freeshard )
+		set !nonSEFreeshard abs ( _ , #shard , _ in _Defiance , #spc , AOS_ABC , #spc , UO_ )
+		set !craftGumpContSize 530_437
+		set !bodGumpContSize 615_454
+		if !freeshard <> 1
+		{
+			set !craftGumpContSize 530_497
+			set !bodGumpContSize 620_459
+		}
+	}
+	if %0 = 4 && !tool <> N/A
+	{
+		finditem %4 C_ , #backpackid
+		if #findkind = -1 2
+			namespace pop
+			return #false
+		if ( #findtype notin !tool && #findid notin !tool ) 2
+			namespace pop
+			return #false
+		set !tool %4
+		set !FirstCall #true
+	}
+	if !1 = %1 && !2 = %2 && !3 = %3 && %2 <> SelectMaterial && !2 notin Smelt_Cut
+		set !MakeLast #true
+	if !1 <> %1 || !2 <> %2 || !3 <> %3 || %2 = SelectMaterial || %2 in Smelt_Cut
+	{
+		set !1 %1
+		if !1 = Tailor
+			set !tool HAG
+		if !1 = Smith
+			set !tool OBG_TBG_TLH_FBG
+		if !1 = Carpentry
+			set !tool EGG_IGG_KGG
+		if !1 = Cooking
+			set !tool BCG_DND_OGG
+		if !1 = Alchemy
+			set !tool RQF
+		if !1 = Stonecrafting
+			set !tool ZEH
+		if !1 = Tinker
+			set !tool JTL_KTL_GTL
+		if !1 = Inscription
+			set !tool PBG
+		if !1 = Cartography
+			set !tool PBG
+		if %0 = 4
+		{
+			finditem %4 C_ , #backpackid
+			if #findkind = -1 2
+				namespace pop
+				return #false
+			if #findtype notin !tool 2
+				namespace pop
+				return #false
+			set !tool %4
+		}
+		if %0 < 4
+		{
+			finditem !tool C_ , #backpackid
+			if #findkind = -1 2
+				namespace Pop
+				return #false
+		}
+		set !FirstCall #true
+		set !MakeLast #false
+		if %2 in smelt_cut 3
+			set !FirstCall #false
+			set !destroyID %3
+			set !destroy #true
+		if !Destroy && !1 notin smith_tailor 2
+			namespace Pop
+			return #false
+		if %2 notin smelt_cut 2
+			set !3 %3
+			set !2 %2
+		if !2 = SelectMaterial
+			set !2 15
+	}
+	for !selection 2 3
+	{
+		for !loop 1 1
+		{
+			set #result #true
+			if !1 = Tailor && !destroy
+				set !loop 2
+			if ( ! !FirstCall || ( !1 = Smith && !Destroy ) ) && !loop <> 2 2
+				gosub s7WaitForVars contsize = !craftGumpContSize contname = generic_gump 2
+				set !loop 1
+			if ( ! #result || !FirstCall ) && !loop <> 2
+			{
+				gosub s7WaitForVars contsize = !craftGumpContSize contname = generic_gump 1
+				finditem !tool C_ , #backpackid
+				if #findkind = -1 2
+					namespace Pop
+					return #false
+				gosub s7WaitForAction 12
+				set #lobjectid #findid
+				event macro 17 0
+				set !loop 0
+				set !FirstCall #False
+			}
+		}
+		set !CraftContPosX #contposx
+		set !CraftContPosY #contposy
+		if !MakeLast && ! !destroy
+		{
+			set !_Cx #contposx + 280
+			set !_Cy #contposy + 450 - !freeshard * 40
+			click !_Cx !_Cy
+			namespace Pop
+			return #true
+		}
+		if !selection = 2
+		{
+			if !destroy && !1 = Tailor
+			{
+				finditem JAG_KAG C
+				if #findkind = -1 2
+					namespace pop
+					return #false
+				set #lobjectid #findid
+				set #ltargetid !destroyid
+				set #ltargetkind 1
+				gosub s7WaitForAction 12
+				event macro 17 0
+				target 2s
+				event macro 22 0
+				set !destroy #false
+				namespace pop
+				return #true
+			}
+			wait 10
+			set !_Cx #contposx + 20
+			set !_Cy ( #contposy + 70 + ( !2 * 20 ) )
+			if !destroy && !1 = Smith
+				set !_Cy ( #contposy + 70 + ( 14 * 20 ) )
+			click !_Cx !_Cy
+			if !destroy && !1 = Smith
+			{			
+				target 2s
+				set #ltargetid !destroyid
+				set #ltargetkind 1
+				event macro 22 0
+				set !destroy #false
+				gosub s7WaitForVars contsize = !craftGumpContSize contname = generic_gump 2
+				namespace pop
+				return #true
+			}
+		}
+		if !selection = 3
+		{
+			set !3t !3
+			for !loop 0 1
+			{
+				if !3t > 10
+				{
+					set !_Cx #contposx + 380
+					set !_Cy #contposy + 270
+					click !_Cx !_Cy
+					set !3t !3t - 10
+					set !loop 0
+				}
+				if !3t <= 10
+				{
+					set !_Cx #contposx + 230
+					set !_Cy ( #contposy + 50 + ( !3t * 20 ) )
+					click !_Cx !_Cy
+					gosub s7WaitForVars contsize = !craftGumpContSize contname = generic_gump 2
+					namespace Pop
+					return #true			
+				}
+			}
+		}
+	}
+	
+;----
+;* @name s7GetTarget
+;* @author snicker7
+;* @ver 1.0 27Dec04
+;* @purpose Returns a target using #targcurs, objects only.
+;* @params 	none
+;* @returns Item id of the targeted item.
+;* @notes none
+;* @example: gosub getTarget
+;* @status tested good
+sub s7GetTarget
+	set #targcurs 1
+	_waitfortargcurs:
+	if #targcurs = 1 2
+		wait 1
+		goto _waitfortargcurs
+return #ltargetid
+
+;----
+;* @name s7FindNamedItem
+;* @author snicker7
+;* @ver 1.1 06Aug05
+;* @purpose	find an item based on its name
+;* @params 	%1	type of item to search for
+;*		%2	"location" to search (typical finditem values: G_3; C_ , #backpackid; etc)
+;*		%3-%n	properties to match
+;* @dependencies
+;* @returns 	#false	no such item was found
+;*		<ItmID>	the ID of the item found
+;* @notes 	Written for bodcollectorer.
+;* @example: 	gosub s7FindNamedItem HS_IS G_10 tailor weaver ;finds all BOD giving tailors within 10 tiles
+;* @status done
+sub s7FindNamedItem
+	namespace push
+	namespace local _s7_FNI
+	set !zero %0
+	set !type %1
+	set !location %2
+	finditem !type !location
+	if #findkind = -1
+	{
+		namespace pop
+		return #false
+	}
+	set !findcnt #findcnt
+	for !findI 1 !findcnt
+	{
+		finditem !type !findI !location
+		gosub s7GetProperty #findid
+		for !nameI 3 !zero
+		{
+			if % . !nameI in #property
+			{
+				namespace pop
+				return #findid
+			}
+		}
+	}
+return #false
+
+;----
+;* @name s7GetProperty
+;* @author snicker7
+;* @ver 2.1 20080309
+;* @purpose	 failsafe method for obtaining property values.
+;* @params 	 %1	ID of item to get property of.
+;* @dependencies N/A
+;* @returns 	 N/A
+;* @notes 	 N/A
+;* @example: gosub s7GetProperty #findid
+;* @status done
+sub s7GetProperty
+	set !_7gpt #systime
+	event property %1
+	for !_7gp 1 1
+	{
+		if !_7gpt + 1500 < #systime
+			return #false
+		if #property = $ || no , #spc , significant in #property || no , #spc , data in #property || ( %0 > 1 && %0 = 2 && #property = %2 )
+			set !_7gp 0
+		if no , #spc , data in #property || ( %0 > 1 && %0 = 2 && #property = %2 )
+			event property %1
+	}
+return #true
+
+;===========
+;**
+;* @name s7ResourceCheck
+;* @ver 1.1 05May05
+;* @author  snicker7
+;* @purpose Checks to see if a certain amount of resources are in the backpack, if not, restocks from a set container
+;* @params  %1	Type of resource to check
+;*		%2	FindCol of resource, N/A if irrelevant
+;*		%3	Minimum amount of resource to have
+;*		%4	How many to restock if not enough found
+;*		%5	True/False: is the resource stackable
+;*		%6	Container ID to restock from
+;* @returns #true		Restock was successful
+;*		#false	Resources not found in backpack or secure
+;* @dependencies	s7MoveToCont
+;* @example call s7subs.euo s7ResourceCheck WZF N/A 6 100 #true %secure
+;* @status testing
+sub s7ResourceCheck
+	namespace push
+	namespace local _s7ResCzech
+	set !ResType %1
+	set !ResCol %2
+	set !ResCount %3
+	set !RestockCnt %4
+	set !StkCnt cnt
+	if %5
+		set !StkCnt stack
+	set !RestockCont %6
+	for !ResI 0 1
+	{
+		finditem !resType C_ , #backpackid
+		set !BPItemCount 0
+		if #findkind <> -1
+		{
+			set !FindCnt #findCnt
+			for !CountItem 1 !FindCnt
+			{
+				finditem !resType !CountItem C_ , #backpackid
+				if ( !ResCol <> N/A && #findcol = !ResCol ) || !ResCol = N/A
+					set !BPItemCount !BPItemCount + #find . !stkCnt
+			}
+		}
+		if !BPItemCount >= !ResCount && !ResI <> 0
+		{
+			namespace pop
+			return #true
+		}
+		if !BPItemCount < !resCount && !ResI <> 0
+		{
+			finditem !resType C_ , !restockCont
+			set !SecureItemCount 0
+			if #findkind <> -1
+			{
+				set !FindCnt #findCnt
+				for !CountItem 1 !FindCnt
+				{
+					finditem !resType !CountItem C_ , !restockCont
+					if ( !ResCol <> N/A && #findcol = !ResCol ) || !ResCol = N/A 2
+						set !SecureItemCount !SecureItemCount + #find . !stkCnt
+						set !RestockID #findid
+				}
+			}
+			if ( !SecureItemCount + !BPItemCount ) < !resCount
+			{
+				namespace pop
+				return #false
+			}
+			set !RestockAmt !restockCnt - !BPItemCount
+			gosub s7MoveToCont !RestockID #backpackid #charid 140_220 !restockAmt
+			wait 20
+			set !ResI 0
+		}
+	}

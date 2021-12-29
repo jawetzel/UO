@@ -1,0 +1,28 @@
+display target ur pet$
+set #TARGCURS 1
+while #targcurs = 1
+ {
+ wait 1
+ }
+set %pet #ltargetid
+
+display move mouse over button$
+set %x #cursorx
+set %y #cursory
+savepix %x %y 2
+
+main:
+cmppix 2 f
+ {
+ finditem %pet
+ if #finddist < 7
+  {
+  key F5
+  target
+  set #ltargetkind 1
+  set #ltargetid %pet
+  event macro 22
+  wait 5
+  }
+ }
+goto main

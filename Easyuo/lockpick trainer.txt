@@ -1,0 +1,46 @@
+display target box were lockpicking today$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %box #ltargetid
+
+display target lockpick inside secure were using$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %pick #ltargetid
+display target the boxes key$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs = 0
+set %key #ltargetid
+
+main:
+finditem %pick
+if #findkind = -1
+ {
+ halt
+ }
+set #lobjectid %pick
+event macro 17
+target
+set #ltargetid %box
+event macro 22
+wait 20
+scanjournal 1
+if This_does_not_appear notin #sysmsg
+ {
+ goto main
+ }
+set #lobjectid %key
+event macro 17
+target
+event macro 22
+wait 20
+goto main

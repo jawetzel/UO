@@ -1,0 +1,3 @@
+event macro 52 1
+event macro 53
+wait 20

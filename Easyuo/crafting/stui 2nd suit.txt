@@ -1,0 +1,24 @@
+95arch
+90tact
+
+120resist
+
+110tame
+115lore
+
+90ninj
+100heal
+
+
+10 10 15 10 10 hat
+11 10 10 09 12 legg 10stam 5hp
+
+reforged
+10 09 09 11 12 7lmc 10stam
+09 09 11 11 12 7lmc 10stam
+imbued
+10 11 11 18 12 5dci 8lmc 2hpr 5hp
+10 19 12 11 12 5dci 8lmc 2hpr 5hp
+   02fire boot
+      02cold earring
+10phys quiver

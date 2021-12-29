@@ -1,0 +1,31 @@
+12 17 21 17 17
+05    05    05
+15 01
+10 08 08 08 08  4mr
+gorget-tunic-legs-gloves
+08 12 11 11 10 20lrc      3hpr 5hpi barbed tunic
+06 12 09 13 11 20lrc 8lmc 3hpr 6hpi horned leggings
+05 13 08 10 12 20lrc 8lmc 4hpr 2mr 5hpi horned gloves
+
+05 07 08 11 07 20lrc 8lmc 4hpr 1mr
+1fc   9dci 25ep 10sdi 8str
+3fcr 11dci 25ep 11sdi 8str
+
+alch bracers
+hephestus
+kasa
+shadow clock of rejuv
+
+crimson cinture
+conj garb
+lt sash
+mana phaser 1hpr 5dci 6lmc 10lrc
+
+104
+45
+106
+
+120
+50
+116
+

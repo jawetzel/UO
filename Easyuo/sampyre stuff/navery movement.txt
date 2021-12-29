@@ -1,0 +1,104 @@
+
+main:
+gosub move 1043 853
+gosub move 1066 853
+gosub move 1066 873
+gosub move 1043 873
+goto main
+
+sub move
+if #charposx > 1073 && #charposy > 876
+ {
+ repeat
+  {
+  event pathfind 1082 885
+  wait 10
+  }
+ until #charposx = 1082 && #charposy = 885
+ repeat
+  {
+  event pathfind 1077 890
+  wait 10
+  }
+ until #charposx = 1077 && #charposy = 890
+ repeat
+  {
+  event pathfind 1063 876
+  wait 10
+  }
+ until #charposx = 1063 && #charposy = 876
+ }
+repeat
+ {
+ set %curentx #charposx
+ set %curenty #charposy
+ move %1 %2 0 1s
+ gosub navery
+ gosub corpse
+ if #charposx = %curentx && #charposy = %curenty && #charposx <> %1 && #charposy <> %2
+  {
+  gosub brokemove %1 %2
+  }
+ }
+until #charposx = %1 && #charposy = %2
+return
+
+sub navery
+finditem XZ G
+if #findkind > -1
+ {
+ repeat
+  {
+  set %lamex #charposx
+  set %lamey #charposy
+  finditem #findid
+  move #findx #findy 0 1s
+  set #ltargetid #findid
+  event macro 27
+  wait 1s
+  if #charposx <> #findx && #charposy <> #findy && #charposx = %lamex && #charposy = %lamey
+  }
+ until #findkind = -1
+ }
+return
+
+sub corpse
+finditem YFM G
+if #findkind > -1
+ {
+ event property #findid
+ if Navrey in #property
+  {
+  repeat
+   {
+   finditem #findid
+   wait 2s
+   }
+  until #findkind = -1
+  }
+ wait 30s
+ }
+return
+
+sub brokemove
+set %newx #charposx
+set %newy #charposy
+if #charposx < 1054
+ {
+ set %newx #charposx + 4
+ }
+if #charposx > 1054
+ {
+ set %newx #charposx - 4
+ }
+if #charposy < 861
+ {
+ set %newy #charposy + 4
+ }
+if #charposy > 861
+ {
+ set %newy #charposy - 4
+ }
+event pathfind %newx %newy #charposz
+wait 20
+return

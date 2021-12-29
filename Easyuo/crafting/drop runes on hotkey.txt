@@ -1,0 +1,11 @@
+onhotkey F12
+ {
+ for %a 1 5
+  {
+  finditem QWL C_ , #lobjectid
+  exevent drag #findid #findstack
+  set %y #charposy + 1
+  exevent dropg #charposx %y #charposz
+  wait 25
+  }
+ }

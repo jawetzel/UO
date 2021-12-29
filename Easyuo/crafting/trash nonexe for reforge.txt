@@ -1,0 +1,43 @@
+display target box$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs <> 1
+set %box #ltargetid
+
+display target trashcan$
+set #targcurs 1
+repeat
+ {
+ }
+until #targcurs <> 1
+set %trash #ltargetid
+
+set #lobjectid %box
+event macro 17
+wait 10
+contpos 300 500
+wait 15
+
+set #lobjectid %trash
+event macro 17
+wait 10
+contpos 100 500
+wait 15
+
+main:
+finditem * C_ , %box
+if #findkind = -1
+ {
+ halt
+ }
+event property #findid
+if Exc notin #property
+ {
+ exevent drag #findid #findstack
+ exevent dropc %trash
+ wait 25
+ }
+ignoreitem #findid
+goto main

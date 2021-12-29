@@ -1,0 +1,21 @@
+
+main:
+finditem MNF_QNF_PNF_KNF_JNF_LNF_KNF G_8
+if #findkind > -1
+ {
+ event property #findid
+ if Unholy notin #property
+  {
+  ignoreitem #findid
+  goto main
+  }
+ set #lobjectid JTWAQRD
+ set #ltargetid #findid
+ set #ltargetkind 1
+ event macro 17
+ target
+ event macro 22
+ wait 25
+ }
+goto main
+ 

@@ -1,0 +1,20 @@
+start:
+finditem KEG C_
+if #findkind = -1
+ {
+ halt
+ }
+if #findbagid = #backpackid
+ {
+ ignoreitem #findid
+ goto start
+ }
+exevent popup #findid
+wait 5
+click 20 20
+wait 5
+set %x #contposx + 135
+set %y #contposy + 140
+click %x %y
+wait 5
+ignoreitem #findid

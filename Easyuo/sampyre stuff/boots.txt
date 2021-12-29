@@ -1,0 +1,52 @@
+set %scnt 0
+set %pots yes
+main:
+if A in #charstatus
+ {
+ finditem BHRIRTD
+ exevent drag #findid #findstack
+ exevent droppd
+ wait 25
+ exevent drag #findid #findstack
+ exevent dropc #backpackid
+ wait 25
+ }
+finditem XUF_YUF C_ , #backpackid
+if #findkind = -1
+ {
+ set %pots no
+ }
+if %pots <> no
+ {
+ if #dex < 122 || #str < 135
+  {
+  if #enemyid <> N/A
+   {
+   key F2
+   wait 25
+   finditem YUF c_ , #backpackid
+   if #dex < 122 && #Findkind > -1
+    {
+    set #lobjectid #findid
+    event macro 17
+    wait 25
+    }
+   finditem XUF c_ , #backpackid
+   if #str < 135 && #findkind > -1
+    {
+    set #lobjectid #findid
+    event macro 17
+    wait 25
+    }
+   key F2
+   wait 25
+   }
+  }
+ }
+if #hits < 75 && #scnt2 > %scnt
+ {
+ event macro 15 147
+ wait 25
+ set %scnt #scnt2 + 100
+ }
+goto main

@@ -1,0 +1,182 @@
+; Note: Need scissors on you
+;       Set item to your make last
+;       Only have 1 kind of leather in resource container
+;==================================
+11 11 07 13 04 20lrc 6lmc 5hp 2hpr 2mr
+
+;==========================
+;set this to item type or armor being made
+set %armortype QKH
+;set these to minimum resists
+set %Physical 11
+set %Fire 11
+set %Cold 7
+set %Poison 13
+set %Energy 4
+;===========================
+set %ps1 %Physical
+set %f1 %Fire
+set %c1 %Cold
+set %psn1 %Poison
+set %e1 %Energy
+
+display target resource box$
+set #TARGCURS 1
+repeat
+ {
+ wait 1
+ }
+until #targcurs = 0
+set %resource #ltargetid
+set #lobjectid #ltargetid
+event macro 17
+wait 20
+
+
+finditem KAG C_ , #backpackid
+set %scissor #findid
+
+start:
+finditem HAG C_ , #backpackid
+set %tool #findid
+set #lobjectid #findid
+event macro 17
+wait 20
+
+main:
+finditem JJG C_ , #backpackid
+set %leather #findid
+if #findstack < 50 || #findkind = -1
+ {
+ finditem JJG C_ , %resource
+ exevent drag #findid 250
+ exevent dropc #backpackid
+ wait 20
+ }
+set %x #contposx + 285
+set %y #contposy + 452
+click %x %y
+set #scnt 0
+repeat
+ {
+ finditem %tool c_ , #backpackid
+ if #findkind = -1
+  {
+  goto start
+  }
+ }
+until #scnt > 3 || #contsize = 530_497
+if #scnt > 3
+ {
+ goto start
+ }
+wait 10
+repeat
+{
+finditem %armortype C_ , #backpackid
+if %armorid = #findid
+ {
+ event macro 8 7
+ wait 20
+ }
+set %armorid #findid
+if #findkind > -1
+ {
+ goto check
+ return:
+ }
+}
+until #findkind = -1
+goto main
+ 
+ 
+ 
+check:
+set #lpc 100
+event property #findid
+gosub phys
+gosub fire
+gosub cold
+gosub poison
+gosub energy
+set #lpc 10
+if %ps2 => %ps1 && %f2 => %f1 && %c2 => %c1 && %psn2 => %psn1 && %e2 => %e1
+ {
+ ignoreitem #findid
+ }
+else
+ {
+ set #lobjectid %scissor
+ set #ltargetid %armorid
+ event macro 17
+ target
+ event macro 22
+ wait 20
+ }
+goto return
+;=====================================
+;SUBS---------------------
+sub phys
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Physical , #spc , Resist , #spc , %number , % in #property
+  {
+  set %ps2 %number
+  }
+ }
+return
+
+sub fire
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Fire , #spc , Resist , #spc , %number , % in #property
+  {
+  set %f2 %number
+  }
+ }
+return
+
+sub cold
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Cold , #spc , Resist , #spc , %number , % in #property
+  {
+  set %c2 %number
+  }
+ }
+return
+
+sub poison
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Poison , #spc , Resist , #spc , %number , % in #property
+  {
+  set %psn2 %number
+  }
+ }
+return
+
+sub energy
+set %number 0
+for %a 1 20
+ {
+ set %number %number + 1
+ if Energy , #spc , Resist , #spc , %number , % in #property
+  {
+  set %e2 %number
+  }
+ }
+return
+;END SUBS-----------------
+  
+  
+  
+

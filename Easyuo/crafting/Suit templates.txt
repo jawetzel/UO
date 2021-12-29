@@ -1,0 +1,64 @@
+dexer suit-
+09 10 10 10 12 5hci 8lmc 2mr 5hp 8mana
+09 10 10 10 12 5hci 8lmc 2mr 5hp 8mana
+09 10 11 18 12 5hci 8lmc 2mr     8mana
+09 11 18 11 12      8lmc 2mr 5hp 6mana
+09 19 11 11 12      8lmc 2mr 5hp 6mana
+15hci 15dci 20di 7str 6dex
+15hci 15dci 20di 7str 6dex
+
+70 70 70 70 70 55lmc 10mr 23hpi 45mana 24str 17dex 80di 45hci 45dci
+Requieres mace and shield reading glasses to finish suit, tangle to finish dci
+
+shroud of the condemned
+quiver infinity
+spell focusing or corguls sash
+
+
+archer suit-
+09 10 10 10 12 5hci 8lmc 2mr 8stam 5hp
+09 10 10 10 12 5hci 8lmc 2mr 8stam 5hp
+09 11 11 18 12 5hci 8lmc 2mr 8stam
+09 11 18 11 12      8lmc 2mr       5hp 5mana
+09 18 11 11 12      8lmc 2mr 6stam 5hp
+15hci 15dci 20di 7str 20ep
+15hci 15dci 20di 7dex 20ep
+
+70 70 70 70 70 55lmc 10mr 23hpi 30stam 10mana 18str 11dex 60di 45hci 45dci 40ep
+Requieres mace and shield reading glasses to finish suit, tangle to finish dci
+
+shroud of the condemned
+quiver infinity
+spell focusing or corguls sash
+
+
+Sampire suit-
+09 19 10 12 12 5hci 8lmc 5hp 8mana
+09 19 10 12 12 5hci 8lmc 5hp 8mana
+09 19 11 12 12 5hci 8lmc 5hp 8mana
+09 19 11 12 12      8lmc 5hp 8mana 5stam
+09 09 18 12 12      8lmc 5hp 8mana 5stam
+15hci 15dci 20di 10skill 20ep
+15hci 15dci 20di 10skill 20ep
+70 95 70 70 70 55lmc 25hpi 40mana 10stam 40ep 80di 45hci 45dci 20skill
+Requieres mace and shield reading glasses to finish suit, tangle to finish dci
+
+quiver infinity
+spell focusing or corguls sash
+
+
+Mage Suit-
+09 11 10 10 11 6lmc 2mr 5hp 7mana
+09 11 10 10 11 6lmc 2mr 5hp 7mana
+09 11 10 11 10 6lmc 2mr 5hp 7mana
+10 10 09 11 11 6lmc 2mr 5hp 7mana
+10 10 10 11 10 6lmc 2mr 5hp 7mana
+1fc 3fcr 10mage 15dci 4sdi
+1fc 3fcr 10mage 10dci 11phys
+
+70 70 70 70 70 100lrc 40lmc 10mr 25hpi 35mana 45dci 2-6cast 16sdi mage wep
+
+quiver of infinity
+kasa
+totem of the void
+mage wep
