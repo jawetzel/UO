@@ -96,8 +96,12 @@
        {
        goto moveon1
        }
-      event pathfind #findx #findy #findz
-      wait 10
+      if #FINDX <> #CHARPOSX || #FINDY <> #CHARPOSY
+       {
+         event pathfind #FINDX #FINDY #FINDZ
+       }
+
+      wait 30
       }
      until #scnt > %time
      moveon1:

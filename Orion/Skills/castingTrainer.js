@@ -63,7 +63,7 @@ var spells = chivSpells;
 
 function  SetSpellAndTimeout(){
     var skill = Orion.SkillValue(InitialSkill);
-    if(skill === 1000) {
+    if(skill === 900) {
         return false;
     }
     var canCast = spells.filter(function(x){
