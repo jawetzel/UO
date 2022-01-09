@@ -2,29 +2,61 @@
 //Orion.Print(Orion.AbilityStatus('Primary'))
 
 //chiv settings
-var useEnemyOfOne = false;
+var useEnemyOfOne = true;
 var useDivineFury = false;
 var useConsecrateWeapon = false;
 
 //combat settings
 var usePrimary = false;
-var useSeccondary = true;
+var useSeccondary = false;
 
 //bushido settings
 var useMomentumStrike = false;
 var useLightningStrike = false;
-var useHonor = false;
+var useHonor = true;
 
 
 // probably dont configure below here
 var timeBetweenLoops = 250; //time in ms between loop cycle
 var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
-var maxEnemyDistance =  "8";
+var maxEnemyDistance =  8;
 
 //defenately dont configure below here
 var timeBetweenBows = 300000; // time in ms between bows (ensure keep logged in)
 
 var lastEnemyHonored = null;
+
+var useTrainTaming = true;
+
+function TrainTaming()
+{
+	Orion.Cast('744');
+	if (Orion.WaitForTarget(2000))
+		Orion.TargetObject('0x02B90880');
+	if (Orion.WaitForGump(2000))
+	{
+		var gump0 = Orion.GetGump('last');
+		if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x00112333'))
+		{
+			gump0.Select(Orion.CreateGumpHook(0));
+			Orion.Wait(100);
+		}
+	}
+	Orion.Wait(1500);
+}
+
+var GetTarget = function(){
+	var dist = 0;
+	while(dist < maxEnemyDistance){
+		var enemy = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile | near | ignorefriends", dist.toString(), enemyTypes);
+		dist = dist + 1;
+		if(enemy && enemy.length > 0){
+			return enemy;
+		}
+	}
+	return null;
+	
+}
 
 var bowCounter = 0;
 while(true){
@@ -34,7 +66,7 @@ while(true){
     }
     
     									
-    var enemy = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile | near | ignorefriends", maxEnemyDistance, enemyTypes);
+    var enemy = GetTarget();
     if(enemy && enemy.length > 0){
 		if(useHonor && (!lastEnemyHonored || lastEnemyHonored.toString() !== enemy.toString())){
 			lastEnemyHonored = enemy;
@@ -46,6 +78,9 @@ while(true){
     }
 	//Orion.KeyPress('')
     if(Player.Mana() > 20) {
+    	if(useTrainTaming){
+    		TrainTaming();
+    	}
     	if(useEnemyOfOne && !Orion.BuffExists('0x754e')){
     		Orion.Cast('Enemy of One');
     		 Orion.Wait(1500);

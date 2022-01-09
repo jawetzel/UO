@@ -1,0 +1,144 @@
+// -> Utilize o ID da sua montaria na linha abaixo.
+//if not buffexists "Dismount" and @inrange 'mount' 2
+//  if not mounted 'self' and not poisoned 'mount'
+//    useobject! 'mount'
+//  endif
+//endif
+if not @listexists 'unstuck'
+  @createlist 'unstuck'
+endif
+if @list 'unstuck' == 0
+  pushlist 'unstuck' 'east'
+  pushlist 'unstuck' 'west'
+  pushlist 'unstuck' 'south'
+  pushlist 'unstuck' 'north'
+endif
+if not timerexists 'movementClock'
+  createtimer 'movementClock'
+  settimer 'movementClock' 0
+endif
+if not timerexists 'pathfind'
+  createtimer 'pathfind'
+  settimer 'pathfind' 0
+endif
+if not timerexists 'evasion'
+  @settimer 'evasion' 22000
+endif
+if not timerexists 'nocast'
+  @settimer 'nocast' 4200
+endif
+if not timerexists 'persuit'
+  @settimer 'persuit' 2000
+endif
+if dead 'self'
+  @warmode 'on'
+endif
+while not dead 'self'
+  // -> SPELLS
+  if timer 'nocast' > 4200
+    // -> BUSHIDO
+    if not @buffexists 'confidence' and hits < 100
+      cast 'confidence'
+      pause 500
+      @settimer 'nocast' 0
+    endif
+    if not @buffexists 'evasion'
+      if @timer 'evasion' > 22000
+        cast 'evasion'
+        @settimer 'evasion' 0
+      elseif not buffexists 'Counter Attack' and mana >= 10
+        cast 'Counter Attack'
+        pause 500
+      endif
+    endif
+    if hits <= 50 and mana >= 20
+      cast 'confidence'
+      pause 500
+      @settimer 'nocast' 0
+    endif
+    // -> CHIVALRY
+    if skill 'chivalry' >= 60
+      if buffexists 'Consecrate Weapon'
+        @cast 'consecrate weapon'
+        pause 1000
+      endif
+      //if not enemy 'enemy' and mana 'self' >= 13
+      //  @cast 'Enemy of One'
+      //endif
+      if stam < 120 and mana 'self' >= 10
+        @cast "Divine Fury"
+      endif
+    endif
+  endif
+  // -> ATTACK
+  if @inrange 'enemy' 1
+    @attack! 'enemy'
+    @setability 'secondary' 'on'
+  else
+    @getenemy 'innocent' 'criminal' 'enemy' 'gray' 'murderer' 'closest'
+    settimer 'persuit' 0
+    // -> Follow
+    if @timer 'persuit' > 2000
+      msg "test"
+      stop
+      break
+    endif
+    if dead
+      replay
+    endif
+    //    elseif @timer 'pathfind' >= 5000
+    // Diverge
+    @settimer 'pathfind' 0
+    while @findobject 'enemy' and not @inrange 'enemy' 2
+      if dead
+        replay
+      elseif @timer 'pathfind' >= 5000
+        // Diverge
+        if direction == 0
+          @poplist 'unstuck' 'north'
+        elseif direction == 2
+          @poplist 'unstuck' 'east'
+        elseif direction == 4
+          @poplist 'unstuck' 'south'
+        elseif direction == 6
+          @poplist 'unstuck' 'west'
+        endif
+        // Unstuck
+        if list 'unstuck' != 0
+          for 5
+            run 'unstuck[0]'
+            pause 100
+            settimer 'movementClock' 0
+          endfor
+          poplist 'unstuck' 'front'
+        endif
+        break
+      elseif @x 'enemy' > x 'self' and @y 'enemy' > y 'self'
+        run 'southeast'
+        settimer 'movementClock' 0
+      elseif @x 'enemy' < x 'self' and @y 'enemy' > y 'self'
+        run 'southwest'
+        settimer 'movementClock' 0
+      elseif @x 'enemy' > x 'self' and @y 'enemy' < y 'self'
+        run 'northeast'
+        settimer 'movementClock' 0
+      elseif @x 'enemy' < x 'self' and @y 'enemy' < y 'self'
+        run 'northwest'
+        settimer 'movementClock' 0
+      elseif @x 'enemy' > x 'self' and @y 'enemy' == y 'self'
+        run 'east'
+        settimer 'movementClock' 0
+      elseif @x 'enemy' < x 'self' and @y 'enemy' == y 'self'
+        run 'west'
+        settimer 'movementClock' 0
+      elseif @x 'enemy' == x 'self' and @y 'enemy' > y 'self'
+        run 'south'
+        settimer 'movementClock' 0
+      elseif @x 'enemy' == x 'self' and @y 'enemy' < y 'self'
+        run 'north'
+        settimer 'movementClock' 0
+      endif
+      // -> FIM - Follow
+    endwhile
+  endif
+endwhile

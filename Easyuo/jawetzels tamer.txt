@@ -176,7 +176,7 @@
      event macro 15 36
      target 4s
      event macro 22
-     wait 10
+     wait 40
      }
     moveon2:
     finditem #findid
