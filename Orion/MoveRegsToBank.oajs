@@ -1,0 +1,113 @@
+var bankId = '0x4534C3AA';
+
+var moveItem = function(item){
+	Orion.MoveItem(item, 1000, bankId);
+	Orion.Wait(1200);
+}
+
+var FindItems = function(){
+	var item = Orion.FindType('0x0F7A', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F7B', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F84', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F85', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F86', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F88', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F8C', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F8D', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0EF3', -1, 'ground', '', '0');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	
+	item = Orion.FindType('0x0F7A', -1,'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F7B', -1, 'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F84', -1, 'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F85', -1, 'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F86', -1, 'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F88', -1, 'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F8C', -1, 'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0F8D', -1, 'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	item = Orion.FindType('0x0EF3', -1, 'backpack');
+	if(item && item.length > 0){
+		moveItem(item);
+		return true;
+	}
+	return false;
+}
+
+
+
+while(true){
+	
+	while(FindItems()){}
+	Orion.Wait(1200);
+}
+
+
+
+

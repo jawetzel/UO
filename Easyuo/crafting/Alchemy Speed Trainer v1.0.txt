@@ -1,0 +1,1484 @@
+;=====================================================================
+; Script Name:   Alchemy Speed Trainer
+; Author: by Einstein
+; Version: 1.0
+; Client Tested with: 7.0.60.47
+; EUO version tested with: 1.5.1.324
+; Shard OSI
+; Revision Date: 4/11/2017
+; Public Release Date: 7/11/2017
+; Purpose: Train Alchemy from 0 to GM.
+;======================================================================
+; http://www.easyuo.com/forum/viewtopic.php?f=3&t=53355
+;======================================================================
+; Directions:
+;----------------------------------------------------------------------
+; Buy what you can from NPC if possible.
+; Be in house, in bank or wherever you want.
+; You can use satyr trick - and target secure and toolbag in packhorses,
+; but must be bag within the packhorse.
+; You need a LOT of Reagents!!!
+;======================================================================
+; Regs needed are:
+; Blood Moss, Garlic, Ginseng, Grave Dust ( if you make Greater Conflagrations),
+; Nightshade ( if you make DP) and Mandrake Rot,
+;======================================================================
+; Feautures
+;======================================================================
+; It supports ball of knowledge, - it will auto find it and activate it.
+; Supports Siege and Log out training. But then the secure and
+; toolbag MUST be in house on ground (prefearly not inside eachother )!
+; Nice menu with gain progress (no resourses spent), time stamp, difficulty
+; and what you are making or doing. It also shows tinkering if you have that.
+;======================================================================
+set #lpc 100
+set %halt_on_too_easy #false   ;#false            ;Halt if targets are too easy - if you got a ball of knowledge with you.
+set %Make_Deadly_Poison #false                    ;Set to TRUE if you want to make DP instead of Greater Conflag
+set %HideWhileWorking #true                       ;Hide while working and while wait for RoT on Siege
+set %wait 10
+Set %clickwait 20                                 ;Adjust if it clicks too fast for to choose correct items
+Set %makelastwait 20                              ;Adjust if it clicks too fast to make new items
+Set %maketools #false
+set %trainit2 tink
+chooseskill %trainit2 real
+if #skill > 40
+   {
+   set %skillcap2 1000                            ;Tinkering skillcap
+   set %trainname2 Tinkering
+   Set %maketools #true
+   set %subtrainskill #true
+   }
+set %trainit alch
+chooseskill %trainit real
+set %skillcap 1000                                ;Alchemy skillcap you want to reach!
+set %trainname Alchemy
+;================================================================================================================
+;No need for edit below here
+;================================================================================================================
+menu hideEUO
+menu hide
+Set %toolbag #false
+set %weight #maxweight - 20
+Set %tinkertool JTL_KTL_GTL
+Set %mortars RQF
+display ok Please Target your resource container. $ With Reagents and ingots!
+set #targcurs 1
+While #TARGCURS = 1
+{
+  Wait 1s
+}
+set %secure #ltargetid
+set #lobjectid %secure
+event macro 17
+wait 20
+set #contPosX 360
+set #contPosY 650
+contpos
+if %maketools = #false
+   {
+   display oh Target your tool bag!$
+   set #targcurs 1
+   While #TARGCURS = 1
+         {
+         Wait 1s
+         }
+   Set %toolbag #LTARGETID
+   set #lobjectid %toolbag
+   event macro 17
+   wait %wait
+   set #contPosX 560
+   set #contPosY 650
+   contpos
+   }
+wait %wait
+Set %ingots ENK
+Set %products ZUF_AVF_NUF_UUF_XUF_YUF_TUF_OUF_AFZ
+Set %reagents KUF_JUF_KZF_JZF_MZF_WZF_RZF_SZF_JUF_IUF_DUF_TZF_UZF_YZF_OZF_GUF
+set %bottles WUF
+set %g_win 530_497                                    ;Size for generic_gump
+set %makelastX #contposx + 280
+set %makelastY #contposy + 450
+;Siege setup
+chooseskill %trainit real
+set %rot_skill #skill
+set %rotwaithide #false
+If #Shard = Siege , #Spc , Perilous         ;will set up siege training
+   {
+   set %bluetrain #false
+   Display yesno Will you do alacrity or logout training on siege?
+   if #dispRes = yes
+      {
+      set %bluetrain #true     ; will log out and in when time is due good for blue training on siege. Remember to fill in password
+      gosub pwmenu
+      }
+   else
+   set %bluetrain #false
+   if %bluetrain = #true
+      {
+      set %HideWhileWorking #false
+      }
+   }
+gosub CBKnowledge                             ;Check for ball of knowledge and activating it
+set %Time_out #SCNT + 200
+set %scriptname Alchemy , #spc , Speed , #spc , Trainer , #spc , v1.0
+gosub showEUOMenu1
+gosub initial_skills                        ;Inital skill setup for menu
+gosub unload_all
+;================================================================================
+repeat
+{
+  if %HideWhileWorking = #true
+     {
+     If H notin #CharStatus
+        {
+        gosub hide
+        }
+     }
+  if #weight > %weight
+     {
+     gosub unload_product
+     if #weight > %weight
+        {
+        gosub unload_all
+        }
+     }
+  finditem %mortars C_ , #backpackid
+  if #findCnt < 1
+     {
+     gosub More_Tools
+     }
+  gosub craftlist
+  gosub Check_Resourses
+  if %CBK = #true                             ;Start jornalscan for difficulty on training
+     {
+     set %jStart #jIndex
+     }
+  gosub craft
+  if %CBK = #true                              ;Display difficulty on training
+     {
+     wait %wait
+     set %jEnd #jIndex
+     for %i %jStart %jEnd
+         {
+         scanjournal %i
+         gosub CBK_menu
+         }
+     }
+  gosub skills
+  if #menubutton = Pause
+     {
+     gosub pause
+     }
+  if #menuButton = Quit
+     {
+     gosub stop_it
+     }
+}
+until #charghost = yes
+menu delete status
+menu Font Color red
+menu Text status 152 92 You are dead...Halting!
+display ok You are dead! Halting!
+halt
+;================================================================================
+sub craft
+Craft:
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+wait %wait
+set %makelastX #contposx + 280
+set %makelastY #contposy + 450
+click %makelastX %makelastY
+return
+;================================================================================
+Sub Check_Resourses
+finditem %bottles C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub unload_products
+   wait %wait
+   finditem %bottles C_ , %secure
+   if #findstack < 50
+        {
+        menu delete status
+        menu Font Color red
+        menu Text status 152 92 No emty Bottles...
+        display ok You are out of Emty Bottles. Halting!
+        halt
+        }
+   exevent drag #findid 50
+   wait %wait
+   exevent dropc #backpackid
+   }
+wait %wait
+finditem %reagtype C_ , #backpackID
+if #findstack < 10
+   {
+   wait %wait
+   finditem %reagtype C_ , %secure
+   if #findcnt < 1
+        {
+        menu delete status
+        menu Font Color red
+        menu Text status 152 92 Out of Reagents ...
+        display ok You are out of %reagname ! Halting!
+        halt
+        }
+   exevent drag #findid 300
+   wait %wait
+   exevent dropc #backpackid
+   }
+return
+;================================================================================
+sub unload_reagents
+menu delete status
+menu Font Color red
+menu Text status 152 92 Unloading Reagents...
+repeat
+   {
+   finditem %reagents C_ , #backpackid
+   exevent drag #findid #findstack
+   wait %wait
+   Exevent dropc %secure
+   wait %wait
+   }
+until #findCnt < 1
+if #weight > #maxweight
+    {
+    gosub unload_all
+    }
+wait %wait
+return
+;================================================================================
+sub unload_products
+menu delete status
+menu Font Color red
+menu Text status 152 92 Unloading Products...
+repeat
+   {
+   finditem %products C_ , #backpackid
+   exevent drag #findid #findstack
+   wait %wait
+   Exevent dropc %secure
+   wait %wait
+   }
+until #findCnt < 1
+if #weight > #maxweight
+    {
+    gosub unload_all
+    }
+wait %wait
+return
+;================================================================================================================
+sub unload_all
+menu delete status
+menu Font Color red
+menu Text status 152 92 Unloading backpack...
+repeat
+   {
+   finditem %products C_ , #backpackid
+   exevent drag #findid #findstack
+   wait %wait
+   Exevent dropc %secure
+   wait %wait
+   }
+until #findCnt < 1
+repeat
+   {
+   finditem %reagents C_ , #backpackid
+   exevent drag #findid #findstack
+   wait %wait
+   Exevent dropc %secure
+   wait %wait
+   }
+until #findCnt < 1
+repeat
+   {
+   finditem %bottles C_ , #backpackid
+   exevent drag #findid #findstack
+   wait %wait
+   Exevent dropc %secure
+   wait %wait
+   }
+until #findCnt < 1
+if #weight > #maxweight
+    {
+    menu delete status
+    menu Font Color red
+    menu Text status 152 92 You are overloaded...
+    display ok You are overloaded, unload and restart script! Halting
+    halt
+    }
+repeat
+   {
+   finditem %ingots C_ , #backpackid
+   exevent drag #findid #findstack
+   wait %wait
+   Exevent dropc %secure
+   wait %wait
+   }
+until #findCnt < 1
+wait %wait
+return
+;================================================================================================================
+Sub More_Tools
+menu delete status
+menu Font Color red
+menu Text status 152 92 Getting More Tools...
+if %maketools = #false
+   {
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Finding More Tools...
+   goto grabtools
+   }
+set %mademort #false
+maketools:
+finditem %ingots C_ , #backpackid
+if #findstack < 6
+        {
+        gosub getingots
+        }
+wait %wait
+finditem %tinkertool C_ , #backpackid
+if #findCnt < 2
+   {
+   if #findCnt < 1
+      {
+      menu delete status
+      menu Font Color red
+      menu Text status 152 92 Out of tinker tools...
+      Display Your out of tinker tools! halting!
+      halt
+      }
+   gosub maketinker
+   }
+wait %wait
+menu delete status
+menu Font Color red
+menu Text status 152 92 Making Mortar and Pestle...
+mortloop:
+finditem %ingots C_ , #backpackid
+if #findstack < 6
+        {
+        gosub getingots
+        }
+finditem %mortars C_ , #backpackid
+if #findCnt > 5
+   {
+   finditem %mortars C_ , #backpackid
+   set #lobjectid #findid
+   return
+   }
+finditem %tinkertool C_ , #backpackid
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+if %mortmade = #false
+   {
+   gosub setmort
+   }
+wait %wait
+set %makelastX #contposx + 280
+set %makelastY #contposy + 450
+click %makelastX %makelastY
+click %makelastX %makelastY
+wait %makelastwait
+click %makelastX %makelastY
+wait %makelastwait
+goto mortloop
+Grabtools:
+ignoreitem reset
+finditem %mortars C_ , #backpackid
+if #findCnt < 5
+   {
+   finditem %mortars C_ , %toolbag
+   if #findCnt < 1
+      {
+       menu delete status
+       menu Font Color red
+       menu Text status 152 92 Out of  Tools...
+       Display ok You are out of tools! Get more tools!!! Halting
+       halt
+       }
+   exevent drag #findid
+   wait %wait
+   exevent dropc #backpackid
+   ignoreItem #findid
+   wait %wait
+   goto Grabtools
+   }
+finditem %mortars C_ , #backpackid
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+return
+;================================================================================================================
+Sub maketinker
+menu delete status
+menu Font Color red
+menu Text status 152 92 Making Tinker Tools...
+Set %tinkmade #false
+Set %mortmade #false
+tinkerloop:
+finditem %ingots C_ , #backpackid
+if #findstack < 6
+        {
+        gosub getingots
+        }
+finditem %tinkertool C_ , #backpackid
+if #findCnt < 2
+   {
+   wait %wait
+   finditem %tinkertool C_ , #backpackid
+   set #lobjectid #findid
+   event macro 17 0
+   gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+   if %tinkmade = #false
+      {
+      gosub settinker
+      goto tinkerloop
+      }
+   set %makelastX #contposx + 280
+   set %makelastY #contposy + 450
+   click %makelastX %makelastY
+   wait %makelastwait
+   click %makelastX %makelastY
+   wait %makelastwait
+   goto tinkerloop
+   }
+finditem
+return
+;================================================================================================================
+sub setmort
+   set %xtool #contposx + 25
+   set %ytool #contposy + 130
+   click %xtool %ytool
+   wait 1s
+   set %xmort #contposx + 230
+   set %ymort #contposx + 90
+   click %xmort %ymort
+   wait 1s
+   set %makelastX #contposx + 280
+   set %makelastY #contposy + 450
+   click %makelastX %makelastY
+   wait %makelastwait
+Set %mortmade #true
+return
+;================================================================================================================
+sub settinker
+   set %xtool #contposx + 25
+   set %ytool #contposy + 130
+   click %xtool %ytool
+   wait 1s
+   set %xtink #contposx + 230
+   set %ytink #contposy + 130
+   click %xtink %ytink
+   wait 1s
+   click %makelastX %makelastY
+   wait %makelastwait
+Set %tinkmade #true
+return
+;================================================================================
+sub getingots
+finditem %ingots C_ , #backpackid
+if #findcnt > 1
+   {
+   exevent drag #findid #findstack
+   wait %wait
+   Exevent dropc %secure
+   wait %wait
+   }
+finditem %ingots C_ , %secure
+   if #findstack < 10
+        {
+        display ok You are out of ingots. None found in resource container.
+        halt
+        }
+exevent drag #findid 50
+wait %wait
+exevent dropc #backpackid
+return
+;================================================================================
+; Craft Table and Subs
+;================================================================================
+Sub craftlist
+chooseskill %trainit real
+If #Skill < 300          ;Lesser Heal Potion
+   {
+   gosub Lesser_Heal
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Lesser Heal...
+   Return
+   }
+If #Skill < 450          ;Agility Potion
+   {
+   gosub Agility
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Agility...
+   Return
+   }
+If #Skill < 550          ;Strenght Potion
+   {
+   gosub Strenght
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Strenght...
+   Return
+   }
+If #Skill < 650                                        ;Greater Agility Potion
+   {
+   gosub Greater_Agility
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Greater Agility...
+   Return
+   }
+If #Skill < 750                                       ;Greater Strenght Potion
+   {
+   gosub Greater_Strenght
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Greater Strenght...
+   Return
+   }
+If #Skill < 850                                       ;Greater Heal Potion
+   {
+   gosub Greater_Heal
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Greater Heal...
+   Return
+   }
+If #Skill < 950                                       ;Greater Cure Potion
+   {
+   gosub Greater_Cure
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Greater Cure...
+   Return
+   }
+If #Skill < 999
+   {
+   if %Make_Deadly_Poison = #True                     ;Deadly Poison Potion
+      {
+      gosub Deadly_poison
+      menu delete status
+      menu Font Color red
+      menu Text status 152 92 Deadly Poison...
+      Return
+      }
+   gosub Greater_Conflagration
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Greater Conflagration...
+   Return
+   }
+if #Skill = 1000
+   {
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Alchemist...
+   display ok Congratulations as Grandmaster Alchemist!$ Remember to rate on EasyUO.com!
+   halt
+   }
+;================================================================================================================
+Sub Lesser_Heal
+if %Item_Lesser_Heal = #true
+   {
+   return
+   }
+set %reagtype JZF
+set %reagname Ginseng
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Lesser Heal...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xhc #contposx + 30
+set %yhc #contposy + 90
+click %xhc %yhc
+wait 1s
+set %xlh #contposx + 230
+set %ylh #contposy + 110
+click %xlh %ylh                        ;Make first Lesser Heal
+wait 1s
+Set %Item_Lesser_Heal #true
+return
+;================================================================================================================
+Sub Agility
+if %Item_Agility = #true
+   {
+   return
+   }
+set %reagtype JUF
+set %reagname Blood , #Spc , Moss
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Agility...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xen #contposx + 30
+set %yen #contposy + 110
+click %xen %yen
+wait 1s
+set %xag #contposx + 230
+set %yag #contposy + 70
+click %xag %yag                        ;Make first Agility
+wait 1s
+set %Item_Agility #true
+return
+;================================================================================================================
+Sub Strenght
+if %Item_Strenght = #true
+   {
+   return
+   }
+set %reagtype MZF
+set %reagname Mandrake , #Spc , Root
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Strenght...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xen #contposx + 30
+set %yen #contposy + 110
+click %xen %yen
+wait 1s
+set %xst #contposx + 230
+set %yst #contposy + 130
+click %xst %yst                        ;Make first Strenght
+wait 1s
+set %Item_Strenght #true
+return
+;================================================================================================================
+Sub Greater_Agility
+if %Item_Greater_Agility = #true
+   {
+   return
+   }
+set %reagtype JUF
+set %reagname Blood , #Spc , Moss
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Greater Agility...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xen #contposx + 30
+set %yen #contposy + 110
+click %xen %yen
+wait 1s
+set %xga #contposx + 230
+set %yga #contposy + 90
+click %xga %yga                        ;Make first Greater Agility
+wait 1s
+set %Item_Greater_Agility #true
+return
+;================================================================================================================
+Sub Greater_Strenght
+if %Item_Greater_Strenght = #true
+   {
+   return
+   }
+set %reagtype MZF
+set %reagname Mandrake , #Spc , Root
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Greater Strenght...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xen #contposx + 30
+set %yen #contposy + 110
+click %xen %yen
+wait 1s
+set %xgs #contposx + 230
+set %ygs #contposy + 150
+click %xgs %ygs                        ;Make first Greater Streanght
+wait 1s
+set %Item_Greater_Strenght #true
+return
+;================================================================================================================
+Sub Greater_Heal
+if %Item_Greater_Heal = #true
+   {
+   return
+   }
+set %reagtype JZF
+set %reagname Ginseng
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Greater Heal...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xhc #contposx + 30
+set %yhc #contposy + 90
+click %xhc %yhc
+wait 1s
+set %xgh #contposx + 230
+set %ygh #contposy + 150
+click %xgh %ygh                        ;Make first Greater Heal
+wait 1s
+set %Item_Greater_Heal #true
+return
+;================================================================================================================
+Sub Greater_Cure
+if %Item_Greater_Cure = #true
+   {
+   return
+   }
+set %reagtype KZF
+set %reagname Garlic
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Greater Cure...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xhc #contposx + 30
+set %yhc #contposy + 90
+click %xhc %yhc
+wait 1s
+set %xgc #contposx + 230
+set %ygc #contposy + 210
+click %xgc %ygc                        ;Make first Greater Cure
+wait 1s
+set %Item_Greater_Cure #true
+return
+;================================================================================================================
+Sub Deadly_poison
+if %Item_Deadly_Poison = #true
+   {
+   return
+   }
+set %reagtype WZF
+set %reagname Nightshade
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Deadly Poison...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xto #contposx + 30
+set %yto #contposy + 130
+click %xto %yto
+wait 1s
+set %xdp #contposx + 230
+set %ydp #contposy + 130
+click %xdp %ydp                        ;Make first Deadly Poison
+wait 1s
+set %Item_Deadly_Poison #true
+return
+;================================================================================================================
+Sub Greater_Conflagration
+if %Item_Greater_Conflag = #true
+   {
+   return
+   }
+set %reagtype TZF
+set %reagname Grave , #Spc , Dust
+gosub unload_reagents
+gosub unload_products
+gosub Check_Resourses
+menu delete status
+menu Font Color red
+menu Text status 152 92 First Greater Conflag...
+wait 1s
+finditem %mortars C_ , #backpackid
+if #findCnt < 1
+   {
+   gosub More_Tools
+   }
+set #lobjectid #findid
+event macro 17 0
+gosub WaitForSysVars CONTSIZE = %g_win CONTNAME = generic_gump
+set %xep #contposx + 30
+set %yep #contposy + 150
+click %xep %yep
+wait 1s
+set %xdp #contposx + 230
+set %ydp #contposy + 150
+click %xdp %ydp                        ;Make first Greater Conflagration
+wait 1s
+set %Item_Greater_Conflag #true
+return
+;================================================================================================================
+Sub CBK_menu
+     if challenging in #journal
+        {
+        menu delete difficutly
+        menu Font Color yellow
+        menu Text difficulty 68 92 ..Challenging..
+        }
+     if too_challenging in #journal
+        {
+        menu delete difficutly
+        menu Font Color $5959FB
+        menu Text difficulty 68 92  Too Challenging
+        }
+     if optimal in #journal
+        {
+        menu delete difficutly
+        menu Font Color green
+        menu Text difficulty 68 92 ....Optimal....
+        }
+     if easy in #journal
+        {
+        menu delete difficutly
+        menu Font Color yellow
+        menu Text difficulty 68 92 .....Easy......
+        }
+     if very_easy in #journal
+        {
+        menu delete difficutly
+        menu Font Color yellow
+        menu Text difficulty 68 92 ...Very Easy..
+        }
+     if too_easy in #journal
+        {
+        menu delete difficutly
+        menu Font Color $5959FB
+        menu Text difficulty 68 92 ...Too Easy....
+        if %halt_on_too_east = #true
+           {
+           menu delete status
+           menu Font Color red
+           menu Text status 152 92 Too easy...Halting!
+           display ok Stealthing are too easy - halting!$ Remember to vote on script on Easyuo.com!
+           halt
+           }
+        }
+return
+;================================================================================================================
+Sub CBKnowledge
+Search:
+finditem GMF C_ , #backpackid
+if #findcnt < 1
+    {
+    set %CBK #false
+    return
+    }
+wait %wait
+event property #FindID
+if knowledge in #property
+   {
+   set %crystalball #FindID
+   wait %wait
+   if turned , #spc , on in #property
+      {
+      set %CBK #true
+      return
+      }
+   goto activate
+   }
+ignoreitem #FindID
+goto search
+activate:
+event property %crystalball
+if turned , #spc , off in #property
+   {
+   set #lobjectid %crystalball
+   event macro 17 0
+   gosub WaitForSysVars CONTSIZE = 300_150 CONTNAME = generic_gump
+   set %x #contposx + 50
+   set %y #contposy + 60
+   click %x %y
+   wait 1s
+   goto activate
+   }
+set %CBK #true
+return
+;================================================================================================================
+sub waitForSysVars
+  set !cnt %0 / 3
+  set !timeOut #scnt + 5
+  if ( %0 % 3 = 1 )
+    set !timeOut #scnt + % . %0
+  for !i 1 !cnt
+  {
+    set !offset 3 * !i - 2
+    set !evaluation !offset + 1
+    set !value !offset + 2
+    if ! ( # . % . !offset % . !evaluation % . !value )
+      set !i 0
+    if #scnt > !timeout
+      return #false
+  }
+return #true
+;================================================================================================================
+sub initial_skills
+chooseskill %trainit real
+  set %start #skill
+  set %current #skill
+  str len %start
+  str ins %start #dot #strRes
+menu Delete start
+menu font color white
+menu Text start 152 8 #strRes
+  str len %current
+  str ins %current #dot #strRes
+menu delete current
+menu text current 152 24 #strRes
+ set %change %current - %starting
+ str len %totalgains
+ str ins %totalgains #dot #strRes
+menu delete change
+menu Text change 172 68 + #strRes
+if %subtrainskill = #true
+   {
+   chooseskill %trainit2 real
+   set %current2 #skill
+   str len %current2
+   str ins %current2 #dot #strRes
+   menu delete subskill
+   menu Font Color gray
+   menu Text subskill 152 40 #strRes
+   }
+return
+;================================================================================================================
+sub skills
+chooseskill %trainit real
+if %current < #skill
+   {
+   gosub timegain
+   }
+  set %current #skill
+  str len %current
+  str ins %current #dot #strRes
+menu Font BGColor $000000
+menu delete current
+menu Font Color white
+menu text current 152 24 #strRes
+ set %change %current - %start
+ str len %change
+ str ins %change #dot #strRes
+menu delete change
+menu Font Color white
+menu Text change 152 68 + #strRes
+menu delete timegain
+menu Font Color white
+menu text timegain 204 68 %time
+chooseskill %trainit
+If #Skill = %skillcap
+   {
+   event macro 3 0 All stop
+   event macro 3 0 All follow me
+   exevent skillLock %trainit locked
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Skillcap Reached!!!
+   display You Have Reached Your %trainname Skill Cap!$ Remember to rate it on EasyUO.com Good-Bye!
+   halt
+   }
+if %subtrainskill = #true
+   {
+   chooseskill %trainit2 real
+   set %current2 #skill
+   str len %current2
+   str ins %current2 #dot #strRes
+   menu delete subskill
+   menu Font Color gray
+   menu Text subskill 152 40 #strRes
+   If #Skill = %skillcap2
+          {
+          exevent skillLock %trainit2 locked
+          }
+   }
+return
+;================================================================================================================
+sub stop_it
+event macro 3 0 All stop
+event macro 3 0 All follow me
+menu delete status
+menu Font Color red
+menu Text status 152 92 Script Stopped!
+Display I hope you enjoyed my Veterinary Trainer!Remember to rate it on EasyUO.com Good-Bye!
+halt
+return
+;================================================================================================================
+sub pause
+event macro 3 0 All stop
+event macro 3 0 All follow me
+menu delete status
+menu Font Color red
+menu Text status 152 92 Script Paused...
+menu delete pause
+menu Font Color Black
+menu Font BGColor Red
+menu Button resume 204 8 75 21 Resume
+set #menubutton n/a
+repeat
+  {
+  wait 1s
+  }
+until #menubutton <> N/A
+menu delete resume
+menu Font Color WindowText
+menu Font BGColor yellow
+menu Button pause 204 8 75 21 Pause
+menu Font Name MS Sans Serif
+menu Font Style
+menu Font Color white
+menu Font BGColor $000000
+menu Font Name Comic Sans MS
+menu Font Style
+menu delete status
+menu Font Color red
+menu Text status 152 92 Resuming...
+Wait %wait
+return
+;================================================================================================================
+sub showEUOMenu1
+	menu Clear
+	menu Font Color black
+	menu Window Title %scriptname
+	menu Window Color $000000
+	menu Window Size 300 121
+	menu Font Transparent #true
+	menu Font Align Right
+	menu Font Name MS Sans Serif
+	menu Font Size 8
+	menu Font Style
+	menu Font Color white
+	menu Font Transparent #false
+	menu Font Align Left
+	menu Font BGColor $000000
+	menu Text EUOLabel1 8 8 Starting %trainname Skill
+	menu Text EUOLabel2 8 24 Current %trainname Skill
+	menu Font Name Comic Sans MS
+	menu Text Start 152 8 000
+	menu Font Color white
+	menu Text current 152 24 000
+  if %subtrainskill = #true
+     {
+     menu Font Name MS Sans Serif
+	   menu Font Style
+	   menu Font Color gray
+     menu Text EUOLabel9 8 40 Current %trainname2 Skill
+	   menu Font Name MS Sans Serif
+	   menu Font Style
+	   menu Font Color gray
+	   menu Text subskill 152 40 000
+	   }
+	menu Font Name MS Sans Serif
+	menu Font Style
+	menu Font Color White
+	menu Font BGColor $000000
+	menu Text EUOLabel3 8 68 Total Gains This Session
+	menu Font Name Comic Sans MS
+	menu Font Color white
+	menu Text change 152 68 000
+	menu Font Name MS Sans Serif
+	menu Font Style
+	menu Font Color WindowText
+	menu Font BGColor yellow
+	menu Button Pause 204 8 75 21 Pause
+	menu Font BGColor $5858FA
+	menu Button Quit 204 32 75 21 Quit
+	menu Font Style
+	menu Font Color white
+	menu Font BGColor $000000
+	menu Text timegain 204 68 000
+	menu Font Name MS Sans Serif
+	menu Font Style
+	menu Font Color white
+	menu Font BGColor $000000
+;	menu Font Name Comic Sans MS
+	menu Font Color red
+	menu Text EUOLabel 8 92 Status:
+	menu Font Name Comic Sans MS
+	menu Font Color red
+	menu Text status 152 92 Initialating
+if %CBK = #true
+  {
+	menu Font BGColor $000000
+	menu Font Name Comic Sans MS
+	menu Font Color white
+	menu Text difficulty 68 92 Updating
+	}
+menu Show 421 270
+menu HideEUO
+return
+;======================================================================
+sub time
+;set %AMPM AM                                                          ;Disable AM/PM
+set %d1 %1 / 1 % 10
+set %d2 %1 / 10 % 10
+set %d3 %1 / 100 % 10
+set %d4 %1 / 1000 % 10
+set %d5 %1 / 10000 % 10
+set %d6 %1 / 100000 % 10
+set %temptime %d6 , %d5
+;if %tempampm > 12 && %2 = 12                                          ;Disable AM/PM
+;  {                                                                   ;Disable AM/PM
+;  set %AMPM PM                                                        ;Disable AM/PM
+;  set %tempampm %tempampm - 12                                        ;Disable AM/PM
+;  }                                                                   ;Disable AM/PM
+;if %2 = 12                                                            ;Disable AM/PM
+;  return %tempampm , : , %d4 , %d3 , : , %d2 , %d1 ;, #SPC , %AMPM    ;Disable AM/PM
+return %temptime , : , %d4 , %d3 , : , %d2 , %d1
+return
+;================================================================================================================
+; %1 = ConvertDate  changes date to MM/DD/YY format
+sub ConvertDate
+  str Mid %1 3 2
+  set %tempstr #STRRES , /
+  str Mid %1 5 2
+  set %tempstr %tempstr , #STRRES , /
+  str Mid %1 1 2
+  set %tempstr %tempstr , #STRRES
+return %tempstr
+;================================================================================================================
+sub timegain
+gosub time #time 12
+set %time #RESULT
+gosub ConvertDate #DATE
+set %date #RESULT
+return
+;================================================================================================================
+sub hide
+menu delete status
+menu Font Color red
+menu Text status 152 92 Hiding...
+If H notin #CharStatus
+   {
+   repeat
+   Event Macro 13 21       ; Hide
+   if H in #charstatus
+      {
+      wait %wait
+      goto continue
+      }
+   Wait 11s
+   until H in #charstatus
+   }
+continue:
+if %rotwaithide = #true
+   {
+   menu delete status
+   menu Font Color red
+   menu Text status 152 92 Waiting for RoT...
+   return
+   }
+wait 11s
+return
+;================================================================================================================
+Sub RoT_Timer       ; Sets the RoT timer
+menu delete status
+menu Font Color red
+menu Text status 152 92 Waiting for RoT...
+gosub skills
+Chooseskill %trainit Real
+Set %rot_skill #skill
+set %rotwaithide #true
+If #Skill < 800                        ; 5 Minute Interval
+   {
+   Set %ROTSkillTimerT #SCNT + 300
+   }
+If #Skill >= 800 && #Skill < 900       ; 8 Minute Interval
+   {
+   Set %ROTSkillTimerT #SCNT + 480
+   {
+If #Skill >= 900 && #Skill < 1000      ; 12 Minute Interval
+   {
+   Set %ROTSkillTimerT #SCNT + 720
+   }
+If #Skill >= 1000 && #Skill < 1200     ; 15 Minute Interval
+   {
+   Set %ROTSkillTimerT #SCNT + 900
+   }
+if %bluetrain = #false
+   {
+   set %OldTime #Time
+   }
+If %HideWhileWorking = #True
+   {
+   gosub hide
+   }
+if %bluetrain = #true
+   {
+   gosub logout
+   }
+Repeat
+
+If %ROTSkillTimerT - #SCNT > 120
+   {
+   IF %HideWhileWorking = #True
+      {
+      If H notin #CharStatus
+         {
+         if %bluetrain = #false
+            {
+            gosub hide       ; Hide
+            }
+         }
+   if %bluetrain = #false
+      {
+      If #Time - %OldTIme > 500            ; Time for to prevent timeout
+         {
+         event macro 8 5                   ; Open spellbook
+         wait 1s
+         event macro 9 5
+         wait 10
+         set %OldTime #Time
+         }
+      }
+   Wait 50
+   }
+Until #SCNT >= %ROTSkillTimerT
+if %bluetrain = #true
+      {
+      gosub loginagain
+      wait 3s
+      even macro 8 7
+      wait 1s
+      }
+Until #SCNT >= %ROTSkillTimerT
+set %rotwaithide #false
+return
+;================================================================================================================
+sub logout
+menu delete status
+menu Font Color red
+menu Text status 152 92 Logging out
+namespace push
+namespace local logout
+logout:
+set !timeOut #scnt + 5
+event macro 8 1
+wait 20
+waitpaperdoll:
+if #scnt > !timeOut
+   {
+	 goto logout
+	 }
+if #contname <> paperdoll_gump
+   {
+	 goto waitpaperdoll
+	 }
+contpos #clixres 0
+wait 20
+_waitConfirm:
+set !timeOut #scnt + 3
+set !paperDollX #clixres + 210
+click !paperDollX 110
+waitlogout:
+if #scnt > !timeOut
+   {
+	 goto _waitConfirm
+   }
+if #contname <> YesNo_gump
+   {
+	 goto waitlogout
+	 }
+set !x #contposx + 120
+set !y #contposy + 90
+_quit:
+click !x !y
+set !timeOut #scnt + 20
+_waitlogout:
+if #scnt > !timeout
+   {
+	 goto _quit
+   }
+if #contname <> MainMenu_gump
+   {
+	 goto _waitlogout
+	 }
+namespace pop
+menu delete status
+menu Font Color red
+menu Text status 152 92 Waiting for RoT
+return
+;================================================================================================================
+sub loginagain
+menu delete status
+menu Font Color red
+menu Text status 152 92 Logging in again...
+if #contName = mainmenu_gump && #contKind = KRDD
+   {
+   _Login:
+   gosub EnterPassword
+   gosub PressNextButton
+   gosub WaitForGump normal_gump CHCD 60
+   if #contName = waiting_gump && #contKind = SRHB
+      {
+      click 320 350 f dmc
+      gosub WaitForGump normal_gump UYLB
+      goto _Login
+      }
+    gosub PressNextButton
+    gosub WaitForGump normal_gump UYLB 30
+    gosub SelectChar
+    gosub PressNextButton
+    gosub WaitForLogin
+    wait 2s
+    menu delete status
+    menu Font Color red
+    menu Text status 152 92 Finding secure...
+    finditem %secure
+    if #findcnt < 1
+       {
+       wait 2s
+       fintitem %secure
+       if #findcnt < 1
+          {
+           menu delete status
+           menu Font Color red
+           menu Text status 152 92 Secure not found...
+           Display ok Secure not found! Halting!
+           Halt
+           }
+       }
+    set #lobjectid %secure
+    event macro 17 0
+    wait 20
+    set #contPosX 360
+    set #contPosY 650
+    contpos
+    wait 20
+if %maketools = #false
+       {
+       set #lobjectid %toolbag
+       event macro 17 0
+       wait 20
+       set #contPosX 560
+       set #contPosY 650
+       contpos
+       wait 20
+       }
+    }
+return
+;================================================================================================================
+sub PressNextButton
+click 615 445 f dmc ; Next Button
+return
+;================================================================================================================
+sub EnterPassword
+click 510 400 f dmc ; Password
+gosub ClearPlace
+msg %password
+return
+;================================================================================================================
+sub ClearPlace
+for %i 1 16
+    {
+    key BACK
+    }
+return
+;================================================================================================================
+sub SelectChar
+set %cx_ 360
+set %cy_ 100 + ( %Character * 40 )
+click %cx_ %cy_ f dmc
+gosub WaitForGump login_gump AAWB 10
+return
+;================================================================================================================
+sub WaitForGump
+set %contName %1
+set %contKind %2
+set %timeCheck #false
+set %timeOut #scnt
+if %0 = 3
+   {
+   set %timeCheck #true
+   set %timeOut #scnt + %3
+   }
+while #contName <> %contName || #contKind <> %contKind
+    {
+    if %timeCheck && #scnt > %timeOut
+    break
+    }
+return
+;================================================================================================================
+sub WaitForLogin
+set %timeOut #scnt + 60
+while #CliLogged = 0 && #scnt < %timeOut
+wait
+return
+;================================================================================================================
+

@@ -1,0 +1,94 @@
+var secureId = '0x4598B31A';
+
+//cure, heal, agility, refresh, str
+//this list is incomplete, as we make more things we should add more to the list.
+var pots = ['0x0F07', '0x0F0C', '0x0F08', '0x0F0B', '0x0F09'];
+
+
+// you should not need to configure below this point
+var bottleType = '0x0F0E';
+//silk, nightshade, ash, ginseng, man root, garlic, blood moss, black pearl
+var regs = ['0x0F8D', '0x0F88', '0x0F8C', '0x0F85', '0x0F86', '0x0F84', '0x0F7B', '0x0F7A'];
+
+//must have all alchie tools premade
+var lastToolId = null;
+var FindTool = function(hardReset){
+	if(hardReset || !lastToolId || !Orion.FindObject(lastToolId)){
+		var find = Orion.FindType('0x0E9B', -1, 'backpack');
+		if(Orion.UseObject(find[0])){
+			lastToolId = find[0];
+		}
+		Orion.Wait(1250)
+	}
+}
+
+var PullResource = function(type){
+	var found = Orion.FindType(type, -1, secureId);
+	Orion.MoveItem(found, 50, 'backpack');
+	Orion.Wait(1200);
+}
+var DepositCrafted = function(){
+	pots.forEach(function(made){
+		var backpackfind = Orion.FindType(made, -1, 'backpack');
+		if(backpackfind && backpackfind.length > 0){
+			Orion.MoveItem(backpackfind[0], 1000, secureId);
+			Orion.Wait(1200);
+		}
+	});
+}
+var DepositCraftedAndGetBottles = function(){
+	var bottleBackpackFind = Orion.FindType(bottleType, -1, 'backpack');
+	if(bottleBackpackFind && bottleBackpackFind.length > 0){
+		var item = Orion.FindObject(bottleBackpackFind[0]);
+		if(item && item.Count() < 5){
+			DepositCrafted();
+			PullResource(bottleType);
+		}
+	} else {
+		Orion.Wait(2000);
+		bottleBackpackFind = Orion.FindType(bottleType, -1, 'backpack');
+		if(bottleBackpackFind && bottleBackpackFind.length > 0){
+			var item = Orion.FindObject(bottleBackpackFind[0]);
+			if(item && item.Count() < 5){
+				DepositCrafted();
+				PullResource(bottleType);
+			}
+		} else {
+			DepositCrafted();
+			PullResource(bottleType);
+		}
+	}
+}
+
+
+var CheckResources = function(){
+	regs.forEach(function(reg){
+		var backpackfind = Orion.FindType(reg, -1,'backpack');
+		if(backpackfind && backpackfind.length > 0){
+			var item = Orion.FindObject(backpackfind[0]);
+			if(item && item.Count() < 15) PullResource(reg);
+		} else {
+			Orion.Wait(2000);
+			backpackfind = Orion.FindType(reg, -1,'backpack');
+			if(backpackfind && backpackfind.length > 0){
+				var item = Orion.FindObject(backpackfind[0]);
+				if(item && item.Count() < 15) PullResource(reg);
+			} else {
+				 PullResource(reg);
+			}		
+		}
+	});
+	
+}
+
+while(true){
+	 FindTool(false);
+	 CheckResources();
+	 DepositCraftedAndGetBottles();
+	 var gump0 = Orion.GetGump('last');
+	 if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000001CC'))
+	{
+		gump0.Select(Orion.CreateGumpHook(1999));
+		Orion.Wait(100);
+	}
+}

@@ -1,0 +1,212 @@
+//todo we need to escape if attacked
+//todo we need to mark runes to good trees
+//todo we need to handle when logs on ground too close to 60k
+//todo we need to handle peacing out if theres another player on screen
+
+//START Setup Instructions
+
+//mark runes to trees on east side of tree, there must also be a empty space 1 space east of you if you have keepnormallogs = false
+//you must have 2 runes in your pack to your house named "HOME", please make them diffrent spots that are within 1 of mailbox
+//At your house there must be a mailbox within 1 tile of your recall to HOME
+//there must be at least one runebook in your pack named "CHOP"
+//There should not be any empty spaces in the runebook
+//This will handle Lumberjacks satchel if you have one (will increase volume between trips to house)
+// you should have a - mage axe equiped so you can fight off minor mobs
+// END Setup Instructions
+
+
+var axeId = '0x4638D207';
+var keepNormalLogs = false;
+
+
+//dont edit below this point
+
+var recalllWaitTime = 5000;
+
+var otherItemsHarvested = ['0x318F', '0x2F5F', '0x3191', '0x3199', '0x3190'];
+//normal, oak, ash, yew, heartwood, bloodwood
+var logGraphic = '0x1BDD';
+var logRegularColor = '0x0000';
+var logColors = ['0x0000', '0x07DA', '0x04A7', '0x04A8', '0x04A9', '0x04AA', '0x047F'];
+
+var boardGraphic = '0x1BD7';
+
+var lumberjackSatchelGraphic = '0xA274';
+
+var noWoodText = "There's not enough wood here to harvest.";
+var notATree = "You can't use an axe on that."
+var runebookToUseIds = [];
+var homeRuneIds = [];
+var recallIndex = 0; //0 is first rune in runebook, 15 is last;
+var runebookIndex = 0; //0 is the first runebook, you should have at least one
+
+function main(){
+	GetRunebooks();
+	GetHomeRunes();
+	
+	DepositBoards();
+	GoToChopLocation();
+	// todo we need to handle the recall not working initialy, subsiquent recalls will get handled automaticly by chaning indexes when no wood
+	while(true){
+		if(Player.Weight() > 515){
+			MinimizeBag();
+			if(Player.Weight() > 425){
+				DepositBoards();
+				GoToChopLocation();
+			}
+		}
+		ChopWood();
+	}
+}
+
+function GetHomeRunes(){
+	var runebooks = Orion.FindType("0x1F14", -1, 'backpack');
+	runebooks.forEach(function(runeId){			
+			var rune = Orion.FindObject(runeId);
+			var properties = rune.Properties();
+			if(properties.indexOf('HOME') > -1){
+				homeRuneIds.push(runeId)
+			}
+		})
+}
+function GetRunebooks(){
+	var runebooks = Orion.FindType("0x22C5", -1, 'backpack');
+	runebooks.forEach(function(runebookId){			
+			var runebook = Orion.FindObject(runebookId);
+			var properties = runebook.Properties();
+			if(properties.indexOf('CHOP') > -1){
+				runebookToUseIds.push(runebookId)
+			}
+		})
+}
+
+function ChopWood(){
+	Orion.UseObject(axeId);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetTileRelative('any', -1, 0, 0);
+	Orion.Wait(1200);
+	var lastJournal = Orion.LastJournalMessage().Text();
+	var moveToNextSpot = lastJournal === noWoodText || lastJournal === notATree;
+	if(moveToNextSpot){
+		if(recallIndex === 15){
+			recallIndex = 0;
+			if(runebookIndex === (runebookToUseIds.length - 1)){
+				runebookIndex = 0;
+			} else {
+				runebookIndex = runebookIndex + 1;
+			}
+		} 
+		else {
+			recallIndex = recallIndex + 1;
+		}
+		GoToChopLocation();
+	}
+}
+
+function GoToChopLocation(){
+	var buttonIndex = 50 + recallIndex;
+	Orion.UseObject(runebookToUseIds[runebookIndex]);
+	Orion.Print("Book: " + runebookIndex +  " Position: " + recallIndex)
+	if (Orion.WaitForGump(3000))
+	{
+		var gump = Orion.GetGump('last');
+		if ((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x00000059'))
+		{
+			gump.Select(Orion.CreateGumpHook(buttonIndex));
+			Orion.Wait(recalllWaitTime);
+		}
+	}
+}
+
+function DepositBoards(){
+	var positionX = Player.X();
+	var positionY = Player.Y();
+	Orion.Cast('32');
+	if (Orion.WaitForTarget(4000))
+		Orion.TargetObject(homeRuneIds[0]);
+	Orion.Wait(recalllWaitTime);
+	if(positionY === Player.Y() && positionX === Player.X()){
+		Orion.Cast('32');
+		if (Orion.WaitForTarget(4000))
+			Orion.TargetObject(homeRuneIds[1]);
+		Orion.Wait(recalllWaitTime);
+	}
+	Orion.UseObject('backpack');
+	Orion.Wait('1200');
+	var foundLumberjackSatchels = Orion.FindType(lumberjackSatchelGraphic, -1, 'backpack');
+	if(foundLumberjackSatchels && foundLumberjackSatchels.length > 0){
+		Orion.UseObject(foundLumberjackSatchels[0]);
+		Orion.Wait('1200');
+	}
+	
+	function MoveBoardsToMailbox(){
+		if(MoveGraphicToMailbox(logGraphic)) return true;
+		if(MoveGraphicToMailbox(boardGraphic)) return true;
+		for(var counter = 0; counter < otherItemsHarvested.length; counter++){
+			if(MoveGraphicToMailbox(otherItemsHarvested[counter])) return true;			
+		}	
+		return false;
+	}
+	
+	function MoveGraphicToMailbox(graphic){
+		var mailboxes = Orion.FindType("0x4142", -1, 'ground', '', '1');
+		var item = Orion.FindType(graphic, -1, 'backpack', '', -1, '', true);
+		if(item && item.length > 0){
+			Orion.DragItem(item[0], 1000);
+			Orion.Wait('300');
+			Orion.DropDraggedItem(mailboxes[0]);
+			Orion.Wait('900');
+			return true;
+		}
+		return false;
+	}
+	
+	while(MoveBoardsToMailbox()){}
+	
+	
+}
+
+
+function MinimizeBag(){
+	if(!keepNormalLogs) DropColorLogs(logRegularColor);	
+	LogsToBoards();
+}
+
+function LogsToBoards(){
+	logColors.forEach(function(color){
+		var findItems0 = Orion.FindType(logGraphic, color, 'backpack');
+		if(findItems0.length > 0){
+			var foundLogs = Orion.FindType(logGraphic, color, 'backpack');
+			if(foundLogs && foundLogs.length > 0){
+				Orion.UseObject(axeId);
+				if (Orion.WaitForTarget(1000))
+					Orion.TargetObject(foundLogs[0]);
+				Orion.Wait(1200);
+				var foundLumberjackSatchels = Orion.FindType(lumberjackSatchelGraphic, -1, 'backpack');
+				if(foundLumberjackSatchels && foundLumberjackSatchels.length > 0){
+					var foundBoards = Orion.FindType(boardGraphic, color, 'backpack');
+					if(foundBoards && foundBoards.length > 0){
+						Orion.DragItem(foundBoards[0], 1000);
+						Orion.Wait('300');
+						Orion.DropDraggedItem(foundLumberjackSatchels[0]);
+						Orion.Wait('800');
+					}
+				}
+			}
+		}
+	});
+}
+
+function DropColorLogs(color){
+	var findItems0 = Orion.FindType(logGraphic, color, 'backpack');
+	if(findItems0.length > 0){
+		Orion.DragItem(findItems0[0], 1000);
+		Orion.Wait('300');
+		var item = Orion.FindType(logGraphic, color, 'ground', '', '2');
+		if(!item || item.length === 0) Orion.DropDraggedItemRelative(1, 0);
+		else Orion.DropDraggedItem(item[0]);
+		Orion.Wait('800');
+	}
+}
+
+main();

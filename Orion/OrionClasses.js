@@ -1,39 +1,7 @@
-class Orion{
+while(true){
 
-}
-class TextWindow{
-
-}
-
-
-class Game{
-
-}
-
-class Object{
-
-}
-class Player{
-
-}
-class Journal{
-
-}
-class Menu{
-
-}
-class Coordinates{
-    
-}
-class Gump{
-
-}
-class GumpHook{
-
-}
-class SelectedTile{
-
-}
-class Macro{
+	 Orion.KeyPress(121);
+ Orion.Wait(1000);
+ 
 
 }

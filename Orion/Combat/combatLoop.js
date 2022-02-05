@@ -1,48 +1,110 @@
 //Orion.Print(Orion.InfoBuff()) //for use in identifying buffs
 //Orion.Print(Orion.AbilityStatus('Primary'))
 
+
+var profiles = {
+	pvp: {
+		useBandages: true,
+		useEnhancementPots: true,
+		useRestorePotions: true
+	},
+	sampyre: {
+		useEnhancementPots: false,
+		usePrimary: true,
+		useAttack: true	
+	},
+	training: {
+		useAttack: true,
+		useEnemyOfOne: true,
+		usePrimary: true,
+		useSeccondary: false,
+		useHonor: true
+	}
+}
+
+
+var profile = profiles.pvp
+
+
+//if you want to cut corpses get a butchers war cleaver
+var useCutCorpses = profile != null ? profile.useCutCorpses : false;
+
 //chiv settings
-var useEnemyOfOne = true;
-var useDivineFury = false;
-var useConsecrateWeapon = false;
+var useEnemyOfOne = profile != null ? profile.useEnemyOfOne :  false;
+var useDivineFury = profile != null ? profile.useDivineFury :  false;
+var useConsecrateWeapon = profile != null ? profile.useConsecrateWeapon :  false;
 
 //combat settings
-var usePrimary = false;
-var useSeccondary = false;
+var usePrimary = profile != null ? profile.usePrimary : false;
+var useSeccondary = profile != null ? profile.useSeccondary :  false;
 
 //bushido settings
-var useMomentumStrike = false;
-var useLightningStrike = false;
-var useHonor = true;
+var useMomentumStrike = profile != null ? profile.useMomentumStrike :  false;
+var useLightningStrike =profile != null ? profile.useLightningStrike :   false;
+var useHonor = profile != null ? profile.useHonor :  false;
 
+var useBandages =  profile != null ? profile.useBandages :  false;
+var useEnhancementPots =  profile != null ? profile.useEnhancementPots :  false;
+var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
+var healPotionThreshold = 50;
 
 // probably dont configure below here
-var timeBetweenLoops = 250; //time in ms between loop cycle
+var timeBetweenLoops = 100; //time in ms between loop cycle
 var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
 var maxEnemyDistance =  8;
+var useAttack = profile != null ? profile.useAttack : false;
 
-//defenately dont configure below here
+var minimumManaForSpells = 20;
+
+//constants
+
 var timeBetweenBows = 300000; // time in ms between bows (ensure keep logged in)
+var bandageBuffIcon = '0x7596';
+var agilityPotionBuffIcon = '0x753c';
+var strPotionBuffIcon = '0x7567';
+var agilityPotionType = '0x0F08';
+var strPotionType = '0x0F09';
+var poisonBuffIcon = '0x7560';
+var curePotionType = '0x0F07';
+var healPotionType = '0x0F0C';
+var objectUseWaitTime = 1100;
 
-var lastEnemyHonored = null;
-
-var useTrainTaming = true;
-
-function TrainTaming()
-{
-	Orion.Cast('744');
-	if (Orion.WaitForTarget(2000))
-		Orion.TargetObject('0x02B90880');
-	if (Orion.WaitForGump(2000))
-	{
-		var gump0 = Orion.GetGump('last');
-		if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x00112333'))
-		{
-			gump0.Select(Orion.CreateGumpHook(0));
-			Orion.Wait(100);
+var Bandage = function(){
+	if(useBandages){
+		if( !Orion.BuffExists(bandageBuffIcon) &&  (Player.Hits() < Player.MaxHits() || Orion.BuffExists(poisonBuffIcon))){
+		Orion.BandageSelf();
+		 Orion.Wait(objectUseWaitTime);
 		}
 	}
-	Orion.Wait(1500);
+}
+
+var EnhancementPots = function(){
+	if(useEnhancementPots){
+		if(Orion.FindType(agilityPotionType).length > 0 && !Orion.BuffExists(agilityPotionBuffIcon)){
+			Orion.UseType(agilityPotionType);
+			Orion.Wait(objectUseWaitTime);
+		}
+		if(Orion.FindType(strPotionType).length > 0 && !Orion.BuffExists(strPotionBuffIcon)){
+			Orion.UseType(strPotionType);
+			Orion.Wait(objectUseWaitTime);
+		}
+	}
+}
+
+var RestorePotions = function(){
+	if(useRestorePotions){
+		if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
+			Orion.UseType(curePotionType);
+			Orion.Wait(objectUseWaitTime);
+		}
+		if(Orion.FindType(healPotionType).length > 0 && Player.Hits() < healPotionThreshold && !Orion.BuffExists(poisonBuffIcon)){
+			Orion.UseType(healPotionType);
+			Orion.Wait(objectUseWaitTime);
+		}
+		if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
+			 RestorePotions();
+		}
+	}
 }
 
 var GetTarget = function(){
@@ -55,19 +117,11 @@ var GetTarget = function(){
 		}
 	}
 	return null;
-	
 }
 
-var bowCounter = 0;
-while(true){
-    if(bowCounter > timeBetweenBows / timeBetweenLoops){
-        bowCounter = 0;
-        Orion.EmoteAction('bow');
-    }
-    
-    									
-    var enemy = GetTarget();
-    if(enemy && enemy.length > 0){
+var lastEnemyHonored = null;
+var AttackTarget = function(enemy){
+	 if(useAttack && enemy && enemy.length > 0){
 		if(useHonor && (!lastEnemyHonored || lastEnemyHonored.toString() !== enemy.toString())){
 			lastEnemyHonored = enemy;
 			Orion.InvokeVirtue("Honor")
@@ -76,35 +130,99 @@ while(true){
 		}
     	Orion.Attack(enemy[0]);
     }
-	//Orion.KeyPress('')
-    if(Player.Mana() > 20) {
-    	if(useTrainTaming){
-    		TrainTaming();
-    	}
+}
+
+var nextSpellTime = 0;
+var SetNextSpellTime = function(delay){
+	nextSpellTime = new Date().getTime() + delay;
+}
+var CanUseAnotherSpell = function(){
+	var now = new Date().getTime();
+	return now > nextSpellTime;
+}
+var CastSpells = function(){
+	if(CanUseAnotherSpell() && Player.Mana() > minimumManaForSpells) {
     	if(useEnemyOfOne && !Orion.BuffExists('0x754e')){
     		Orion.Cast('Enemy of One');
-    		 Orion.Wait(1500);
+    		SetNextSpellTime(1500)
+    		Orion.Wait(500) //handle fcr
     	} else if(useDivineFury && !Orion.BuffExists('0x754d')){
     		Orion.Cast('Divine Fury');
-    		 Orion.Wait(1250);
+    		SetNextSpellTime(1250);
+    		Orion.Wait(500) //handle fcr
     	} else if(useConsecrateWeapon && !Orion.BuffExists('0x75a7')){
     		Orion.Cast('Consecrate Weapon');
-    		 Orion.Wait(1000);
-    	}
+    		SetNextSpellTime(1000);
+    		Orion.Wait(500) //handle fcr
+    	}    
+    }
+}
+
+var UseSpecials = function(){
+	if(Player.Mana() > 20) {
     	if(useMomentumStrike && !Orion.BuffExists('0x75fb')){
 	    	Orion.Cast('Momentum Strike');
+	    	Orion.Wait(250);
     	}
     	if(useLightningStrike && !Orion.BuffExists('0x75fa')){
 	    	Orion.Cast('Lightning Strike');
+	    	Orion.Wait(250);
     	}
     	if(usePrimary && !Orion.AbilityStatus('Primary')){
 	    	Orion.UseAbility('Primary');
+	    	Orion.Wait(250);
     	}
     	if(useSeccondary && !Orion.AbilityStatus('Secondary')){
 	    	Orion.UseAbility('Secondary');
+	    	Orion.Wait(250);
     	}
-    	
-        
+    
     }
+}
+
+var bowCounter = 0;
+
+var Bow = function(){
+	if(bowCounter > timeBetweenBows / timeBetweenLoops){
+        bowCounter = 0;
+        Orion.EmoteAction('bow');
+    }
+}
+
+function CutCorpse()
+{
+	if(useCutCorpses){
+    	Orion.UseIgnoreList('ignore');
+	    var corpses = Orion.FindType(0x2006, any, ground, "", 2);
+	    if (!corpses.length)
+	    {
+	        return;
+	    }
+	    var knifeType = "0x2D23"; // Knife Graphic 
+	    var corpse = corpses[corpses.length - 1];
+	    Orion.WaitTargetObject(corpse);
+		Orion.Ignore(corpse);
+	    if (!Orion.UseType(knifeType))
+	    {
+	        Orion.CancelWaitTarget();
+	        Orion.CharPrint(self, 0x0021, "No Knife");
+	        return;
+	    }
+	
+	    Orion.Wait(objectUseWaitTime);
+	    //todo we need to handle some kind of bag of sending for the leather depending on weight vs maxweight
+    }
+}
+
+
+while(true){
+    Bow();
+   	AttackTarget(GetTarget());
+	Bandage();
+	EnhancementPots();
+	RestorePotions();
+	CastSpells();
+	UseSpecials();
+    CutCorpse();
     Orion.Wait(timeBetweenLoops);
 }

@@ -1,0 +1,4 @@
+while(true){
+	Orion.EmoteAction('bow');
+	Orion.Wait(30000);
+}
