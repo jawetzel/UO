@@ -16,14 +16,18 @@ var profiles = {
 	training: {
 		useAttack: true,
 		useEnemyOfOne: true,
-		usePrimary: true,
+		usePrimary: false,
 		useSeccondary: false,
-		useHonor: true
+		useHonor: true,
+		useLightningStrike: true,
+		useDivineFury: false,
+		useBandages: true,
+		useLootCorpses: true,
 	}
 }
 
 
-var profile = profiles.pvp
+var profile = profiles.training
 
 
 //if you want to cut corpses get a butchers war cleaver
@@ -55,6 +59,8 @@ var maxEnemyDistance =  8;
 var useAttack = profile != null ? profile.useAttack : false;
 
 var minimumManaForSpells = 20;
+
+var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
 
 //constants
 
@@ -214,6 +220,77 @@ function CutCorpse()
     }
 }
 
+function ShouldKeepItem(itemId){
+	var splinter = "Splintering Weapon";
+	var splinter20 = "Splintering Weapon 20%";
+	var splinter25 = "Splintering Weapon 25%";
+	var splinter30 = "Splintering Weapon 30%";
+	var cursed = 'Cursed';
+	var antique = 'Antique';
+	var brittle = 'Brittle';
+
+	var item = Orion.FindObject(itemId);
+	var props = item.Properties();
+	if(props.indexOf(cursed) > -1) return false;
+	
+	//handle splinter
+	if(props.indexOf(splinter) > -1){
+		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
+			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
+				return false;
+			}
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+function LootCorpses(){
+	var corpseGraphic = '0x2006'
+
+	if(useLootCorpses){
+		var corpses = Orion.FindType(0x2006, any, ground, "", 2);
+		 if (!corpses.length)
+	    {
+	        return;
+	    }
+	    var corpseId = corpses[corpses.length - 1];
+	    var corpse = Orion.FindObject(corpseId);
+		if(!corpse.IsCorpse()){
+			Orion.Ignore(corpseId);
+			return;
+		}
+		var containerId = Orion.OpenContainer(corpseId);
+		var openCorpseTime = new Date().getTime();
+		Orion.Wait(500);
+		Orion.Print("Start Evaluate Item")
+		var itemsInCorpse = Orion.FindType('any', 'any', lastcontainer);
+		itemsInCorpse.forEach(function(item){
+			Orion.Print("Evaluate Item");
+			if(ShouldKeepItem(item)){
+				var nowTime = new Date().getTime();
+				var deltaTime = nowTime - openCorpseTime;
+				if(deltaTime < 1200){
+					Orion.Wait(1200 - deltaTime);
+				}
+				Orion.DragItem(item);
+				openCorpseTime = new Date().getTime();
+				Orion.Wait(250);
+				Orion.DropDraggedItem();
+				Orion.Wait(250);
+			}
+			Orion.Ignore(item);				
+		});
+		var currentTime = new Date().getTime();
+		var delta = currentTime - openCorpseTime;
+			if(delta < 1200){
+				Orion.Wait(1200 - delta);
+			}
+		Orion.Print("Finish Evaluate Items");
+		Orion.Ignore(corpseId);
+	}
+}
 
 while(true){
     Bow();
@@ -224,5 +301,6 @@ while(true){
 	CastSpells();
 	UseSpecials();
     CutCorpse();
+    LootCorpses()
     Orion.Wait(timeBetweenLoops);
 }
