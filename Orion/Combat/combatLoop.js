@@ -15,14 +15,16 @@ var profiles = {
 	},
 	training: {
 		useAttack: true,
-		useEnemyOfOne: true,
+		useEnemyOfOne: false,
 		usePrimary: false,
-		useSeccondary: false,
-		useHonor: true,
-		useLightningStrike: true,
+		useSeccondary: true,
+		useHonor: false,
+		useLightningStrike: false,
 		useDivineFury: false,
-		useBandages: true,
+		useBandages: false,
 		useLootCorpses: true,
+		useEnhancementPots: false,
+		useConsecrateWeapon: false
 	}
 }
 
@@ -61,7 +63,11 @@ var useAttack = profile != null ? profile.useAttack : false;
 var minimumManaForSpells = 20;
 
 var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
-
+//shame crystals
+var lootItems = {
+	'0x400B': true,
+	'0x0F87': true
+}
 //constants
 
 var timeBetweenBows = 300000; // time in ms between bows (ensure keep logged in)
@@ -221,25 +227,95 @@ function CutCorpse()
 }
 
 function ShouldKeepItem(itemId){
+	
+	var cursed = 'Cursed';
+	
+
+	var item = Orion.FindObject(itemId);
+	if(!item) return false;
+	
+	//loot by type
+	if(lootItems[item.Graphic()]) return true;
+	
+	var props = item.Properties();
+	
+	//handle cursed items
+	if(props.indexOf(cursed) > -1) return false;
+	
+	//Handle Legendary
+	var legendary = 'Legendary Artifact';
+	if(props.indexOf(legendary) > -1) return true;
+	
+	//Handle Major
+	var major = 'Major Artifact';
+	if(props.indexOf(major) > -1) return true;
+	
+	//handle splinter
 	var splinter = "Splintering Weapon";
 	var splinter20 = "Splintering Weapon 20%";
 	var splinter25 = "Splintering Weapon 25%";
 	var splinter30 = "Splintering Weapon 30%";
-	var cursed = 'Cursed';
 	var antique = 'Antique';
 	var brittle = 'Brittle';
-
-	var item = Orion.FindObject(itemId);
-	var props = item.Properties();
-	if(props.indexOf(cursed) > -1) return false;
-	
-	//handle splinter
 	if(props.indexOf(splinter) > -1){
 		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
 			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
 				return false;
 			}
 			return true;
+		}
+	}
+	
+	
+	//handle clean SSI Jewls
+	var ring = 'Ring';
+	var bracelet = 'Bracelet';
+	var dex = 'Dexterity Bonus';
+	var int = 'Intelligence Bonus';
+	var str = 'Strength Bonus';
+	var hci = 'Hit Chance Increase';
+	var di = 'Damage Increase';
+	var dci = 'Defense Chance Increase';
+	var ep = 'Enhance Potions';
+	var ssi = 'Swing Speed Increase 10%';
+	var weight = 'Weight';
+	var durability = 'Durability';
+	var prized = 'Prized';
+	if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
+		Orion.Print("in ring");
+		if(props.indexOf(ssi) > -1){
+			Orion.Print("Has SSI");
+			var weightIndex = props.indexOf(weight);
+			var durabilityIndex = props.indexOf(durability);
+			var propsSubstring = props.substring(weightIndex + weight.length, durabilityIndex);
+			var newLinesCount = propsSubstring.split('\n').length;
+			if(newLinesCount === 3) return true;
+			if(newLinesCount === 4){
+				if(
+					propsSubstring.indexOf(dex) > -1
+					|| propsSubstring.indexOf(int) > -1
+					|| propsSubstring.indexOf(str) > -1
+					|| propsSubstring.indexOf(hci) > -1
+					|| propsSubstring.indexOf(di) > -1
+					|| propsSubstring.indexOf(dci) > -1
+					|| propsSubstring.indexOf(ep) > -1
+				) return true;
+			}
+			if(newLinesCount === 5 && propsSubstring.indexOf(prized) > -1){
+				if(
+					propsSubstring.indexOf(dex) > -1
+					|| propsSubstring.indexOf(int) > -1
+					|| propsSubstring.indexOf(str) > -1
+					|| propsSubstring.indexOf(hci) > -1
+					|| propsSubstring.indexOf(di) > -1
+					|| propsSubstring.indexOf(dci) > -1
+					|| propsSubstring.indexOf(ep) > -1
+				) return true;
+			}
+			
+			//we should have 2 new lines, one for after weight, and one before durability
+			//a clean ring will have 1 additional new line
+			//a almost clean ring will have 2 additional new line
 		}
 	}
 	
@@ -291,6 +367,7 @@ function LootCorpses(){
 		Orion.Ignore(corpseId);
 	}
 }
+
 
 while(true){
     Bow();
