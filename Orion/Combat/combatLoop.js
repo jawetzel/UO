@@ -10,26 +10,27 @@ var profiles = {
 	},
 	sampyre: {
 		useEnhancementPots: false,
-		usePrimary: true,
+		usePrimary: false,
 		useAttack: true	
 	},
 	training: {
 		useAttack: true,
 		useEnemyOfOne: false,
-		usePrimary: false,
-		useSeccondary: true,
-		useHonor: false,
+		usePrimary: true,
+		useSeccondary: false,
+		useHonor: true,
 		useLightningStrike: false,
 		useDivineFury: false,
 		useBandages: false,
 		useLootCorpses: true,
+		useInsureItem: true,
 		useEnhancementPots: false,
 		useConsecrateWeapon: false
 	}
 }
 
 
-var profile = profiles.training
+var profile = profiles.sampyre
 
 
 //if you want to cut corpses get a butchers war cleaver
@@ -63,10 +64,28 @@ var useAttack = profile != null ? profile.useAttack : false;
 var minimumManaForSpells = 20;
 
 var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
-//shame crystals
+var useInsureItem = profile != null ? profile.useInsureItem :   false;
+
 var lootItems = {
-	'0x400B': true,
-	'0x0F87': true
+	'0x400B': true, //shame crystals
+	'0x0F87': true, // lucky coin
+	'0x226F': true, //wraith form
+	'0x2D51': true, //SW spell
+	'0x2D52': true, //SW spell
+	'0x2D53': true, //immolating weapon SW Spell
+	'0x2D54': true, //SW spell
+	'0x2D55': true, //SW Spell
+	'0x2D56': true, //SW Spell
+	'0x2D57': true, //SW Spell
+	'0x2D58': true, //SW Spell
+	'0x2D59': true, //SW Spell
+	'0x2D5A': true, //SW Spell
+	'0x2D5B': true, //SW Spell
+	'0x2D5C': true, //SW Spell
+	'0x2D5D': true, //SW Spell
+	'0x2D5E': true, //word of death SW spell
+	'0x2D5F': true, //Gift Of Life SW spell
+	'0x2D60': true, //Gift Of Life SW spell
 }
 //constants
 
@@ -79,6 +98,7 @@ var strPotionType = '0x0F09';
 var poisonBuffIcon = '0x7560';
 var curePotionType = '0x0F07';
 var healPotionType = '0x0F0C';
+var lootBagType = '0x0E79';
 var objectUseWaitTime = 1100;
 
 var Bandage = function(){
@@ -226,6 +246,125 @@ function CutCorpse()
     }
 }
 
+function ShouldKeepItem_CheckCleanSsi(props, itemId){
+	//handle clean SSI Jewls
+	var ring = 'Ring';
+	var bracelet = 'Bracelet';
+	var dex = 'Dexterity Bonus';
+	var int = 'Intelligence Bonus';
+	var str = 'Strength Bonus';
+	var hci = 'Hit Chance Increase';
+	var di = 'Damage Increase';
+	var dci = 'Defense Chance Increase';
+	var ep = 'Enhance Potions';
+	var ssi = 'Swing Speed Increase 10%';
+	var weight = 'Weight';
+	var durability = 'Durability';
+	var prized = 'Prized';
+	var antique = 'Antique';
+	
+	if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
+		Orion.Print("in ring");
+		if(props.indexOf(ssi) > -1){
+			Orion.Print("Has SSI");
+			var weightIndex = props.indexOf(weight);	
+			var durabilityIndex = props.indexOf(durability);			
+			var propsSubstring = props.substring(weightIndex + weight.length, durabilityIndex);
+			if(propsSubstring.indexOf(ssi) === -1){
+				Orion.Print("could not read ring props right, retrying");
+				Orion.Wait(100);
+				return ShouldKeepItem(itemId);
+			}
+			var newLinesCount = propsSubstring.split('\n').length;
+			Orion.Print("New Line Count: " + newLinesCount)
+			Orion.Print(propsSubstring)
+
+			if(newLinesCount === 2) return true;
+			if(newLinesCount === 3) return true;
+			if(newLinesCount === 4){
+				if(
+					propsSubstring.indexOf(dex) > -1
+					|| propsSubstring.indexOf(int) > -1
+					|| propsSubstring.indexOf(str) > -1
+					|| propsSubstring.indexOf(hci) > -1
+					|| propsSubstring.indexOf(di) > -1
+					|| propsSubstring.indexOf(dci) > -1
+					|| propsSubstring.indexOf(ep) > -1
+					|| propsSubstring.indexOf(antique) > -1
+					|| propsSubstring.indexOf(prized) > -1	
+				) {
+					Orion.Print("Keeper Almost Pure Ring");
+					return true;
+				}
+			}
+			
+			if(newLinesCount === 5 && (propsSubstring.indexOf(prized) > -1 || propsSubstring.indexOf(antique) > -1 )){
+				if(
+					propsSubstring.indexOf(dex) > -1
+					|| propsSubstring.indexOf(int) > -1
+					|| propsSubstring.indexOf(str) > -1
+					|| propsSubstring.indexOf(hci) > -1
+					|| propsSubstring.indexOf(di) > -1
+					|| propsSubstring.indexOf(dci) > -1
+					|| propsSubstring.indexOf(ep) > -1
+				) {
+					Orion.Print("Keeper Almost Pure Ring");
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+function ShouldKeepItem_Splinter(props){
+	//handle splinter
+	var splinter = "Splintering Weapon";
+	var splinter20 = "Splintering Weapon 20%";
+	var splinter25 = "Splintering Weapon 25%";
+	var splinter30 = "Splintering Weapon 30%";
+	var antique = 'Antique';
+	var brittle = 'Brittle';
+	var fireball = "Hit Fireball";
+	var lightning = "Hit Lightning";
+	var harm = "Hit Harm";
+	var magicArrow = "Hit Magic Arrow";
+	var spellChanneling = 'Spell Channeling';
+	
+	if(props.indexOf(splinter) > -1){
+		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
+			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
+				return false;
+			}
+			if(
+				props.indexOf(fireball) > -1 || 
+				props.indexOf(lightning) > -1 || 
+				props.indexOf(harm) > -1 || 
+				props.indexOf(magicArrow) > -1 || 
+				props.indexOf(spellChanneling) > -1
+				){
+				return true;
+			} else {
+				return false;
+			}
+			
+		}
+	}
+	return false;
+}
+
+function ShouldKeepItem_ReactiveParaShield(props){
+	var skillReq = 'Skill Required';
+	var reactivePara = 'Reactive Paralyze';
+	var spellChanneling = 'Spell Channeling';
+	
+	if(props.indexOf(reactivePara) > -1 && props.indexOf(skillReq) === -1){
+		if(props.indexOf(spellChanneling) > -1) return true;
+	}
+	
+	return false;
+}
+
 function ShouldKeepItem(itemId){
 	
 	var cursed = 'Cursed';
@@ -250,78 +389,21 @@ function ShouldKeepItem(itemId){
 	var major = 'Major Artifact';
 	if(props.indexOf(major) > -1) return true;
 	
-	//handle splinter
-	var splinter = "Splintering Weapon";
-	var splinter20 = "Splintering Weapon 20%";
-	var splinter25 = "Splintering Weapon 25%";
-	var splinter30 = "Splintering Weapon 30%";
-	var antique = 'Antique';
-	var brittle = 'Brittle';
-	if(props.indexOf(splinter) > -1){
-		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
-			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
-				return false;
-			}
-			return true;
-		}
-	}
-	
-	
-	//handle clean SSI Jewls
-	var ring = 'Ring';
-	var bracelet = 'Bracelet';
-	var dex = 'Dexterity Bonus';
-	var int = 'Intelligence Bonus';
-	var str = 'Strength Bonus';
-	var hci = 'Hit Chance Increase';
-	var di = 'Damage Increase';
-	var dci = 'Defense Chance Increase';
-	var ep = 'Enhance Potions';
-	var ssi = 'Swing Speed Increase 10%';
-	var weight = 'Weight';
-	var durability = 'Durability';
-	var prized = 'Prized';
-	if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
-		Orion.Print("in ring");
-		if(props.indexOf(ssi) > -1){
-			Orion.Print("Has SSI");
-			var weightIndex = props.indexOf(weight);
-			var durabilityIndex = props.indexOf(durability);
-			var propsSubstring = props.substring(weightIndex + weight.length, durabilityIndex);
-			var newLinesCount = propsSubstring.split('\n').length;
-			if(newLinesCount === 3) return true;
-			if(newLinesCount === 4){
-				if(
-					propsSubstring.indexOf(dex) > -1
-					|| propsSubstring.indexOf(int) > -1
-					|| propsSubstring.indexOf(str) > -1
-					|| propsSubstring.indexOf(hci) > -1
-					|| propsSubstring.indexOf(di) > -1
-					|| propsSubstring.indexOf(dci) > -1
-					|| propsSubstring.indexOf(ep) > -1
-				) return true;
-			}
-			if(newLinesCount === 5 && propsSubstring.indexOf(prized) > -1){
-				if(
-					propsSubstring.indexOf(dex) > -1
-					|| propsSubstring.indexOf(int) > -1
-					|| propsSubstring.indexOf(str) > -1
-					|| propsSubstring.indexOf(hci) > -1
-					|| propsSubstring.indexOf(di) > -1
-					|| propsSubstring.indexOf(dci) > -1
-					|| propsSubstring.indexOf(ep) > -1
-				) return true;
-			}
-			
-			//we should have 2 new lines, one for after weight, and one before durability
-			//a clean ring will have 1 additional new line
-			//a almost clean ring will have 2 additional new line
-		}
-	}
+	if(ShouldKeepItem_Splinter(props)) return true;
+	if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
+	if(ShouldKeepItem_ReactiveParaShield(props)) return true;
 	
 	return false;
 }
-
+function InsureItem(itemId)
+{
+	Orion.RequestContextMenu('self');
+	Orion.WaitContextMenuID('self', 418);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetObject(itemId);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetObject('0x00000000');
+}
 function LootCorpses(){
 	var corpseGraphic = '0x2006'
 
@@ -339,12 +421,13 @@ function LootCorpses(){
 		}
 		var containerId = Orion.OpenContainer(corpseId);
 		var openCorpseTime = new Date().getTime();
-		Orion.Wait(500);
+		Orion.Wait(900);
 		Orion.Print("Start Evaluate Item")
 		var itemsInCorpse = Orion.FindType('any', 'any', lastcontainer);
 		itemsInCorpse.forEach(function(item){
 			Orion.Print("Evaluate Item");
 			if(ShouldKeepItem(item)){
+				
 				var nowTime = new Date().getTime();
 				var deltaTime = nowTime - openCorpseTime;
 				if(deltaTime < 1200){
@@ -353,8 +436,16 @@ function LootCorpses(){
 				Orion.DragItem(item);
 				openCorpseTime = new Date().getTime();
 				Orion.Wait(250);
-				Orion.DropDraggedItem();
+				var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
+				if(lootbag && lootbag.length > 0){
+					Orion.DropDraggedItem(lootbag);
+				}
+				else {
+					Orion.DropDraggedItem();
+				}
+				
 				Orion.Wait(250);
+				if(useInsureItem) InsureItem(item);
 			}
 			Orion.Ignore(item);				
 		});

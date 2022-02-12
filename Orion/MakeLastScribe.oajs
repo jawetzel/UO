@@ -1,0 +1,83 @@
+var secureId = '0x4598B31A';
+
+//cure, heal, agility, refresh, str
+//this list is incomplete, as we make more things we should add more to the list.
+var pots = ['0x0EFA'];
+
+
+// you should not need to configure below this point
+var bottleType = '0x0EF3';
+
+
+
+var PullResource = function(type){
+	var found = Orion.FindType(type, -1, secureId);
+	Orion.MoveItem(found, 150, 'backpack');
+	Orion.Wait(1200);
+}
+
+var DepositCraftedAndGetBottles = function(){
+	var bottleBackpackFind = Orion.FindType(bottleType, -1, 'backpack');
+	if(bottleBackpackFind && bottleBackpackFind.length > 0){
+		var item = Orion.FindObject(bottleBackpackFind[0]);
+		if(item && item.Count() < 20){
+			PullResource(bottleType);
+		}
+	} else {
+		Orion.Wait(2000);
+		bottleBackpackFind = Orion.FindType(bottleType, -1, 'backpack');
+		if(bottleBackpackFind && bottleBackpackFind.length > 0){
+			var item = Orion.FindObject(bottleBackpackFind[0]);
+			if(item && item.Count() < 5){
+				PullResource(bottleType);
+			}
+		} else {
+			PullResource(bottleType);
+		}
+	}
+}
+
+var lastDragTime = 0;
+
+var TrashCrafted = function(){
+	pots.forEach(function(made){
+		var backpackfind = Orion.FindType(made, -1, 'backpack');
+		if(backpackfind && backpackfind.length > 0){
+			Orion.MoveItem(backpackfind[0], 1000, '0x44F8D464');
+			var delta = new Date().getTime() - lastDragTime;
+			lastDragTime = new Date().getTime();
+			if(delta < 1200){
+				Orion.Wait(1200 - delta);
+			}		
+		}
+	});
+}
+
+//must have all alchie tools premade
+var lastToolId = null;
+var FindTool = function(hardReset){
+	if(hardReset || !lastToolId || !Orion.FindObject(lastToolId)){
+		var delta = new Date().getTime() - lastDragTime;
+		
+		if(delta < 1200){
+			Orion.Wait(1200 - delta);
+		}		
+		var find = Orion.FindType('0x0FBF', -1, 'backpack', '', 'finddistance', '', true);
+		if(Orion.UseObject(find[0])){
+			lastToolId = find[0];
+		}
+		Orion.Wait(1250)
+	}
+}
+
+while(true){
+	 FindTool(false);
+	 DepositCraftedAndGetBottles();
+	 TrashCrafted();
+	 var gump0 = Orion.GetGump('last');
+	 if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000001CC'))
+	{
+		gump0.Select(Orion.CreateGumpHook(1999));
+		Orion.Wait(100);
+	}
+}
