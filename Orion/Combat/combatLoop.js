@@ -64,7 +64,8 @@ var useBandages =  profile != null ? profile.useBandages :  false;
 var useEnhancementPots =  profile != null ? profile.useEnhancementPots :  false;
 var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
 var healPotionThreshold = 50;
-
+var useHealFriend = profile != null ? profile.useHealFriend :  false;
+var healFriendThreshold = 80; // this is a percent
 // probably dont configure below here
 var timeBetweenLoops = 100; //time in ms between loop cycle
 var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
@@ -75,6 +76,7 @@ var minimumManaForSpells = 20;
 
 var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
 var useInsureItem = profile != null ? profile.useInsureItem :   false;
+
 
 var lootItems = {
 	'0x400B': true, //shame crystals
@@ -109,13 +111,23 @@ var poisonBuffIcon = '0x7560';
 var curePotionType = '0x0F07';
 var healPotionType = '0x0F0C';
 var lootBagType = '0x0E79';
-var objectUseWaitTime = 1100;
+var objectUseWaitTime = 1200;
+
+var lastObjectUsedTime = 0;
+function WaitForObjectTimeout(){
+	var nowTime = new Date().getTime();
+	var deltaTime = nowTime - lastObjectUsedTime;
+	if(deltaTime < objectUseWaitTime){
+		Orion.Wait(objectUseWaitTime - deltaTime);
+	}
+}
 
 var Bandage = function(){
 	if(useBandages){
 		if( !Orion.BuffExists(bandageBuffIcon) &&  (Player.Hits() < Player.MaxHits() || Orion.BuffExists(poisonBuffIcon))){
-		Orion.BandageSelf();
-		 Orion.Wait(objectUseWaitTime);
+			WaitForObjectTimeout();
+			Orion.BandageSelf();
+			lastObjectUsedTime = new Date().getTime();
 		}
 	}
 }
@@ -123,12 +135,14 @@ var Bandage = function(){
 var EnhancementPots = function(){
 	if(useEnhancementPots){
 		if(Orion.FindType(agilityPotionType).length > 0 && !Orion.BuffExists(agilityPotionBuffIcon)){
+			WaitForObjectTimeout();
 			Orion.UseType(agilityPotionType);
-			Orion.Wait(objectUseWaitTime);
+			lastObjectUsedTime = new Date().getTime();
 		}
 		if(Orion.FindType(strPotionType).length > 0 && !Orion.BuffExists(strPotionBuffIcon)){
+			WaitForObjectTimeout();
 			Orion.UseType(strPotionType);
-			Orion.Wait(objectUseWaitTime);
+			lastObjectUsedTime = new Date().getTime();
 		}
 	}
 }
@@ -136,12 +150,14 @@ var EnhancementPots = function(){
 var RestorePotions = function(){
 	if(useRestorePotions){
 		if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
+			WaitForObjectTimeout();
 			Orion.UseType(curePotionType);
-			Orion.Wait(objectUseWaitTime);
+			lastObjectUsedTime = new Date().getTime();
 		}
 		if(Orion.FindType(healPotionType).length > 0 && Player.Hits() < healPotionThreshold && !Orion.BuffExists(poisonBuffIcon)){
+			WaitForObjectTimeout();
 			Orion.UseType(healPotionType);
-			Orion.Wait(objectUseWaitTime);
+			lastObjectUsedTime = new Date().getTime();
 		}
 		if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
 			 RestorePotions();
@@ -244,15 +260,14 @@ function CutCorpse()
 	    var corpse = corpses[corpses.length - 1];
 	    Orion.WaitTargetObject(corpse);
 		Orion.Ignore(corpse);
+		WaitForObjectTimeout();
 	    if (!Orion.UseType(knifeType))
 	    {
 	        Orion.CancelWaitTarget();
 	        Orion.CharPrint(self, 0x0021, "No Knife");
 	        return;
 	    }
-	
-	    Orion.Wait(objectUseWaitTime);
-	    //todo we need to handle some kind of bag of sending for the leather depending on weight vs maxweight
+	    lastObjectUsedTime = new Date().getTime();
     }
 }
 
@@ -348,32 +363,7 @@ function ShouldKeepItem_Splinter(props){
 				return false;
 			}
 			//todo we need to handle imbueable splinter weapons
-			var twoHanded = 'Two-handed Weapon';
-			var hatchet = 'Hatchet';
-			var spear = 'Spear';
-			var spearSpeed = 'Weapon Speed 2.75';
-			var ornateAxe = 'Ornate Axe';
-			if(props.indexOf(twoHanded) > -1){ // I want to exclude all 2h except spears, ornate axes and hatchets
-				if( 
-				props.indexOf(ornateAxe) === -1 && 
-				props.indexOf(hatchet) === -1 && 
-				!(props.indexOf(spear) > -1 && props.indexOf(spearSpeed) > -1)
-				){
-					return false;
-				}
-			}
-			else { //I want to exclude specific 1h weapons
-				var elvenSpellblade = 'Elven Spellblade';
-				var elvenMachete = 'Elven Machete';
-				var radiantScim = 'Radiant Scimitar';
-				if(
-					props.indexOf(elvenSpellblade) > -1 && 
-					props.indexOf(elvenMachete) > -1 && 
-					props.indexOf(radiantScim) > -1 
-				){
-					return false;
-				}
-			}
+
 			if(
 				props.indexOf(fireball) > -1 || 
 				props.indexOf(lightning) > -1 || 
@@ -403,9 +393,6 @@ function ShouldKeepItem_ReactiveParaShield(props){
 }
 
 function ShouldKeepItem(itemId){
-	
-	
-
 	var item = Orion.FindObject(itemId);
 	if(!item) return false;
 	
@@ -417,8 +404,40 @@ function ShouldKeepItem(itemId){
 	//handle cursed items
 	var cursed = 'Cursed';
 	if(props.indexOf(cursed) > -1) return false;
+	//exclude archery weapons (never seen a good one)
 	var archery = 'Skill Required: Archery';
 	if(props.indexOf(archery) > -1) return false;
+	
+	//I want to exclude weapons that will never be good
+	if(props.indexOf(twoHanded) > -1){ // I want to exclude all 2h except spears, ornate axes and hatchets
+		var twoHanded = 'Two-handed Weapon';
+		var hatchet = 'Hatchet';
+		var spear = 'Spear';
+		var spearSpeed = 'Weapon Speed 2.75';
+		var ornateAxe = 'Ornate Axe';
+		if( 
+			props.indexOf(ornateAxe) === -1 && 
+			props.indexOf(hatchet) === -1 && 
+			!(props.indexOf(spear) > -1 && props.indexOf(spearSpeed) > -1)
+		){
+			return false;
+		}
+	}
+	else { //I want to exclude specific 1h weapons
+		var elvenSpellblade = 'Elven Spellblade';
+		var elvenMachete = 'Elven Machete';
+		var radiantScim = 'Radiant Scimitar';
+		var wildStaff = 'Wild Staff';
+		if(
+			props.indexOf(elvenSpellblade) > -1 && 
+			props.indexOf(elvenMachete) > -1 && 
+			props.indexOf(wildStaff) > -1 && 
+			props.indexOf(radiantScim) > -1 
+		){
+			return false;
+		}
+	}
+	
 	
 	//Handle Legendary
 	var legendary = 'Legendary Artifact';
@@ -458,20 +477,16 @@ function LootCorpses(){
 			Orion.Ignore(corpseId);
 			return;
 		}
+		WaitForObjectTimeout();
 		var containerId = Orion.OpenContainer(corpseId);
-		var openCorpseTime = new Date().getTime();
+		lastObjectUsedTime = new Date().getTime();
 		Orion.Wait(900);
 		Orion.Print("Start Evaluate Item")
 		var itemsInCorpse = Orion.FindType('any', 'any', lastcontainer);
 		itemsInCorpse.forEach(function(item){
 			Orion.Print("Evaluate Item");
 			if(ShouldKeepItem(item)){
-				
-				var nowTime = new Date().getTime();
-				var deltaTime = nowTime - openCorpseTime;
-				if(deltaTime < 1200){
-					Orion.Wait(1200 - deltaTime);
-				}
+				WaitForObjectTimeout()
 				var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
 				if(lootbag && lootbag.length > 0){
 					Orion.MoveItem(item, 1000, lootbag);
@@ -479,22 +494,35 @@ function LootCorpses(){
 				else {
 					Orion.MoveItem(item, 1000, 'backpack');
 				}
-				openCorpseTime = new Date().getTime();
+				lastObjectUsedTime = new Date().getTime();
 				Orion.Wait(250);
 				if(useInsureItem) InsureItem(item);
 			}
 			Orion.Ignore(item);				
 		});
-		var currentTime = new Date().getTime();
-		var delta = currentTime - openCorpseTime;
-			if(delta < 1200){
-				Orion.Wait(1200 - delta);
-			}
 		Orion.Print("Finish Evaluate Items");
 		Orion.Ignore(corpseId);
 	}
 }
 
+var useHealFriend = profile != null ? profile.useHealFriend :  false;
+var healFriendThreshold = 80; // this is a percent
+var friendToHeal = null;
+if(useHealFriend){
+	Orion.Print("Target the friend you'd like to heal");
+    Orion.WaitForAddObject('myTarget');
+     friendToHeal = Orion.FindObject('myTarget');
+}
+
+function HealFriend(){
+	if(useHealFriend){
+		if(friendToHeal && !Orion.BuffExists('healing skill') && friendToHeal.Distance() <= 2 && (friendToHeal.Poisoned() || friendToHeal.Hits() < healFriendThreshold)){
+			WaitForObjectTimeout();
+			Orion.BandageTarget(friendToHeal);
+			lastObjectUsedTime = new Date().getTime();
+		}
+	}
+}
 
 while(true){
     Bow();
