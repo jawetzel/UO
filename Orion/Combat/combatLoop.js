@@ -369,7 +369,7 @@ function ShouldKeepItem_Splinter(props){
 				if(
 					props.indexOf(elvenSpellblade) > -1 && 
 					props.indexOf(elvenMachete) > -1 && 
-					props.indexOf(radiantScim) > -1 && 
+					props.indexOf(radiantScim) > -1 
 				){
 					return false;
 				}
