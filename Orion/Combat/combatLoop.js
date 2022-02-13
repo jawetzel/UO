@@ -26,11 +26,21 @@ var profiles = {
 		useInsureItem: true,
 		useEnhancementPots: false,
 		useConsecrateWeapon: false
+	},
+	looter: {
+		useLootCorpses: true,
+	},
+	szevtra: {
+		useAttack: true,
+		usePrimary: true,
+		useHonor: true,
+		useLootCorpses: true,
+		useInsureItem: true,
 	}
 }
 
 
-var profile = profiles.sampyre
+var profile = profiles.szevtra
 
 
 //if you want to cut corpses get a butchers war cleaver
@@ -319,6 +329,8 @@ function ShouldKeepItem_CheckCleanSsi(props, itemId){
 
 function ShouldKeepItem_Splinter(props){
 	//handle splinter
+	
+	//todo handle clean splinter weapons (can be imbued)
 	var splinter = "Splintering Weapon";
 	var splinter20 = "Splintering Weapon 20%";
 	var splinter25 = "Splintering Weapon 25%";
@@ -329,19 +341,44 @@ function ShouldKeepItem_Splinter(props){
 	var lightning = "Hit Lightning";
 	var harm = "Hit Harm";
 	var magicArrow = "Hit Magic Arrow";
-	var spellChanneling = 'Spell Channeling';
 	
 	if(props.indexOf(splinter) > -1){
 		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
 			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
 				return false;
 			}
+			//todo we need to handle imbueable splinter weapons
+			var twoHanded = 'Two-handed Weapon';
+			var hatchet = 'Hatchet';
+			var spear = 'Spear';
+			var spearSpeed = 'Weapon Speed 2.75';
+			var ornateAxe = 'Ornate Axe';
+			if(props.indexOf(twoHanded) > -1){ // I want to exclude all 2h except spears, ornate axes and hatchets
+				if( 
+				props.indexOf(ornateAxe) === -1 && 
+				props.indexOf(hatchet) === -1 && 
+				!(props.indexOf(spear) > -1 && props.indexOf(spearSpeed) > -1)
+				){
+					return false;
+				}
+			}
+			else { //I want to exclude specific 1h weapons
+				var elvenSpellblade = 'Elven Spellblade';
+				var elvenMachete = 'Elven Machete';
+				var radiantScim = 'Radiant Scimitar';
+				if(
+					props.indexOf(elvenSpellblade) > -1 && 
+					props.indexOf(elvenMachete) > -1 && 
+					props.indexOf(radiantScim) > -1 && 
+				){
+					return false;
+				}
+			}
 			if(
 				props.indexOf(fireball) > -1 || 
 				props.indexOf(lightning) > -1 || 
 				props.indexOf(harm) > -1 || 
-				props.indexOf(magicArrow) > -1 || 
-				props.indexOf(spellChanneling) > -1
+				props.indexOf(magicArrow) > -1			
 				){
 				return true;
 			} else {
@@ -357,7 +394,7 @@ function ShouldKeepItem_ReactiveParaShield(props){
 	var skillReq = 'Skill Required';
 	var reactivePara = 'Reactive Paralyze';
 	var spellChanneling = 'Spell Channeling';
-	
+	//todo we need to run a check for imbueable or needs to have all the mods want
 	if(props.indexOf(reactivePara) > -1 && props.indexOf(skillReq) === -1){
 		if(props.indexOf(spellChanneling) > -1) return true;
 	}
@@ -367,7 +404,6 @@ function ShouldKeepItem_ReactiveParaShield(props){
 
 function ShouldKeepItem(itemId){
 	
-	var cursed = 'Cursed';
 	
 
 	var item = Orion.FindObject(itemId);
@@ -377,9 +413,12 @@ function ShouldKeepItem(itemId){
 	if(lootItems[item.Graphic()]) return true;
 	
 	var props = item.Properties();
-	
+		
 	//handle cursed items
+	var cursed = 'Cursed';
 	if(props.indexOf(cursed) > -1) return false;
+	var archery = 'Skill Required: Archery';
+	if(props.indexOf(archery) > -1) return false;
 	
 	//Handle Legendary
 	var legendary = 'Legendary Artifact';
@@ -433,17 +472,14 @@ function LootCorpses(){
 				if(deltaTime < 1200){
 					Orion.Wait(1200 - deltaTime);
 				}
-				Orion.DragItem(item);
-				openCorpseTime = new Date().getTime();
-				Orion.Wait(250);
 				var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
 				if(lootbag && lootbag.length > 0){
-					Orion.DropDraggedItem(lootbag);
+					Orion.MoveItem(item, 1000, lootbag);
 				}
 				else {
-					Orion.DropDraggedItem();
+					Orion.MoveItem(item, 1000, 'backpack');
 				}
-				
+				openCorpseTime = new Date().getTime();
 				Orion.Wait(250);
 				if(useInsureItem) InsureItem(item);
 			}
