@@ -40,7 +40,7 @@ var profiles = {
 }
 
 
-var profile = profiles.szevtra
+var profile = profiles.looter
 
 
 //if you want to cut corpses get a butchers war cleaver
@@ -409,29 +409,28 @@ function ShouldKeepItem(itemId){
 	if(props.indexOf(archery) > -1) return false;
 	
 	//I want to exclude weapons that will never be good
+	var twoHanded = 'Two-handed Weapon';
 	if(props.indexOf(twoHanded) > -1){ // I want to exclude all 2h except spears, ornate axes and hatchets
-		var twoHanded = 'Two-handed Weapon';
 		var hatchet = 'Hatchet';
 		var spear = 'Spear';
 		var spearSpeed = 'Weapon Speed 2.75';
 		var ornateAxe = 'Ornate Axe';
 		if( 
-			props.indexOf(ornateAxe) === -1 && 
-			props.indexOf(hatchet) === -1 && 
+			!(props.indexOf(ornateAxe) > -1) && 
+			!(props.indexOf(hatchet) > -1) && 
 			!(props.indexOf(spear) > -1 && props.indexOf(spearSpeed) > -1)
 		){
 			return false;
 		}
 	}
-	else { //I want to exclude specific 1h weapons
-		var elvenSpellblade = 'Elven Spellblade';
+	var oneHanded = 'One-handed Weapon';
+	if(props.indexOf(oneHanded) > -1) { //I want to exclude specific 1h weapons
 		var elvenMachete = 'Elven Machete';
 		var radiantScim = 'Radiant Scimitar';
 		var wildStaff = 'Wild Staff';
 		if(
-			props.indexOf(elvenSpellblade) > -1 && 
-			props.indexOf(elvenMachete) > -1 && 
-			props.indexOf(wildStaff) > -1 && 
+			props.indexOf(elvenMachete) > -1 ||
+			props.indexOf(wildStaff) > -1 || 
 			props.indexOf(radiantScim) > -1 
 		){
 			return false;
