@@ -386,7 +386,7 @@ function ShouldKeepItem_ReactiveParaShield(props){
 	var spellChanneling = 'Spell Channeling';
 	//todo we need to run a check for imbueable or needs to have all the mods want
 	if(props.indexOf(reactivePara) > -1 && props.indexOf(skillReq) === -1){
-		if(props.indexOf(spellChanneling) > -1) return true;
+		if(props.indexOf(spellChanneling) > -1 && props.indexOf(dci) > -1) return true;
 	}
 	
 	return false;
