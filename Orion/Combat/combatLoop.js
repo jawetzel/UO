@@ -384,6 +384,7 @@ function ShouldKeepItem_ReactiveParaShield(props){
 	var skillReq = 'Skill Required';
 	var reactivePara = 'Reactive Paralyze';
 	var spellChanneling = 'Spell Channeling';
+	var dci = 'Defense Chance Increase';
 	//todo we need to run a check for imbueable or needs to have all the mods want
 	if(props.indexOf(reactivePara) > -1 && props.indexOf(skillReq) === -1){
 		if(props.indexOf(spellChanneling) > -1 && props.indexOf(dci) > -1) return true;
@@ -444,7 +445,13 @@ function ShouldKeepItem(itemId){
 	
 	//Handle Major
 	var major = 'Major Artifact';
-	if(props.indexOf(major) > -1) return true;
+	if(props.indexOf(major) > -1){
+		var ring = 'Ring';
+		var bracelet = 'Bracelet';
+		if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
+			return true;
+		}
+	}
 	
 	if(ShouldKeepItem_Splinter(props)) return true;
 	if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
