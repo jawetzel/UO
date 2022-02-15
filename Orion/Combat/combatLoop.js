@@ -312,7 +312,7 @@ function ShouldKeepItem_CheckCleanSsi(props, itemId){
 					|| propsSubstring.indexOf(int) > -1
 					|| propsSubstring.indexOf(str) > -1
 					|| propsSubstring.indexOf(hci) > -1
-					|| propsSubstring.indexOf(di) > -1
+					|| (propsSubstring.indexOf(di) > -1 && propsSubstring.indexOf(sdi) === -1)
 					|| propsSubstring.indexOf(dci) > -1
 					|| propsSubstring.indexOf(ep) > -1
 					|| propsSubstring.indexOf(antique) > -1
@@ -356,7 +356,7 @@ function ShouldKeepItem_Splinter(props){
 	var lightning = "Hit Lightning";
 	var harm = "Hit Harm";
 	var magicArrow = "Hit Magic Arrow";
-	
+	var hitLowerD = 'Hit Lower Defense';
 	if(props.indexOf(splinter) > -1){
 		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
 			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
@@ -368,10 +368,15 @@ function ShouldKeepItem_Splinter(props){
 				props.indexOf(fireball) > -1 || 
 				props.indexOf(lightning) > -1 || 
 				props.indexOf(harm) > -1 || 
-				props.indexOf(magicArrow) > -1			
+				props.indexOf(magicArrow) > -1	|| 
+				props.indexOf(hitLowerD) > -1		
 				){
 				return true;
-			} else {
+			} 
+			else if(true){ //todo: we need to condition is imbueable here 
+				return true;
+			}
+			 else {
 				return false;
 			}
 			
@@ -416,10 +421,20 @@ function ShouldKeepItem(itemId){
 		var spear = 'Spear';
 		var spearSpeed = 'Weapon Speed 2.75';
 		var ornateAxe = 'Ornate Axe';
+		var pitchfork = 'Pitchfork';
+		var noDachi = 'No-Dachi';
+		var doubleAxe = 'Double Axe';
+		var bladedStaff = 'Bladed Staff';
+		var gnarledStaff = 'Gnarled Staff';
 		if( 
 			!(props.indexOf(ornateAxe) > -1) && 
 			!(props.indexOf(hatchet) > -1) && 
-			!(props.indexOf(spear) > -1 && props.indexOf(spearSpeed) > -1)
+			!(props.indexOf(spear) > -1 && props.indexOf(spearSpeed) > -1) && 
+			!(props.indexOf(pitchfork) > -1) && 
+			!(props.indexOf(noDachi) > -1) && 
+			!(props.indexOf(doubleAxe) > -1) && 
+			!(props.indexOf(bladedStaff) > -1) && 
+			!(props.indexOf(gnarledStaff) > -1)
 		){
 			return false;
 		}
@@ -429,10 +444,12 @@ function ShouldKeepItem(itemId){
 		var elvenMachete = 'Elven Machete';
 		var radiantScim = 'Radiant Scimitar';
 		var wildStaff = 'Wild Staff';
+		var lance = 'Lance';
 		if(
 			props.indexOf(elvenMachete) > -1 ||
 			props.indexOf(wildStaff) > -1 || 
-			props.indexOf(radiantScim) > -1 
+			props.indexOf(radiantScim) > -1 ||
+			props.indexOf(lance) > -1 
 		){
 			return false;
 		}
@@ -448,8 +465,12 @@ function ShouldKeepItem(itemId){
 	if(props.indexOf(major) > -1){
 		var ring = 'Ring';
 		var bracelet = 'Bracelet';
+		var skillReq = 'Skill Required';
 		if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
 			return true;
+		}
+		else {
+			//return false; // we cant decide if we want to throw out majjor arti armor
 		}
 	}
 	
@@ -495,7 +516,7 @@ function LootCorpses(){
 				WaitForObjectTimeout()
 				var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
 				if(lootbag && lootbag.length > 0){
-					Orion.MoveItem(item, 1000, lootbag);
+					Orion.MoveItem(item, 1000, lootbag[0]);
 				}
 				else {
 					Orion.MoveItem(item, 1000, 'backpack');
@@ -522,9 +543,9 @@ if(useHealFriend){
 
 function HealFriend(){
 	if(useHealFriend){
-		if(friendToHeal && !Orion.BuffExists('healing skill') && friendToHeal.Distance() <= 2 && (friendToHeal.Poisoned() || friendToHeal.Hits() < healFriendThreshold)){
+		if(friendToHeal && !Orion.BuffExists('healing skill') && friendToHeal.Distance() <= 2 && (friendToHeal.Poisoned() || (friendToHeal.Hits() * 4) < healFriendThreshold)){
 			WaitForObjectTimeout();
-			Orion.BandageTarget(friendToHeal);
+			Orion.BandageTarget(friendToHeal.Serial());
 			lastObjectUsedTime = new Date().getTime();
 		}
 	}
@@ -534,6 +555,7 @@ while(true){
     Bow();
    	AttackTarget(GetTarget());
 	Bandage();
+	HealFriend();
 	EnhancementPots();
 	RestorePotions();
 	CastSpells();
