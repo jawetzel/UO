@@ -13,7 +13,7 @@ var profiles = {
 		usePrimary: false,
 		useAttack: true	
 	},
-	training: {
+	training2: {
 		useAttack: true,
 		useEnemyOfOne: false,
 		usePrimary: true,
@@ -36,11 +36,29 @@ var profiles = {
 		useHonor: true,
 		useLootCorpses: true,
 		useInsureItem: true,
+		useEnemyOfOne: false,
+	},
+	training: {
+		useAttack: true,
+		useLootCorpses: true,
+		useInsureItem: true,
+		useBandages: false,
+		useEnemyOfOne:false,
+		useHonor: true,
+		useSeccondary: true,
+	},
+	event: {
+		useAttack: true,
+		useBandages: true,
+		useEnemyOfOne:true,
+		useHonor: true,
+		usePrimary: true,
+		ignorePlayers: true,
 	}
 }
 
 
-var profile = profiles.looter
+var profile = profiles.event
 
 
 //if you want to cut corpses get a butchers war cleaver
@@ -71,7 +89,7 @@ var timeBetweenLoops = 100; //time in ms between loop cycle
 var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
 var maxEnemyDistance =  8;
 var useAttack = profile != null ? profile.useAttack : false;
-
+var ignorePlayers = profile != null ? profile.ignorePlayers : false;
 var minimumManaForSpells = 20;
 
 var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
@@ -82,22 +100,24 @@ var lootItems = {
 	'0x400B': true, //shame crystals
 	'0x0F87': true, // lucky coin
 	'0x226F': true, //wraith form
-	'0x2D51': true, //SW spell
-	'0x2D52': true, //SW spell
-	'0x2D53': true, //immolating weapon SW Spell
-	'0x2D54': true, //SW spell
-	'0x2D55': true, //SW Spell
-	'0x2D56': true, //SW Spell
-	'0x2D57': true, //SW Spell
-	'0x2D58': true, //SW Spell
-	'0x2D59': true, //SW Spell
-	'0x2D5A': true, //SW Spell
-	'0x2D5B': true, //SW Spell
-	'0x2D5C': true, //SW Spell
-	'0x2D5D': true, //SW Spell
-	'0x2D5E': true, //word of death SW spell
-	'0x2D5F': true, //Gift Of Life SW spell
-	'0x2D60': true, //Gift Of Life SW spell
+	//'0x2D51': true, //SW spell
+	//'0x2D52': true, //SW spell
+	//'0x2D53': true, //immolating weapon SW Spell
+	//'0x2D54': true, //SW spell
+	//'0x2D55': true, //SW Spell
+	//'0x2D56': true, //SW Spell
+	//'0x2D57': true, //SW Spell
+	//'0x2D58': true, //SW Spell
+	//'0x2D59': true, //SW Spell
+	//'0x2D5A': true, //SW Spell
+	//'0x2D5B': true, //SW Spell
+	//'0x2D5C': true, //SW Spell
+	//'0x2D5D': true, //SW Spell
+	//'0x2D5E': true, //word of death SW spell
+	//'0x2D5F': true, //Gift Of Life SW spell
+	//'0x2D60': true, //Gift Of Life SW spell
+	'0x573E': true, //void Orion
+	'0x5728': true, //void core
 }
 //constants
 
@@ -170,8 +190,19 @@ var GetTarget = function(){
 	while(dist < maxEnemyDistance){
 		var enemy = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile | near | ignorefriends", dist.toString(), enemyTypes);
 		dist = dist + 1;
+		
 		if(enemy && enemy.length > 0){
-			return enemy;
+			var enemyObject = Orion.FindObject(enemy[0]);
+			
+			var props = Orion.FindObject(enemy[0]).Properties();
+			if(ignorePlayers){
+				if(enemyObject.IsPlayer() === false && props.indexOf("(summoned)") === -1){
+					return enemy;
+				}
+			}
+			else {
+				return enemy;
+			}	
 		}
 	}
 	return null;
@@ -287,7 +318,7 @@ function ShouldKeepItem_CheckCleanSsi(props, itemId){
 	var durability = 'Durability';
 	var prized = 'Prized';
 	var antique = 'Antique';
-	
+	var sdi = 'Spell Damage Increase';
 	if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
 		Orion.Print("in ring");
 		if(props.indexOf(ssi) > -1){
@@ -357,23 +388,39 @@ function ShouldKeepItem_Splinter(props){
 	var harm = "Hit Harm";
 	var magicArrow = "Hit Magic Arrow";
 	var hitLowerD = 'Hit Lower Defense';
+	var weight = "Weight:";
+	
 	if(props.indexOf(splinter) > -1){
 		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
+			var isHitSpell = props.indexOf(fireball) > -1 || 
+				props.indexOf(lightning) > -1 || 
+				props.indexOf(harm) > -1 || 
+				props.indexOf(magicArrow) > -1	;
+				
+			var isLowerD = props.indexOf(hitLowerD) > -1;
+		
+		
+			//we will keep antique or brittle if HLD hit spell and splinter
+			if(isHitSpell && isLowerD){
+				return true;
+			} 
+		
+		
 			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
 				return false;
 			}
 			//todo we need to handle imbueable splinter weapons
 
-			if(
-				props.indexOf(fireball) > -1 || 
-				props.indexOf(lightning) > -1 || 
-				props.indexOf(harm) > -1 || 
-				props.indexOf(magicArrow) > -1	|| 
-				props.indexOf(hitLowerD) > -1		
-				){
+			if(isHitSpell || isLowerD){
 				return true;
 			} 
 			else if(true){ //todo: we need to condition is imbueable here 
+				var weightIndex = props.indexOf(weight);
+				var weaponSpeedIndex = props.indexOf("Weapon Speed");
+				var propsSection = props.substring(weightIndex + weight.length, weaponSpeedIndex);
+				var propertiesCount = propsSection.split("\n").length;
+				Orion.Print("propertiesCount" + propertiesCount);
+				
 				return true;
 			}
 			 else {
@@ -398,6 +445,24 @@ function ShouldKeepItem_ReactiveParaShield(props){
 	return false;
 }
 
+function ShouldKeepItem_LuckShield(props){
+	var physicalResist = "Physical Resist";
+	var fireResist = "Fire Resist";
+	var coldResist = "Cold Resist";
+	var lcuk = "Luck 150";
+	var skillReq = "Skill Required";
+	var ring = "Ring";
+	var bracelet = "Bracelet";
+	if(props.indexOf(lcuk) > -1 ){
+		if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1) return false;
+		if(props.indexOf(skillReq) > -1) return false;
+		if(props.indexOf(physicalResist) > -1 && props.indexOf(fireResist) > -1 && props.indexOf(coldResist) > -1) return false;
+		return true;
+	}
+	return false;
+}
+
+
 function ShouldKeepItem(itemId){
 	var item = Orion.FindObject(itemId);
 	if(!item) return false;
@@ -420,20 +485,19 @@ function ShouldKeepItem(itemId){
 		var hatchet = 'Hatchet';
 		var spear = 'Spear';
 		var spearSpeed = 'Weapon Speed 2.75';
-		var ornateAxe = 'Ornate Axe';
 		var pitchfork = 'Pitchfork';
 		var noDachi = 'No-Dachi';
 		var doubleAxe = 'Double Axe';
 		var bladedStaff = 'Bladed Staff';
+		var doubleBladedStaff = 'Double Bladed Staff';
 		var gnarledStaff = 'Gnarled Staff';
 		if( 
-			!(props.indexOf(ornateAxe) > -1) && 
 			!(props.indexOf(hatchet) > -1) && 
 			!(props.indexOf(spear) > -1 && props.indexOf(spearSpeed) > -1) && 
 			!(props.indexOf(pitchfork) > -1) && 
 			!(props.indexOf(noDachi) > -1) && 
 			!(props.indexOf(doubleAxe) > -1) && 
-			!(props.indexOf(bladedStaff) > -1) && 
+			!(props.indexOf(bladedStaff) > -1 && props.indexOf(doubleBladedStaff) === -1) && 
 			!(props.indexOf(gnarledStaff) > -1)
 		){
 			return false;
@@ -445,16 +509,21 @@ function ShouldKeepItem(itemId){
 		var radiantScim = 'Radiant Scimitar';
 		var wildStaff = 'Wild Staff';
 		var lance = 'Lance';
+		var skinningKnife = 'Skinning Knife';
 		if(
 			props.indexOf(elvenMachete) > -1 ||
 			props.indexOf(wildStaff) > -1 || 
 			props.indexOf(radiantScim) > -1 ||
+			props.indexOf(skinningKnife) > -1 ||
 			props.indexOf(lance) > -1 
 		){
 			return false;
 		}
 	}
 	
+	//Handle max level Tmaps 
+	//var cache = " Cache";
+	//if(props.indexOf(cache) > -1) return true;
 	
 	//Handle Legendary
 	var legendary = 'Legendary Artifact';
@@ -474,14 +543,21 @@ function ShouldKeepItem(itemId){
 		}
 	}
 	
-	if(ShouldKeepItem_Splinter(props)) return true;
+	var skillReq = 'Skill Required';
+	if(ShouldKeepItem_Splinter(props)){
+		 return true;
+	} else if(props.indexOf(skillReq) > -1){ //if its  weapon and its not splinter I dont want it
+		return false;
+	}
+
 	if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
 	if(ShouldKeepItem_ReactiveParaShield(props)) return true;
-	
+	if(ShouldKeepItem_LuckShield(props)) return true;
 	return false;
 }
 function InsureItem(itemId)
 {
+	Orion.Wait(200);
 	Orion.RequestContextMenu('self');
 	Orion.WaitContextMenuID('self', 418);
 	if (Orion.WaitForTarget(1000))
@@ -510,19 +586,26 @@ function LootCorpses(){
 		Orion.Wait(900);
 		Orion.Print("Start Evaluate Item")
 		var itemsInCorpse = Orion.FindType('any', 'any', lastcontainer);
+		var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
 		itemsInCorpse.forEach(function(item){
 			Orion.Print("Evaluate Item");
 			if(ShouldKeepItem(item)){
 				WaitForObjectTimeout()
-				var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
+				var movedItem = Orion.FindObject(item);
 				if(lootbag && lootbag.length > 0){
 					Orion.MoveItem(item, 1000, lootbag[0]);
+					lastObjectUsedTime = new Date().getTime();
 				}
 				else {
 					Orion.MoveItem(item, 1000, 'backpack');
+					lastObjectUsedTime = new Date().getTime();
+				}
+				var waitForLootbagIndex = 0;
+				while(movedItem.Container() !== lootbag[0] && waitForLootbagIndex < 15){
+					waitForLootbagIndex ++;
+					Orion.Wait(100);
 				}
 				lastObjectUsedTime = new Date().getTime();
-				Orion.Wait(250);
 				if(useInsureItem) InsureItem(item);
 			}
 			Orion.Ignore(item);				
