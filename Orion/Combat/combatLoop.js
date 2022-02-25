@@ -354,21 +354,16 @@ function ShouldKeepItem_CheckCleanSsi(props, itemId){
 	var antique = 'Antique';
 	var sdi = 'Spell Damage Increase';
 	if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
-		Orion.Print("in ring");
 		if(props.indexOf(ssi) > -1){
-			Orion.Print("Has SSI");
 			var weightIndex = props.indexOf(weight);	
 			var durabilityIndex = props.indexOf(durability);			
 			var propsSubstring = props.substring(weightIndex + weight.length, durabilityIndex);
 			if(propsSubstring.indexOf(ssi) === -1){
-				Orion.Print("could not read ring props right, retrying");
 				Orion.Wait(100);
 				return ShouldKeepItem(itemId);
 			}
 			var newLinesCount = propsSubstring.split('\n').length;
-			Orion.Print("New Line Count: " + newLinesCount)
-			Orion.Print(propsSubstring)
-
+			
 			if(newLinesCount === 2) return true;
 			if(newLinesCount === 3) return true;
 			if(newLinesCount === 4){
@@ -383,7 +378,6 @@ function ShouldKeepItem_CheckCleanSsi(props, itemId){
 					|| propsSubstring.indexOf(antique) > -1
 					|| propsSubstring.indexOf(prized) > -1	
 				) {
-					Orion.Print("Keeper Almost Pure Ring");
 					return true;
 				}
 			}
@@ -398,7 +392,6 @@ function ShouldKeepItem_CheckCleanSsi(props, itemId){
 					|| propsSubstring.indexOf(dci) > -1
 					|| propsSubstring.indexOf(ep) > -1
 				) {
-					Orion.Print("Keeper Almost Pure Ring");
 					return true;
 				}
 			}
