@@ -43,7 +43,8 @@ var profiles = {
 		useLootCorpses: true,
 		useInsureItem: true,
 		usePrimary: true,
-		useHealFriend: true
+		useHealFriend: true,
+		useHonor: true
 	},
 	event: {
 		useAttack: true,
@@ -88,7 +89,7 @@ var useEnhancementPots =  profile != null ? profile.useEnhancementPots :  false;
 var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
 var healPotionThreshold = 50;
 var useHealFriend = profile != null ? profile.useHealFriend :  false;
-var healFriendThreshold = 50; // this is a percent
+var healFriendThreshold = 40; // this is a percent
 // probably dont configure below here
 var timeBetweenLoops = 100; //time in ms between loop cycle
 var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
@@ -475,19 +476,19 @@ function ShouldKeepItem_Splinter(props){
 				Orion.Print(props);
 				return false;
 			}
-			var startIndex = props.indexOf(" Stones");
+			var propsStart = " Stones\n";
+			var startIndex = props.indexOf(propsStart);
 			if(startIndex === -1){
 				Orion.Print("startIndex IS -1, SOMETHING WENT WRONG");
 				Orion.Print(props);
 				return false;
 			}
-			var modsSubstring = props.substring(startIndex, endIndex);
+			var modsSubstring = props.substring(startIndex + propsStart.length, endIndex);
 			modCount = modCount + modsSubstring.split('\n').length;
 			var prized = "Prized";
 			var fcMinusOne = "Faster Casting -1";
 			if(props.indexOf(prized) > -1)  modCount--;
 			if(props.indexOf(fcMinusOne) > -1) modCount--;
-			//modCount = modCount - 1; // there are 2 more lines than there are mods
 			
 			var imbueSlotsOpen = 5 - modCount;
 			Orion.Print("IMBUE SLOTS OPEN");
