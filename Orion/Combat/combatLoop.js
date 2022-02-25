@@ -594,6 +594,17 @@ function ShouldKeepItem(itemId){
 	}
 	
 	
+	var skillReq = 'Skill Required';
+	if(ShouldKeepItem_Splinter(props)){
+		 return true;
+	} else if(props.indexOf(skillReq) > -1){ //if its  weapon and its not splinter I dont want it
+		return false;
+	}
+
+	if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
+	if(ShouldKeepItem_LuckShield(props)) return true;
+	
+	
 	//Handle Legendary
 	var legendary = 'Legendary Artifact';
 	if(props.indexOf(legendary) > -1) return true;
@@ -610,18 +621,7 @@ function ShouldKeepItem(itemId){
 			//return false; // we cant decide if we want to throw out majjor arti armor
 		}
 	}
-	
-	
-	
-	var skillReq = 'Skill Required';
-	if(ShouldKeepItem_Splinter(props)){
-		 return true;
-	} else if(props.indexOf(skillReq) > -1){ //if its  weapon and its not splinter I dont want it
-		return false;
-	}
 
-	if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
-	if(ShouldKeepItem_LuckShield(props)) return true;
 	return false;
 }
 function InsureItem(itemId)
