@@ -487,7 +487,7 @@ function ShouldKeepItem_Splinter(props){
 			var fcMinusOne = "Faster Casting -1";
 			if(props.indexOf(prized) > -1)  modCount--;
 			if(props.indexOf(fcMinusOne) > -1) modCount--;
-			modCount = modCount - 2; // there are 2 more lines than there are mods
+			//modCount = modCount - 1; // there are 2 more lines than there are mods
 			
 			var imbueSlotsOpen = 5 - modCount;
 			Orion.Print("IMBUE SLOTS OPEN");
