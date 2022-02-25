@@ -42,23 +42,28 @@ var profiles = {
 		useAttack: true,
 		useLootCorpses: true,
 		useInsureItem: true,
-		useBandages: false,
-		useEnemyOfOne:false,
-		useHonor: true,
-		useSeccondary: true,
+		usePrimary: true,
+		useHealFriend: true
 	},
 	event: {
 		useAttack: true,
 		useBandages: true,
-		useEnemyOfOne:true,
+		useEnemyOfOne:false,
 		useHonor: true,
 		usePrimary: true,
 		ignorePlayers: true,
+	},
+	attack: {
+		useAttack: true,
+		useLootCorpses: true,
+		useInsureItem: true,
+		useHonor: true,
+		useEnemyOfOne:true,
 	}
 }
 
 
-var profile = profiles.event
+var profile = profiles.training
 
 
 //if you want to cut corpses get a butchers war cleaver
@@ -83,7 +88,7 @@ var useEnhancementPots =  profile != null ? profile.useEnhancementPots :  false;
 var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
 var healPotionThreshold = 50;
 var useHealFriend = profile != null ? profile.useHealFriend :  false;
-var healFriendThreshold = 80; // this is a percent
+var healFriendThreshold = 50; // this is a percent
 // probably dont configure below here
 var timeBetweenLoops = 100; //time in ms between loop cycle
 var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
@@ -146,8 +151,10 @@ var Bandage = function(){
 	if(useBandages){
 		if( !Orion.BuffExists(bandageBuffIcon) &&  (Player.Hits() < Player.MaxHits() || Orion.BuffExists(poisonBuffIcon))){
 			WaitForObjectTimeout();
-			Orion.BandageSelf();
-			lastObjectUsedTime = new Date().getTime();
+			if( !Orion.BuffExists(bandageBuffIcon)){
+				Orion.BandageSelf();
+				lastObjectUsedTime = new Date().getTime();
+			}
 		}
 	}
 }
@@ -156,13 +163,17 @@ var EnhancementPots = function(){
 	if(useEnhancementPots){
 		if(Orion.FindType(agilityPotionType).length > 0 && !Orion.BuffExists(agilityPotionBuffIcon)){
 			WaitForObjectTimeout();
-			Orion.UseType(agilityPotionType);
+			if(Orion.FindType(agilityPotionType).length > 0 && !Orion.BuffExists(agilityPotionBuffIcon)){
+				Orion.UseType(agilityPotionType);
+			}
 			lastObjectUsedTime = new Date().getTime();
 		}
 		if(Orion.FindType(strPotionType).length > 0 && !Orion.BuffExists(strPotionBuffIcon)){
 			WaitForObjectTimeout();
-			Orion.UseType(strPotionType);
-			lastObjectUsedTime = new Date().getTime();
+			if(Orion.FindType(strPotionType).length > 0 && !Orion.BuffExists(strPotionBuffIcon)){
+				Orion.UseType(strPotionType);
+				lastObjectUsedTime = new Date().getTime();
+			}
 		}
 	}
 }
@@ -171,13 +182,17 @@ var RestorePotions = function(){
 	if(useRestorePotions){
 		if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
 			WaitForObjectTimeout();
-			Orion.UseType(curePotionType);
-			lastObjectUsedTime = new Date().getTime();
+			if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
+				Orion.UseType(curePotionType);
+				lastObjectUsedTime = new Date().getTime();
+			}
 		}
 		if(Orion.FindType(healPotionType).length > 0 && Player.Hits() < healPotionThreshold && !Orion.BuffExists(poisonBuffIcon)){
 			WaitForObjectTimeout();
-			Orion.UseType(healPotionType);
-			lastObjectUsedTime = new Date().getTime();
+			if(Orion.FindType(healPotionType).length > 0 && Player.Hits() < healPotionThreshold && !Orion.BuffExists(poisonBuffIcon)){
+				Orion.UseType(healPotionType);
+				lastObjectUsedTime = new Date().getTime();
+			}
 		}
 		if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
 			 RestorePotions();
@@ -190,19 +205,37 @@ var GetTarget = function(){
 	while(dist < maxEnemyDistance){
 		var enemy = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile | near | ignorefriends", dist.toString(), enemyTypes);
 		dist = dist + 1;
-		
 		if(enemy && enemy.length > 0){
-			var enemyObject = Orion.FindObject(enemy[0]);
-			
-			var props = Orion.FindObject(enemy[0]).Properties();
-			if(ignorePlayers){
-				if(enemyObject.IsPlayer() === false && props.indexOf("(summoned)") === -1){
-					return enemy;
+			if(enemy.length > 1){
+				var firstEnemy = null;
+				enemy.forEach(function(enemyId){
+					if(ignorePlayers && enemyObject){
+						var enemyObject = Orion.FindObject(enemy[0]);
+						var props = Orion.FindObject(enemy[0]).Properties();
+						if(enemyObject.IsPlayer() === false && props.indexOf("(summoned)") === -1){
+							firstEnemy = enemy;
+							break;
+						}
+					}
+					else {
+						firstEnemy = enemy;
+						break;
+					}	
+				})
+				if(firstEnemy) return firstEnemy;
+			} else{
+				if(ignorePlayers && enemyObject){
+					var enemyObject = Orion.FindObject(enemy[0]);
+					var props = Orion.FindObject(enemy[0]).Properties();
+					if(enemyObject.IsPlayer() === false && props.indexOf("(summoned)") === -1){
+						return enemy;
+					}
 				}
+				else {
+					return enemy;
+				}	
 			}
-			else {
-				return enemy;
-			}	
+			
 		}
 	}
 	return null;
@@ -389,7 +422,7 @@ function ShouldKeepItem_Splinter(props){
 	var magicArrow = "Hit Magic Arrow";
 	var hitLowerD = 'Hit Lower Defense';
 	var weight = "Weight:";
-	
+	var bokuto = "Bokuto";
 	if(props.indexOf(splinter) > -1){
 		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
 			var isHitSpell = props.indexOf(fireball) > -1 || 
@@ -398,29 +431,73 @@ function ShouldKeepItem_Splinter(props){
 				props.indexOf(magicArrow) > -1	;
 				
 			var isLowerD = props.indexOf(hitLowerD) > -1;
+			
+			var isBokuto = props.indexOf(bokuto) > -1;
+			
+			var isCappedSplinter = props.indexOf(splinter30) > -1;
 		
+			if(isHitSpell && isCappedSplinter){
+				return true;
+			}
 		
 			//we will keep antique or brittle if HLD hit spell and splinter
 			if(isHitSpell && isLowerD){
 				return true;
 			} 
+			
+			//Keep hit spell bokutos
+			if (isBokuto && isHitSpell) {
+				return true;
+			}
 		
 		
 			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
 				return false;
 			}
-			//todo we need to handle imbueable splinter weapons
+			
 
-			if(isHitSpell || isLowerD){
+
+			//Lets Figure out how many imbue slots are open;
+			var modCount = 0;
+			var physDamageType = '\nPhysical Damage';
+			var fireDamageType = '\nFire Damage';
+			var coldDamageType = '\nCold Damage';
+			var poisonDamageType = '\nPoison Damage';
+			var energyDamageType = '\nEnergy Damage';
+			var endIndex = 0;
+			if(props.indexOf(physDamageType) > -1 && (endIndex == 0 || props.indexOf(physDamageType) < endIndex)) endIndex = props.indexOf(physDamageType);
+			if(props.indexOf(fireDamageType) > -1 && (endIndex == 0 || props.indexOf(fireDamageType) < endIndex)) endIndex = props.indexOf(fireDamageType);
+			if(props.indexOf(coldDamageType) > -1 && (endIndex == 0 || props.indexOf(coldDamageType) < endIndex)) endIndex = props.indexOf(coldDamageType);
+			if(props.indexOf(poisonDamageType) > -1 && (endIndex == 0 || props.indexOf(poisonDamageType) < endIndex)) endIndex = props.indexOf(poisonDamageType);
+			if(props.indexOf(energyDamageType) > -1 && (endIndex == 0 || props.indexOf(energyDamageType) < endIndex)) endIndex = props.indexOf(energyDamageType);
+			if(endIndex == 0){
+				Orion.Print("END INDEX IS 0, SOMETHING WENT WRONG");
+				Orion.Print(props);
+				return false;
+			}
+			var startIndex = props.indexOf(" Stones");
+			if(startIndex === -1){
+				Orion.Print("startIndex IS -1, SOMETHING WENT WRONG");
+				Orion.Print(props);
+				return false;
+			}
+			var modsSubstring = props.substring(startIndex, endIndex);
+			modCount = modCount + modsSubstring.split('\n').length;
+			var prized = "Prized";
+			var fcMinusOne = "Faster Casting -1";
+			if(props.indexOf(prized) > -1)  modCount--;
+			if(props.indexOf(fcMinusOne) > -1) modCount--;
+			modCount = modCount - 2; // there are 2 more lines than there are mods
+			
+			var imbueSlotsOpen = 5 - modCount;
+			Orion.Print("IMBUE SLOTS OPEN");
+			Orion.Print(imbueSlotsOpen);
+			Orion.Print(modsSubstring);
+
+			if(imbueSlotsOpen > 0 && (isHitSpell || isLowerD)){
 				return true;
 			} 
-			else if(true){ //todo: we need to condition is imbueable here 
-				var weightIndex = props.indexOf(weight);
-				var weaponSpeedIndex = props.indexOf("Weapon Speed");
-				var propsSection = props.substring(weightIndex + weight.length, weaponSpeedIndex);
-				var propertiesCount = propsSection.split("\n").length;
-				Orion.Print("propertiesCount" + propertiesCount);
-				
+			else if(imbueSlotsOpen > 1){ //todo: we need to condition is imbueable here 
 				return true;
 			}
 			 else {
@@ -429,19 +506,6 @@ function ShouldKeepItem_Splinter(props){
 			
 		}
 	}
-	return false;
-}
-
-function ShouldKeepItem_ReactiveParaShield(props){
-	var skillReq = 'Skill Required';
-	var reactivePara = 'Reactive Paralyze';
-	var spellChanneling = 'Spell Channeling';
-	var dci = 'Defense Chance Increase';
-	//todo we need to run a check for imbueable or needs to have all the mods want
-	if(props.indexOf(reactivePara) > -1 && props.indexOf(skillReq) === -1){
-		if(props.indexOf(spellChanneling) > -1 && props.indexOf(dci) > -1) return true;
-	}
-	
 	return false;
 }
 
@@ -525,15 +589,25 @@ function ShouldKeepItem(itemId){
 	//var cache = " Cache";
 	//if(props.indexOf(cache) > -1) return true;
 	
+	var ring = 'Ring';
+	var bracelet = 'Bracelet';
+	//Handle Named Jewlery
+	if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
+		//I do not want arcane Jewl of sorcery.
+		var arcane = "Arcane";
+		var sorcerery = "Sorcery";
+		if(props.indexOf(arcane) > -1 && props.indexOf(sorcerery) > -1) return false;
+	}
+	
+	
 	//Handle Legendary
 	var legendary = 'Legendary Artifact';
 	if(props.indexOf(legendary) > -1) return true;
 	
 	//Handle Major
 	var major = 'Major Artifact';
+
 	if(props.indexOf(major) > -1){
-		var ring = 'Ring';
-		var bracelet = 'Bracelet';
 		var skillReq = 'Skill Required';
 		if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
 			return true;
@@ -543,6 +617,8 @@ function ShouldKeepItem(itemId){
 		}
 	}
 	
+	
+	
 	var skillReq = 'Skill Required';
 	if(ShouldKeepItem_Splinter(props)){
 		 return true;
@@ -551,7 +627,6 @@ function ShouldKeepItem(itemId){
 	}
 
 	if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
-	if(ShouldKeepItem_ReactiveParaShield(props)) return true;
 	if(ShouldKeepItem_LuckShield(props)) return true;
 	return false;
 }
@@ -626,10 +701,12 @@ if(useHealFriend){
 
 function HealFriend(){
 	if(useHealFriend){
-		if(friendToHeal && !Orion.BuffExists('healing skill') && friendToHeal.Distance() <= 2 && (friendToHeal.Poisoned() || (friendToHeal.Hits() * 4) < healFriendThreshold)){
+		if(friendToHeal && !Orion.BuffExists('healing skill') && friendToHeal.Distance() <= 2 && ((friendToHeal.Hits() * 4) < healFriendThreshold)){
 			WaitForObjectTimeout();
-			Orion.BandageTarget(friendToHeal.Serial());
-			lastObjectUsedTime = new Date().getTime();
+			if(!Orion.BuffExists('healing skill') && ((friendToHeal.Hits() * 4) < healFriendThreshold)){
+				Orion.BandageTarget(friendToHeal.Serial());
+				lastObjectUsedTime = new Date().getTime();
+			}
 		}
 	}
 }
