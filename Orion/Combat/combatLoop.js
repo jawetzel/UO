@@ -43,8 +43,10 @@ var profiles = {
 		useLootCorpses: true,
 		useInsureItem: true,
 		usePrimary: true,
-		useHealFriend: true,
-		useHonor: true
+		useHealFriend: false,
+		useHonor: true,
+		useEnemyOfOne:true,
+		useBandages: true,
 	},
 	event: {
 		useAttack: true,
@@ -472,9 +474,13 @@ function ShouldKeepItem_Splinter(props){
 			var propsStart = " Stones\n";
 			var startIndex = props.indexOf(propsStart);
 			if(startIndex === -1){
-				Orion.Print("startIndex IS -1, SOMETHING WENT WRONG");
-				Orion.Print(props);
-				return false;
+				var propsStartOneStone = " Stone\n";
+				 startIndex = props.indexOf(propsStartOneStone);
+				 if(startIndex === -1){
+				 	Orion.Print("startIndex IS -1, SOMETHING WENT WRONG");
+					Orion.Print(props);
+					return false;
+				 }
 			}
 			var modsSubstring = props.substring(startIndex + propsStart.length, endIndex);
 			modCount = modCount + modsSubstring.split('\n').length;
