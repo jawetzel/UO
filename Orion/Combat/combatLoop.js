@@ -430,9 +430,9 @@ function ShouldKeepItem_Splinter(props){
 			
 			var isBokuto = props.indexOf(bokuto) > -1;
 			
-			var isCappedSplinter = props.indexOf(splinter30) > -1;
-		
-			if(isHitSpell && isCappedSplinter){
+			var isCappedSplinter = props.indexOf(splinter30) > -1 ||  props.indexOf(splinter25) > -1;
+			
+			if((isHitSpell || isLowerD) && isCappedSplinter){
 				return true;
 			}
 		
@@ -494,7 +494,7 @@ function ShouldKeepItem_Splinter(props){
 			Orion.Print(imbueSlotsOpen);
 			Orion.Print(modsSubstring);
 
-			if(imbueSlotsOpen > 0 && (isHitSpell || isLowerD)){
+			if(imbueSlotsOpen > 0 && (isHitSpell || isLowerD || isBokuto)){
 				return true;
 			} 
 			else if(imbueSlotsOpen > 1){ //todo: we need to condition is imbueable here 
