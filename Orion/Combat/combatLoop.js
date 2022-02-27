@@ -3,70 +3,24 @@
 
 
 var profiles = {
-	pvp: {
-		useBandages: true,
-		useEnhancementPots: true,
-		useRestorePotions: true
-	},
-	sampyre: {
-		useEnhancementPots: false,
-		usePrimary: false,
-		useAttack: true	
-	},
-	training2: {
-		useAttack: true,
-		useEnemyOfOne: false,
-		usePrimary: true,
-		useSeccondary: false,
-		useHonor: true,
-		useLightningStrike: false,
-		useDivineFury: false,
-		useBandages: false,
-		useLootCorpses: true,
-		useInsureItem: true,
-		useEnhancementPots: false,
-		useConsecrateWeapon: false
-	},
-	looter: {
-		useLootCorpses: true,
-	},
-	szevtra: {
+	JunkoSamp : {
 		useAttack: true,
 		usePrimary: true,
-		useHonor: true,
 		useLootCorpses: true,
 		useInsureItem: true,
-		useEnemyOfOne: false,
+		useHealFriend: true,
 	},
-	training: {
+	JunkoSampSeccondary : {
 		useAttack: true,
+		useSeccondary: true,
 		useLootCorpses: true,
 		useInsureItem: true,
-		usePrimary: true,
-		useHealFriend: false,
-		useHonor: true,
-		useEnemyOfOne:true,
-		useBandages: true,
-	},
-	event: {
-		useAttack: true,
-		useBandages: true,
-		useEnemyOfOne:false,
-		useHonor: true,
-		usePrimary: true,
-		ignorePlayers: true,
-	},
-	attack: {
-		useAttack: true,
-		useLootCorpses: true,
-		useInsureItem: true,
-		useHonor: true,
-		useEnemyOfOne:true,
+		useHealFriend: true,
 	}
 }
 
 
-var profile = profiles.training
+var profile = profiles.JunkoSamp
 
 
 //if you want to cut corpses get a butchers war cleaver
@@ -91,7 +45,7 @@ var useEnhancementPots =  profile != null ? profile.useEnhancementPots :  false;
 var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
 var healPotionThreshold = 50;
 var useHealFriend = profile != null ? profile.useHealFriend :  false;
-var healFriendThreshold = 40; // this is a percent
+var healFriendThreshold = 75; // this is a percent
 // probably dont configure below here
 var timeBetweenLoops = 100; //time in ms between loop cycle
 var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
@@ -212,7 +166,7 @@ var GetTarget = function(){
 			if(enemy.length > 1){
 				var firstEnemy = null;
 				enemy.forEach(function(enemyId){
-					if(ignorePlayers && enemyObject){
+					if(enemyObject){
 						var enemyObject = Orion.FindObject(enemy[0]);
 						var props = Orion.FindObject(enemy[0]).Properties();
 						if(enemyObject.IsPlayer() === false && props.indexOf("(summoned)") === -1){
@@ -227,7 +181,7 @@ var GetTarget = function(){
 				})
 				if(firstEnemy) return firstEnemy;
 			} else{
-				if(ignorePlayers && enemyObject){
+				if(enemyObject){
 					var enemyObject = Orion.FindObject(enemy[0]);
 					var props = Orion.FindObject(enemy[0]).Properties();
 					if(enemyObject.IsPlayer() === false && props.indexOf("(summoned)") === -1){
@@ -407,32 +361,45 @@ function ShouldKeepItem_Splinter(props){
 	
 	//todo handle clean splinter weapons (can be imbued)
 	var splinter = "Splintering Weapon";
-	var splinter20 = "Splintering Weapon 20%";
-	var splinter25 = "Splintering Weapon 25%";
-	var splinter30 = "Splintering Weapon 30%";
+	var isOverCapSplinter = props.indexOf(splinter + " 25") > -1 || props.indexOf(splinter + " 30") > -1;
+	var isSplinter =  props.indexOf(splinter + " 20") > -1 || isOverCapSplinter;
+	
 	var antique = 'Antique';
+	var isAntique = props.indexOf(antique) > -1;
 	var brittle = 'Brittle';
+	var isBrittle =  props.indexOf(brittle) > -1;
+	
 	var fireball = "Hit Fireball";
+	var isFireball = props.indexOf(fireball) > -1;
+	var isCappedFireball = props.indexOf(fireball + " 50") > -1
+	var isOverCapFireball = props.indexOf(fireball + " 60") > -1 || props.indexOf(fireball + " 70") > -1;
 	var lightning = "Hit Lightning";
+	var isLightning = props.indexOf(lightning) > -1;
+	var isCappedLightning = props.indexOf(lightning + " 50") > -1
+	var isOverCapLightning = props.indexOf(lightning + " 60") > -1 || props.indexOf(lightning + " 70") > -1;
+	var overCapLightning
 	var harm = "Hit Harm";
+	var isHarm = props.indexOf(harm) > -1;
+	var isOverCapHarm = props.indexOf(harm + " 60") > -1 || props.indexOf(harm + " 70") > -1;
 	var magicArrow = "Hit Magic Arrow";
+	var isMagicArrow = props.indexOf(magicArrow) > -1;
+	var isOverCapMagicArrow = props.indexOf(magicArrow + " 60") > -1 || props.indexOf(magicArrow + " 70") > -1;
+	
 	var hitLowerD = 'Hit Lower Defense';
+	var isLowerD = props.indexOf(hitLowerD) > -1;
+	
 	var weight = "Weight:";
 	var bokuto = "Bokuto";
-	if(props.indexOf(splinter) > -1){
-		if(props.indexOf(splinter20) > -1 || props.indexOf(splinter25) > -1 || props.indexOf(splinter30) > -1){
-			var isHitSpell = props.indexOf(fireball) > -1 || 
-				props.indexOf(lightning) > -1 || 
-				props.indexOf(harm) > -1 || 
-				props.indexOf(magicArrow) > -1	;
+	var isBokuto = props.indexOf(bokuto) > -1;
+	
+	if(isSplinter){
+			var isHitSpell = isFireball || isLightning || isHarm || isMagicArrow;
 				
-			var isLowerD = props.indexOf(hitLowerD) > -1;
-			
-			var isBokuto = props.indexOf(bokuto) > -1;
-			
-			var isCappedSplinter = props.indexOf(splinter30) > -1 ||  props.indexOf(splinter25) > -1;
-			
-			if((isHitSpell || isLowerD) && isCappedSplinter){
+			if((isHitSpell || isLowerD) && isOverCapSplinter){
+				return true;
+			}
+		
+			if(isOverCapLightning || isOverCapFireball || isOverCapHarm || isCappedFireball || isCappedLightning){
 				return true;
 			}
 		
@@ -447,7 +414,7 @@ function ShouldKeepItem_Splinter(props){
 			}
 		
 		
-			if(props.indexOf(antique) > -1 || props.indexOf(brittle) > -1){
+			if(isAntique || isBrittle){
 				return false;
 			}
 			
@@ -494,7 +461,7 @@ function ShouldKeepItem_Splinter(props){
 			Orion.Print(imbueSlotsOpen);
 			Orion.Print(modsSubstring);
 
-			if(imbueSlotsOpen > 0 && (isHitSpell || isLowerD || isBokuto)){
+			if(imbueSlotsOpen > 0 && (isHitSpell || isLowerD || isBokuto || isOverCapSplinter)){
 				return true;
 			} 
 			else if(imbueSlotsOpen > 1){ //todo: we need to condition is imbueable here 
@@ -504,23 +471,12 @@ function ShouldKeepItem_Splinter(props){
 				return false;
 			}
 			
-		}
 	}
 	return false;
 }
 
 function ShouldKeepItem_LuckShield(props){
-	var physicalResist = "Physical Resist";
-	var fireResist = "Fire Resist";
-	var coldResist = "Cold Resist";
-	var lcuk = "Luck 150";
-	var skillReq = "Skill Required";
-	var ring = "Ring";
-	var bracelet = "Bracelet";
-	if(props.indexOf(lcuk) > -1 ){
-		if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1) return false;
-		if(props.indexOf(skillReq) > -1) return false;
-		if(props.indexOf(physicalResist) > -1 && props.indexOf(fireResist) > -1 && props.indexOf(coldResist) > -1) return false;
+	if(props.indexOf("Luck 150") > -1 ){
 		return true;
 	}
 	return false;
@@ -531,11 +487,19 @@ function ShouldKeepItem(itemId){
 	var item = Orion.FindObject(itemId);
 	if(!item) return false;
 	
+	
 	//loot by type
 	if(lootItems[item.Graphic()]) return true;
 	
 	var props = item.Properties();
 		
+		
+	var isJewlery = props.indexOf('Ring') > -1 || props.indexOf('Bracelet') > -1;
+	var is2hWeapon = props.indexOf('Two-handed Weapon') > -1;
+	var is1hWeapon = props.indexOf('One-handed Weapon') > -1;
+	var isArmor = props.indexOf("Physical Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1;
+	
+	
 	//handle cursed items
 	var cursed = 'Cursed';
 	if(props.indexOf(cursed) > -1) return false;
@@ -544,42 +508,28 @@ function ShouldKeepItem(itemId){
 	if(props.indexOf(archery) > -1) return false;
 	
 	//I want to exclude weapons that will never be good
-	var twoHanded = 'Two-handed Weapon';
-	if(props.indexOf(twoHanded) > -1){ // I want to exclude all 2h except spears, ornate axes and hatchets
-		var hatchet = 'Hatchet';
-		var spear = 'Spear';
-		var spearSpeed = 'Weapon Speed 2.75';
-		var pitchfork = 'Pitchfork';
-		var noDachi = 'No-Dachi';
-		var doubleAxe = 'Double Axe';
-		var bladedStaff = 'Bladed Staff';
-		var doubleBladedStaff = 'Double Bladed Staff';
-		var gnarledStaff = 'Gnarled Staff';
+	if(is2hWeapon){ // I want to exclude all 2h except spears, ornate axes and hatchets
 		if( 
-			!(props.indexOf(hatchet) > -1) && 
-			!(props.indexOf(spear) > -1 && props.indexOf(spearSpeed) > -1) && 
-			!(props.indexOf(pitchfork) > -1) && 
-			!(props.indexOf(noDachi) > -1) && 
-			!(props.indexOf(doubleAxe) > -1) && 
-			!(props.indexOf(bladedStaff) > -1 && props.indexOf(doubleBladedStaff) === -1) && 
-			!(props.indexOf(gnarledStaff) > -1)
+			!(props.indexOf('Hatchet') > -1) && 
+			!(props.indexOf( 'Spear') > -1 && props.indexOf('Weapon Speed 2.75') > -1) && 
+			!(props.indexOf('Pitchfork') > -1) && 
+			!(props.indexOf( 'No-Dachi') > -1) && 
+			!(props.indexOf('Double Axe') > -1) && 
+			!(props.indexOf('Bladed Staff') > -1 && props.indexOf('Double Bladed Staff') === -1) && 
+			!(props.indexOf('Gnarled Staff') > -1)
 		){
 			return false;
 		}
 	}
-	var oneHanded = 'One-handed Weapon';
-	if(props.indexOf(oneHanded) > -1) { //I want to exclude specific 1h weapons
-		var elvenMachete = 'Elven Machete';
-		var radiantScim = 'Radiant Scimitar';
-		var wildStaff = 'Wild Staff';
-		var lance = 'Lance';
-		var skinningKnife = 'Skinning Knife';
+	if(is1hWeapon) { //I want to exclude specific 1h weapons
 		if(
-			props.indexOf(elvenMachete) > -1 ||
-			props.indexOf(wildStaff) > -1 || 
-			props.indexOf(radiantScim) > -1 ||
-			props.indexOf(skinningKnife) > -1 ||
-			props.indexOf(lance) > -1 
+			props.indexOf('Elven Machete') > -1 ||
+			props.indexOf( 'Radiant Scimitar') > -1 || 
+			props.indexOf('Wild Staff') > -1 ||
+			props.indexOf( 'Lance') > -1 ||
+			props.indexOf('Skinning Knife') > -1 ||
+			props.indexOf('Sledge Hammer') > -1 ||
+			props.indexOf('Cutlass') > -1
 		){
 			return false;
 		}
@@ -589,38 +539,43 @@ function ShouldKeepItem(itemId){
 	//var cache = " Cache";
 	//if(props.indexOf(cache) > -1) return true;
 	
-	var ring = 'Ring';
-	var bracelet = 'Bracelet';
 	//Handle Named Jewlery
-	if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
+	if(isJewlery){
 		//I do not want arcane Jewl of sorcery.
-		var arcane = "Arcane";
-		var sorcerery = "Sorcery";
-		if(props.indexOf(arcane) > -1 && props.indexOf(sorcerery) > -1) return false;
+		if(props.indexOf("Arcane") > -1 && props.indexOf("Sorcery") > -1) return false;
 	}
 	
-	
-	var skillReq = 'Skill Required';
 	if(ShouldKeepItem_Splinter(props)){
 		 return true;
-	} else if(props.indexOf(skillReq) > -1){ //if its  weapon and its not splinter I dont want it
+	} else if(is1hWeapon || is2hWeapon){ //if its  weapon and its not splinter I dont want it
 		return false;
 	}
 
 	if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
-	if(ShouldKeepItem_LuckShield(props)) return true;
 	
+	if(!isArmor && !isJewlery && !is2hWeapon && !is1hWeapon){
+		if(ShouldKeepItem_LuckShield(props)) return true;
+	}
+	
+	
+	if(isArmor){
+		if(props.indexOf("Fortified") > -1 || props.indexOf("Of Defense") > -1){
+			return false;
+		}
+		if(
+			(props.indexOf("Mystic") > -1 || props.indexOf("Arcane") > -1) && 
+			(props.indexOf("Of Wizardry") > -1 || props.indexOf("Of Sorcery") > -1)){
+			return false;
+		}
+	}
 	
 	//Handle Legendary
-	var legendary = 'Legendary Artifact';
-	if(props.indexOf(legendary) > -1) return true;
+	if(props.indexOf('Legendary Artifact') > -1) return true;
 	
 	//Handle Major
-	var major = 'Major Artifact';
-
-	if(props.indexOf(major) > -1){
+	if(props.indexOf('Major Artifact') > -1){
 		var skillReq = 'Skill Required';
-		if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
+		if(isJewlery){
 			return true;
 		}
 		else {
@@ -663,35 +618,38 @@ function LootCorpses(){
 		var itemsInCorpse = Orion.FindType('any', 'any', lastcontainer);
 		var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
 		itemsInCorpse.forEach(function(item){
-			Orion.Print("Evaluate Item");
-			if(ShouldKeepItem(item)){
-				WaitForObjectTimeout()
-				var movedItem = Orion.FindObject(item);
-				if(lootbag && lootbag.length > 0){
-					Orion.MoveItem(item, 1000, lootbag[0]);
+			var itemInstance = Orion.FindObject(item);
+			if(itemInstance.Container() !== Player.Container() &&  itemInstance.Container() !== lootbag[0]){
+				Orion.Print("Evaluate Item");
+				if(ShouldKeepItem(item)){
+					WaitForObjectTimeout()
+					var movedItem = Orion.FindObject(item);
+					if(lootbag && lootbag.length > 0){
+						Orion.MoveItem(item, 1000, lootbag[0]);
+						lastObjectUsedTime = new Date().getTime();
+					}
+					else {
+						Orion.MoveItem(item, 1000, 'backpack');
+						lastObjectUsedTime = new Date().getTime();
+					}
+					var waitForLootbagIndex = 0;
+					while(movedItem.Container() !== lootbag[0] && waitForLootbagIndex < 15){
+						waitForLootbagIndex ++;
+						Orion.Wait(100);
+					}
 					lastObjectUsedTime = new Date().getTime();
+					if(useInsureItem){
+						 InsureItem(item);
+					}
 				}
-				else {
-					Orion.MoveItem(item, 1000, 'backpack');
-					lastObjectUsedTime = new Date().getTime();
-				}
-				var waitForLootbagIndex = 0;
-				while(movedItem.Container() !== lootbag[0] && waitForLootbagIndex < 15){
-					waitForLootbagIndex ++;
-					Orion.Wait(100);
-				}
-				lastObjectUsedTime = new Date().getTime();
-				if(useInsureItem) InsureItem(item);
-			}
-			Orion.Ignore(item);				
+				Orion.Ignore(item);
+			}				
 		});
 		Orion.Print("Finish Evaluate Items");
 		Orion.Ignore(corpseId);
 	}
 }
 
-var useHealFriend = profile != null ? profile.useHealFriend :  false;
-var healFriendThreshold = 80; // this is a percent
 var friendToHeal = null;
 if(useHealFriend){
 	Orion.Print("Target the friend you'd like to heal");

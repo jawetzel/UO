@@ -6,13 +6,13 @@
 
 ;==========================
 ;set this to item type or armor being made
-set %armortype LLH
+set %armortype ALH
 ;set these to minimum resists
-set %Physical 1
-set %Fire 1
-set %Cold 10
-set %Poison 6
-set %Energy 9
+set %Physical 5
+set %Fire 5
+set %Cold 5
+set %Poison 5
+set %Energy 5
 ;===========================
 set %ps1 %Physical
 set %f1 %Fire
@@ -100,7 +100,7 @@ gosub cold
 gosub poison
 gosub energy
 set #lpc 10
-if %ps2 => %ps1 && %f2 => %f1 && %c2 => %c1 && %psn2 => %psn1 && %e2 => %e1
+if %ps2 =< %ps1 && %f2 =< %f1 && %c2 => %c1 && %psn2 => %psn1 && %e2 => %e1
  {
  ignoreitem #findid
  }
