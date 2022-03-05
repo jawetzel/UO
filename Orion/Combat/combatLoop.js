@@ -16,6 +16,18 @@ var profiles = {
 		useLootCorpses: true,
 		useInsureItem: true,
 		useHealFriend: true,
+	},
+	heal: {
+		useBandages: true,
+	},
+	Training: {
+		useAttack: true,
+		useLootCorpses: true,
+		useInsureItem: true,
+		//useBandages: true,
+		useHonor: true,
+		useEnemyOfOne: true,
+		usePrimary: true
 	}
 }
 
@@ -46,6 +58,12 @@ var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
 var healPotionThreshold = 50;
 var useHealFriend = profile != null ? profile.useHealFriend :  false;
 var healFriendThreshold = 75; // this is a percent
+var healFriendNames = [
+	'BabbyShark',
+	'MommyShark',
+	'DaddyShark',
+	'DootDoot'
+]
 // probably dont configure below here
 var timeBetweenLoops = 100; //time in ms between loop cycle
 var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
@@ -62,22 +80,22 @@ var lootItems = {
 	'0x400B': true, //shame crystals
 	'0x0F87': true, // lucky coin
 	'0x226F': true, //wraith form
-	//'0x2D51': true, //SW spell
-	//'0x2D52': true, //SW spell
-	//'0x2D53': true, //immolating weapon SW Spell
-	//'0x2D54': true, //SW spell
-	//'0x2D55': true, //SW Spell
-	//'0x2D56': true, //SW Spell
-	//'0x2D57': true, //SW Spell
-	//'0x2D58': true, //SW Spell
-	//'0x2D59': true, //SW Spell
-	//'0x2D5A': true, //SW Spell
-	//'0x2D5B': true, //SW Spell
-	//'0x2D5C': true, //SW Spell
-	//'0x2D5D': true, //SW Spell
-	//'0x2D5E': true, //word of death SW spell
-	//'0x2D5F': true, //Gift Of Life SW spell
-	//'0x2D60': true, //Gift Of Life SW spell
+	'0x2D51': true, //SW spell
+	'0x2D52': true, //SW spell
+	'0x2D53': true, //immolating weapon SW Spell
+	'0x2D54': true, //SW spell
+	'0x2D55': true, //SW Spell
+	'0x2D56': true, //SW Spell
+	'0x2D57': true, //SW Spell
+	'0x2D58': true, //SW Spell
+	'0x2D59': true, //SW Spell
+	'0x2D5A': true, //SW Spell
+	'0x2D5B': true, //SW Spell
+	'0x2D5C': true, //SW Spell
+	'0x2D5D': true, //SW Spell
+	'0x2D5E': true, //word of death SW spell
+	'0x2D5F': true, //Gift Of Life SW spell
+	'0x2D60': true, //Gift Of Life SW spell
 	'0x573E': true, //void Orion
 	'0x5728': true, //void core
 }
@@ -160,7 +178,7 @@ var RestorePotions = function(){
 var GetTarget = function(){
 	var dist = 0;
 	while(dist < maxEnemyDistance){
-		var enemy = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile | near | ignorefriends", dist.toString(), enemyTypes);
+		var enemy = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile | near | ignorefriends", dist.toString(), enemyTypes);		
 		dist = dist + 1;
 		if(enemy && enemy.length > 0){
 			if(enemy.length > 1){
@@ -574,7 +592,6 @@ function ShouldKeepItem(itemId){
 	
 	//Handle Major
 	if(props.indexOf('Major Artifact') > -1){
-		var skillReq = 'Skill Required';
 		if(isJewlery){
 			return true;
 		}
@@ -650,21 +667,29 @@ function LootCorpses(){
 	}
 }
 
-var friendToHeal = null;
-if(useHealFriend){
-	Orion.Print("Target the friend you'd like to heal");
-    Orion.WaitForAddObject('myTarget');
-     friendToHeal = Orion.FindObject('myTarget');
-}
-
 function HealFriend(){
 	if(useHealFriend){
-		if(friendToHeal && !Orion.BuffExists('healing skill') && friendToHeal.Distance() <= 2 && ((friendToHeal.Hits() * 4) < healFriendThreshold)){
-			WaitForObjectTimeout();
-			if(!Orion.BuffExists('healing skill') && ((friendToHeal.Hits() * 4) < healFriendThreshold)){
-				Orion.BandageTarget(friendToHeal.Serial());
-				lastObjectUsedTime = new Date().getTime();
-			}
+		var friendlys = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile", '2', 'green | blue');
+		if(friendlys && friendlys.length > -1){
+			friendlys.forEach(function(friendId){
+				if(friendId === Player.Serial()) return;
+				if(Orion.BuffExists('healing skill')) return;
+				var friendObject = Orion.FindObject(friendId);
+				if(!friendObject) return;
+				var friendProps = friendObject.Properties();
+				var namesFound = healFriendNames.filter(function(name){
+					return friendProps.indexOf(name) > -1;
+				});
+				if(namesFound.length === 0) return;
+				if(friendObject.Distance() <= 2 && ((friendObject.Hits() * 4) < healFriendThreshold)){
+					WaitForObjectTimeout();
+					if(!Orion.BuffExists('healing skill') && ((friendObject.Hits() * 4) < healFriendThreshold)){
+						Orion.BandageTarget(friendObject.Serial());
+						lastObjectUsedTime = new Date().getTime();
+						Orion.Wait(100);
+					}
+				}
+			})
 		}
 	}
 }
