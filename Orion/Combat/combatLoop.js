@@ -1,18 +1,10 @@
 //Orion.Print(Orion.InfoBuff()) //for use in identifying buffs
 //Orion.Print(Orion.AbilityStatus('Primary'))
 
-
 var profiles = {
 	JunkoSamp : {
 		useAttack: true,
-		usePrimary: true,
-		useLootCorpses: true,
-		useInsureItem: true,
-		useHealFriend: true,
-	},
-	JunkoSampSeccondary : {
-		useAttack: true,
-		useSeccondary: true,
+		useSpecial: true,
 		useLootCorpses: true,
 		useInsureItem: true,
 		useHealFriend: true,
@@ -22,17 +14,20 @@ var profiles = {
 	},
 	Training: {
 		useAttack: true,
+		useHonor: true,
 		useLootCorpses: true,
 		useInsureItem: true,
-		//useBandages: true,
-		useHonor: true,
-		useEnemyOfOne: true,
-		usePrimary: true
+		useMomentumStrike: true,
+		useConsecrateWeapon: true
+	},
+	event: {
+		useAttack: true,
+		useSpecial: true,
 	}
 }
 
 
-var profile = profiles.JunkoSamp
+var profile = profiles.Training
 
 
 //if you want to cut corpses get a butchers war cleaver
@@ -44,9 +39,22 @@ var useDivineFury = profile != null ? profile.useDivineFury :  false;
 var useConsecrateWeapon = profile != null ? profile.useConsecrateWeapon :  false;
 
 //combat settings
-var usePrimary = profile != null ? profile.usePrimary : false;
-var useSeccondary = profile != null ? profile.useSeccondary :  false;
-
+var useSpecial = profile != null ? profile.useSpecial : false;
+var primaryArmorIgnoreWeapons = [
+	'Bladed Staff',
+	'Hatchet'
+];
+var secondaryArmorIgnoreWeapons = [
+	'Katana',
+	'Leafblade'
+];
+var primaryWhirlwindWeapon = [
+	'Radiant Scimitar'
+];
+var secondaryWhirlwindWeapon = [
+	'Double Axe'
+];
+			
 //bushido settings
 var useMomentumStrike = profile != null ? profile.useMomentumStrike :  false;
 var useLightningStrike =profile != null ? profile.useLightningStrike :   false;
@@ -98,6 +106,7 @@ var lootItems = {
 	'0x2D60': true, //Gift Of Life SW spell
 	'0x573E': true, //void Orion
 	'0x5728': true, //void core
+	//'0x0E21': true, //bandages
 }
 //constants
 
@@ -265,15 +274,52 @@ var UseSpecials = function(){
 	    	Orion.Cast('Lightning Strike');
 	    	Orion.Wait(250);
     	}
-    	if(usePrimary && !Orion.AbilityStatus('Primary')){
-	    	Orion.UseAbility('Primary');
-	    	Orion.Wait(250);
-    	}
-    	if(useSeccondary && !Orion.AbilityStatus('Secondary')){
-	    	Orion.UseAbility('Secondary');
-	    	Orion.Wait(250);
-    	}
-    
+    	if(useSpecial){
+    		var weaponObject = Orion.ObjAtLayer('RightHand');
+			if(!weaponObject) weaponObject = Orion.ObjAtLayer('LeftHand');
+			if(!weaponObject) return;
+			var props = weaponObject.Properties();
+			
+			if(primaryArmorIgnoreWeapons.filter(function(weapon){
+					return props.indexOf(weapon) > -1;
+				}).length > 0){
+				if(!Orion.AbilityStatus('Primary')){
+					Orion.UseAbility('Primary');
+	    			Orion.Wait(250);
+				}
+				return;
+			}
+			
+			if(secondaryArmorIgnoreWeapons.filter(function(weapon){
+					return props.indexOf(weapon) > -1;
+				}).length > 0){
+				if(!Orion.AbilityStatus('Secondary')){
+					Orion.UseAbility('Secondary');
+	    			Orion.Wait(250);
+				}
+				return;
+			}
+			
+			if(primaryWhirlwindWeapon.filter(function(weapon){
+					return props.indexOf(weapon) > -1;
+				}).length > 0){
+				if(!Orion.AbilityStatus('Primary')){
+					Orion.UseAbility('Primary');
+	    			Orion.Wait(250);
+				}
+				return;
+			}
+			
+    		if(secondaryWhirlwindWeapon.filter(function(weapon){
+					return props.indexOf(weapon) > -1;
+				}).length > 0){
+				if(!Orion.AbilityStatus('Secondary')){
+					Orion.UseAbility('Secondary');
+	    			Orion.Wait(250);
+				}
+				return;
+			}
+    	}    
     }
 }
 
@@ -572,7 +618,7 @@ function ShouldKeepItem(itemId){
 	if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
 	
 	if(!isArmor && !isJewlery && !is2hWeapon && !is1hWeapon){
-		if(ShouldKeepItem_LuckShield(props)) return true;
+		//if(ShouldKeepItem_LuckShield(props)) return true;
 	}
 	
 	
@@ -638,6 +684,7 @@ function LootCorpses(){
 			var itemInstance = Orion.FindObject(item);
 			if(itemInstance && itemInstance.Container() !== Player.Container() &&  itemInstance.Container() !== lootbag[0]){
 				Orion.Print("Evaluate Item");
+				var itemGraphic = itemInstance.Graphic();
 				if(ShouldKeepItem(item)){
 					WaitForObjectTimeout()
 					var movedItem = Orion.FindObject(item);
@@ -655,7 +702,7 @@ function LootCorpses(){
 						Orion.Wait(100);
 					}
 					lastObjectUsedTime = new Date().getTime();
-					if(useInsureItem){
+					if(useInsureItem && !lootItems[itemGraphic]){
 						 InsureItem(item);
 					}
 				}
