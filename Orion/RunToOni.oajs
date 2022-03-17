@@ -1,0 +1,29 @@
+function WalkToOni()
+ {
+    while (!Player.Dead()) 
+    {
+
+    var mobs = Orion.FindType('0x00F1', '-1', ground, 'near|live|mobile', '1000' , 'gray|orange|red|ignorefriends|criminal' );
+    var creature;
+    //If Mobs are found...
+    if (mobs.length)
+    {
+        creature = Orion.FindObject(mobs[0]);
+        if (creature.Serial) {
+               Orion.Wait(50);
+
+              var x = creature.X()
+                var y = creature.Y()
+                var z = creature.Z()
+            Orion.Print('Walking To Oni')
+            Orion.WalkTo(x, y, z,0,100,1,1,50000);
+        //Attack Mob
+        //    Orion.Attack(creature[0]);
+           Orion.Wait(2500);
+           }
+         Orion.Wait(2500);
+       }
+       Orion.Wait(2500);
+     }
+             Orion.Wait(100);
+}
