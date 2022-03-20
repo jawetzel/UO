@@ -1,0 +1,29 @@
+function HealFriend(){
+		var playerObject = Orion.FindObject(Player.Serial());
+		var friendlys = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile", '8', 'green | blue');
+			if(friendlys && friendlys.length > -1){
+				friendlys.forEach(function(friendId){
+					if(playerObject.Hits() * 4 < 100 && playerObject.Hits() > 0){
+						Orion.Cast('29');
+						if (Orion.WaitForTarget(3000))
+							Orion.TargetObject(playerObject.Serial());
+						Orion.Wait(200);
+					
+					}
+					var friendObject = Orion.FindObject(friendId);
+					if(!friendObject) return;
+					if(friendObject.Hits() * 4 < 90 && friendObject.Hits() > 0){
+						Orion.Cast('29');
+						if (Orion.WaitForTarget(3000))
+							Orion.TargetObject(friendObject.Serial());
+						Orion.Wait(200);
+					}
+				})
+			}
+	}
+		
+function Run(){
+	while(!Player.Dead()){
+		HealFriend();
+	}
+}
