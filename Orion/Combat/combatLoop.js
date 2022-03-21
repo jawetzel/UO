@@ -198,10 +198,16 @@ function CombatLoop(){
 				if(enemy.length > 1){
 					var firstEnemy = null;
 					enemy.forEach(function(enemyId){
+						var enemyObject = Orion.FindObject(enemy[0]);
 						if(enemyObject){
-							var enemyObject = Orion.FindObject(enemy[0]);
-							var props = Orion.FindObject(enemy[0]).Properties();
-							if(enemyObject.IsPlayer() === false && props.indexOf("(summoned)") === -1){
+							var props = enemyObject.Properties();
+							if(enemyObject.IsPlayer() === false && 
+							enemyObject.Graphic() !== '0x02C1' &&  //stone form
+							enemyObject.Graphic() !== '0x02EC' && //male wraith form
+							enemyObject.Graphic() !== '0x02EB' &&  //female wraith form
+							props.indexOf("(summoned)") === -1 &&
+							props.indexOf("(tame)") === -1 &&
+							props.indexOf("(bonded)") === -1){
 								firstEnemy = enemy;
 								break;
 							}
@@ -213,10 +219,17 @@ function CombatLoop(){
 					})
 					if(firstEnemy) return firstEnemy;
 				} else{
-					if(enemyObject){
-						var enemyObject = Orion.FindObject(enemy[0]);
-						var props = Orion.FindObject(enemy[0]).Properties();
-						if(enemyObject.IsPlayer() === false && props.indexOf("(summoned)") === -1){
+					var enemyObject = Orion.FindObject(enemy[0]);
+					if(enemyObject){						
+						var props = enemyObject.Properties();
+						if(enemyObject.IsPlayer() === false && 
+							enemyObject.Graphic() !== '0x02C1' &&  //stone form
+							enemyObject.Graphic() !== '0x02EC' && //male wraith form
+							enemyObject.Graphic() !== '0x02EB' &&  //female wraith form
+							props.indexOf("(summoned)") === -1 &&
+							props.indexOf("(tame)") === -1 &&
+							props.indexOf("(bonded)") === -1
+							){
 							return enemy;
 						}
 					}
@@ -733,6 +746,8 @@ function CombatLoop(){
 						return friendProps.indexOf(name) > -1;
 					});
 					if(namesFound.length === 0) return;
+					Orion.ShowStatusbar(friendId, 740, 175);
+					Orion.GetStatus(friendId);
 					if(friendObject.Distance() <= 2 && ((friendObject.Hits() * 4) < healFriendThreshold)){
 						WaitForObjectTimeout();
 						if(!Orion.BuffExists('healing skill') && ((friendObject.Hits() * 4) < healFriendThreshold)){
