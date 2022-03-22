@@ -14,14 +14,14 @@ function HealFriend(){
 					}
 					var friendObject = Orion.FindObject(friendId);
 					
-					var friendHits = friendObject.Hits();
 					if(!friendObject) return;
+					var friendHits = friendObject.Hits();
 					if(friendId !== playerSerial && friendHits === 0){
 						 Orion.ShowStatusbar(friendId, 740, 175);
 						 Orion.GetStatus(friendId);
 						 friendHits = friendObject.Hits();
 					}
-					if(friendHits * 4 < 90 && friendHits > 0){
+					if(friendHits * 4 < 80 && friendHits > 0){
 						Orion.Cast('29');
 						if (Orion.WaitForTarget(3000))
 							Orion.TargetObject(friendId);
