@@ -1,5 +1,6 @@
 function HealFriend(){
-		var playerObject = Orion.FindObject(Player.Serial());
+		var playerSerial = Player.Serial();
+		var playerObject = Orion.FindObject(playerSerial);
 		var friendlys = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile", '8', 'green | blue');
 			if(friendlys && friendlys.length > -1){
 				friendlys.forEach(function(friendId){
@@ -7,22 +8,23 @@ function HealFriend(){
 					if(playerObject.Hits() * 4 < 100 && playerObject.Hits() > 0){
 						Orion.Cast('29');
 						if (Orion.WaitForTarget(3000))
-							Orion.TargetObject(playerObject.Serial());
+							Orion.TargetObject(playerSerial);
 						Orion.Wait(200);
 					
 					}
 					var friendObject = Orion.FindObject(friendId);
 					
-				
+					var friendHits = friendObject.Hits();
 					if(!friendObject) return;
-					if(friendId !== Player.Serial()){
+					if(friendId !== playerSerial && friendHits === 0){
 						 Orion.ShowStatusbar(friendId, 740, 175);
 						 Orion.GetStatus(friendId);
+						 friendHits = friendObject.Hits();
 					}
-					if(friendObject.Hits() * 4 < 90 && friendObject.Hits() > 0){
+					if(friendHits * 4 < 90 && friendHits > 0){
 						Orion.Cast('29');
 						if (Orion.WaitForTarget(3000))
-							Orion.TargetObject(friendObject.Serial());
+							Orion.TargetObject(friendId);
 						Orion.Wait(200);
 					}
 				})
