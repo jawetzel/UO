@@ -1,0 +1,69 @@
+function PlayerAlertSystem(){
+	var location = "Fire Entrance"; // Change this to your position when setting up
+	
+	var counter = 0;
+	var playerTypes = 'gray | criminal | enemy | red | green | blue';
+	var playerGraphics = "0x02C1 | 0x02EC | 0x02EB | 0x0190 | 0x0191 | 0x0192 | 0x0193 | 0x03DB | 0x03DF | 0x03E2 | 0x029A | 0x025E" ;
+	var ignoreList = {};
+	var lastJournalMessage = null;
+	
+	var npcTitlesToIgnore = [
+		"[-G-]",
+		"[SPRT]",
+		" The Peasant",
+		" The Fighter",
+		" The Thief",
+		" The Sailor",
+		" The Beggar",
+		" The Gypsy",
+		" The Actor",
+		" The Noble",
+	];
+	
+	var selfProps = Player.Properties();
+	if(selfProps.indexOf("\n") > -1){
+		selfProps = selfProps.split("\n")[0];
+	}
+	
+	while(!Player.Dead()){
+		if(counter > 300){
+			Orion.EmoteAction('bow');
+			counter = 0;
+			var now = new Date().getTime();
+			var oneMinuteAgo = now - 60000;
+			for(var prop in ignoreList){
+				
+				if(ignoreList[prop] < oneMinuteAgo){
+					delete ignoreList[prop];
+				}
+			}
+		}
+		counter++;
+				
+		var players = Orion.FindType(playerGraphics, 'any', "ground", "mobile", '12', playerTypes);
+		if(players && players.length > 0){
+			players.forEach(function(playerId){
+				var foundPlayer = Orion.FindObject(playerId);
+				if(!foundPlayer) return;
+				//todo ignore self
+				var props = foundPlayer.Properties();
+				if(props.indexOf("\n") > -1){
+					props = props.split("\n")[0];
+				}
+				if(props.trim().length > 0 && !ignoreList[props] && selfProps !== props){
+					var fitsIgnoreTitles = npcTitlesToIgnore.filter(function(title){
+						return props.indexOf(title) > -1;
+					})
+					if(fitsIgnoreTitles.length > 0) return;
+					
+					var webhook = "https://discord.com/api/webhooks/956023163106496512/sc3AUpLerfXBkbgxlXm9qcVNCwihnDgB2P2jazRcyrXeYnM85ymIiM7qOULgVG_2gUgh"
+					var paramText = "content=";
+					Orion.HttpPost(webhook, paramText + location + " - Spotted -  " + props);
+					
+					ignoreList[props] = new Date().getTime();	
+				}
+			})
+		}
+		Orion.Wait(100);
+	}
+}
