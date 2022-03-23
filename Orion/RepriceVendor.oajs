@@ -1,0 +1,33 @@
+function RepriceVendor(){
+	var newPercent = .4;
+	Orion.Print("Target item in container that we want to reprice");
+    Orion.WaitForAddObject('containerObject');
+    var containerObject = Orion.FindObject('containerObject');
+    var containerId = containerObject.Container();
+    var items =  Orion.FindType('any', 'any', containerId);
+    var total =items.length;
+    var index = 1;
+    items.forEach(function(itemId){
+    	 Orion.Print("Working On Item " + index + " / " + total);
+    	 index++;
+    	 var item = Orion.FindObject(itemId);
+    	 var props = item.Properties();
+    	 if(props.indexOf("Not For Sale") > -1) return;
+    	 
+    	 var priceText = "Price: ";
+    	 var priceIndex = props.indexOf(priceText);
+    	 var afterPriceText = props.substring(priceIndex + priceText.length);
+    	 var priceText = afterPriceText.split("\n")[0];
+    	 var cleanPriceText = priceText.split(",").join("");
+    	 var number = parseInt(cleanPriceText);
+    	 var newPrice = number * newPercent;    	 
+    	 var oldItemX = item.X();
+    	 var oldItemY = item.Y();
+    	 Orion.MoveItem(itemId, 1000, 'backpack');
+    	 Orion.Wait(1750);
+    	 Orion.MoveItem(itemId, 1000, containerId, oldItemX, oldItemY);
+    	 Orion.Wait(1000);
+    	 Orion.SendPrompt(newPrice)
+    	 Orion.Wait(750);
+    })
+}
