@@ -1,0 +1,47 @@
+<bodies>
+  <humanoid>
+    <body name="Human Male" graphic="0x190" />
+    <body name="Human Female" graphic="0x191" />
+    <body name="Elf Male" graphic="0x25d" />
+    <body name="Elf Female" graphic="0x25e" />
+    <body name="Gargoly Male" graphic="0x29a" />
+    <body name="Gargoly Female" graphic="0x29b" />
+  </humanoid>
+  <transformation>
+    <!-- Necromancy -->
+    <body name="Vampire Male" graphic="0x2e8" />
+    <body name="Vampire Female" graphic="0x2e9" />
+    <body name="Horrific Beast" graphic="0x2ea" />
+    <body name="Wraith Female" graphic="0x2eb" />
+    <body name="Wraith Male" graphic="0x2ec" />
+    <body name="Lich" graphic="0x2ed" />
+    <!-- Ninjitsu -->
+    <body name="Giant Serpent" graphic="0x15" />
+    <body name="Wolf" graphic="0x19" />
+    <body name="Bullfrog" graphic="0x51" />
+    <body name="Unicorn" graphic="0x7a" />
+    <body name="Ki-rin" graphic="0x84" />
+    <body name="Cat" graphic="0xc9" />
+    <body name="Rabbit" graphic="0xcd" />
+    <body name="Dog" graphic="0xd9" />
+    <body name="Ostard" graphic="0xdb" />
+    <body name="Llama" graphic="0xdc" />
+    <body name="Rat" graphic="0xee" />
+    <body name="Bake-kitsune" graphic="0xf6" />
+    <body name="White Tiger" graphic="0x4e6" />
+    <!-- Spellweaving -->
+    <body name="Ethereal Voyage" graphic="0x302" />
+    <body name="Reaper Form" graphic="0x11d" />
+    <!-- Mysticism -->
+    <body name="Stone Form" graphic="0x2c1" />
+    <!-- Others -->
+    <body name="Tribal Male" graphic="0xb7" />
+    <body name="Tribal Female" graphic="0xb8" />
+  </transformation>
+  <ev>
+    <body name="Energy Vortex" graphic="0xa4" />
+  </ev>
+  <rc>
+    <body name="Rising Colossus" graphic="0x33d" />
+  </rc>
+</bodies>
