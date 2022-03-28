@@ -759,10 +759,9 @@ function CombatLoop(){
 	
 	function HealFriend(){
 		if(useHealFriend){
-			var friendlys = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile", '2', 'green | blue');
+			var friendlys = Orion.FindType("any", "any", "ground", "mobile | ignoreself", '2', 'green | blue');		
 			if(friendlys && friendlys.length > -1){
-				friendlys.forEach(function(friendId){
-					if(friendId === Player.Serial()) return;
+				friendlys.forEach(function(friendId){					
 					if(Orion.BuffExists('healing skill')) return;
 					var friendObject = Orion.FindObject(friendId);
 					if(!friendObject) return;
