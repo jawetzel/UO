@@ -5,33 +5,29 @@
 function CombatLoop(){
 
 	var profiles = {
-		JunkoSamp : {
-			useAttack: true,
+		startingProfile: {
 			useSpecial: true,
+			useAttack: true,
+			useLootCorpses: true,
+			useInsureItem: true,
+			useLootTMaps: true,
+			useHonor: true
+		},
+		Spawn: {
+			useSpecial: true,
+			useAttack: true,
+		},
+		JunkoSamp: {
+			useSpecial: true,
+			useAttack: true,
 			useLootCorpses: true,
 			useInsureItem: true,
 			useHealFriend: true,
-		},
-		heal: {
-			useBandages: true,
-		},
-		Training: {
-			useAttack: true,
-			useHonor: true,
-			useLootCorpses: true,
-			useInsureItem: true,
-			useMomentumStrike: true,
-			//useConsecrateWeapon: true
-		},
-		event: {
-			useSpecial: true,
-			useConsecrateWeapon: true,
-			useEnemyOfOne: true
 		}
 	}
 	
 	
-	var profile = profiles.Training
+	var profile = profiles.Spawn;
 	
 	
 	//if you want to cut corpses get a butchers war cleaver
@@ -81,12 +77,14 @@ function CombatLoop(){
 	var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
 	var maxEnemyDistance =  8;
 	var useAttack = profile != null ? profile.useAttack : false;
-	var ignorePlayers = profile != null ? profile.ignorePlayers : false;
+	var humanoidNamesToAttack = [
+		"Protector"
+	];
 	var minimumManaForSpells = 20;
 	
 	var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
 	var useInsureItem = profile != null ? profile.useInsureItem :   false;
-	
+	var useLootTMaps = profile != null ? profile.useLootTMaps :   false;
 	
 	var lootItems = {
 		'0x400B': true, //shame crystals
@@ -190,24 +188,43 @@ function CombatLoop(){
 	}
 	
 	var GetTarget = function(){
+		var typesToIgnore = {
+			'0x0190': true, //human male
+			'0x0191': true, //human female
+			'0x025D': true, //elf male
+			'0x025E': true, //elf female
+			'0x029A': true, //garg male
+			'0x029B': true, //garg Female
+			'0x02E8': true, //vamp male,
+			'0x02E9': true, //vamp female
+			'0x02EB': true, //writh female
+			'0x02EC': true, //wraith male	
+		}
+		var playerSerial = Player.Serial();
 		var dist = 0;
 		while(dist < maxEnemyDistance){
-			var enemy = Orion.FindType("-1 | !0x0191 | !0x0190 ", -1, "ground", "mobile | near | ignorefriends", dist.toString(), enemyTypes);		
+			var enemy = Orion.FindType("any", "any", "ground", "mobile | near | ignorefriends | ignoreself", dist.toString(), enemyTypes);		
 			dist = dist + 1;
 			if(enemy && enemy.length > 0){
 				if(enemy.length > 1){
 					var firstEnemy = null;
 					enemy.forEach(function(enemyId){
+						if(playerSerial === enemyId) break;
 						var enemyObject = Orion.FindObject(enemy[0]);
 						if(enemyObject){
-							var props = enemyObject.Properties();
-							if(enemyObject.IsPlayer() === false && 
-							enemyObject.Graphic() !== '0x02C1' &&  //stone form
-							enemyObject.Graphic() !== '0x02EC' && //male wraith form
-							enemyObject.Graphic() !== '0x02EB' &&  //female wraith form
-							props.indexOf("(summoned)") === -1 &&
-							props.indexOf("(tame)") === -1 &&
-							props.indexOf("(bonded)") === -1){
+							var props = enemyObject.Properties();							
+							if(							
+								props.indexOf("(summoned)") === -1 &&
+								props.indexOf("(tame)") === -1 &&
+								props.indexOf("(bonded)") === -1 && 
+								(
+									!typesToIgnore[enemyObject.Graphic()] ||
+									
+									humanoidNamesToAttack.filter(function(name){
+										return props.indexOf(name) > -1;
+									}).length > 0
+								)
+							){
 								firstEnemy = enemy;
 								break;
 							}
@@ -219,25 +236,30 @@ function CombatLoop(){
 					})
 					if(firstEnemy) return firstEnemy;
 				} else{
-					var enemyObject = Orion.FindObject(enemy[0]);
-					if(enemyObject){						
-						var props = enemyObject.Properties();
-						if(enemyObject.IsPlayer() === false && 
-							enemyObject.Graphic() !== '0x02C1' &&  //stone form
-							enemyObject.Graphic() !== '0x02EC' && //male wraith form
-							enemyObject.Graphic() !== '0x02EB' &&  //female wraith form
-							props.indexOf("(summoned)") === -1 &&
-							props.indexOf("(tame)") === -1 &&
-							props.indexOf("(bonded)") === -1
+					if(playerSerial !== enemy[0]){					
+						var enemyObject = Orion.FindObject(enemy[0]);
+						if(enemyObject){						
+							var props = enemyObject.Properties();
+							if(
+								props.indexOf("(summoned)") === -1 &&
+								props.indexOf("(tame)") === -1 &&
+								props.indexOf("(bonded)") === -1 && 
+								(
+									!typesToIgnore[enemyObject.Graphic()] ||
+									
+									humanoidNamesToAttack.filter(function(name){
+										return props.indexOf(name) > -1;
+									}).length > 0
+								)
 							){
-							return enemy;
+								return enemy;
+							}
 						}
-					}
-					else {
-						return enemy;
-					}	
-				}
-				
+						else {
+							return enemy;
+						}					
+					}					
+				}				
 			}
 		}
 		return null;
@@ -618,8 +640,11 @@ function CombatLoop(){
 		}
 		
 		//Handle max level Tmaps 
-		//var cache = " Cache";
-		//if(props.indexOf(cache) > -1) return true;
+		if(useLootTMaps){
+			var cache = " Cache";
+			if(props.indexOf(cache) > -1) return true;
+		}
+		
 		
 		//Handle Named Jewlery
 		if(isJewlery){
