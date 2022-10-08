@@ -5,7 +5,7 @@ function HealFriend(){
 			if(friendlys && friendlys.length > -1){
 				friendlys.forEach(function(friendId){
 					
-					if(playerObject.Hits() * 4 < 100 && playerObject.Hits() > 0){
+					if(Player.Hits() < 100 && Player.Hits() > 0){
 						Orion.Cast('29');
 						if (Orion.WaitForTarget(3000))
 							Orion.TargetObject(playerSerial);
@@ -13,6 +13,7 @@ function HealFriend(){
 					
 					}
 					var friendObject = Orion.FindObject(friendId);
+					
 					
 					if(!friendObject) return;
 					var friendHits = friendObject.Hits();
@@ -27,6 +28,10 @@ function HealFriend(){
 							Orion.TargetObject(friendId);
 						Orion.Wait(200);
 					}
+					if(friendId !== playerSerial){
+						Orion.CloseStatusbar(friendId)
+					}
+					Orion.Wait(50);
 				})
 			}
 	}

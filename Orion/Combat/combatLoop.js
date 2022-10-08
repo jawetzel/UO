@@ -42,11 +42,16 @@ function CombatLoop(){
 	var useSpecial = profile != null ? profile.useSpecial : false;
 	var primaryArmorIgnoreWeapons = [
 		'Bladed Staff',
-		'Hatchet'
+		'Hatchet',
+		'Soul Glaive',
+		'Composite Bow',
+		'Boomerang',
 	];
 	var secondaryArmorIgnoreWeapons = [
 		'Katana',
-		'Leafblade'
+		'Leafblade',
+		'Bokuto',
+		'Yumi'
 	];
 	var primaryWhirlwindWeapon = [
 		'Radiant Scimitar'
@@ -73,9 +78,9 @@ function CombatLoop(){
 		'DootDoot'
 	]
 	// probably dont configure below here
-	var timeBetweenLoops = 100; //time in ms between loop cycle
-	var enemyTypes = 'gray | criminal | enemy | red'			; // 'gray | criminal | enemy | red'
-	var maxEnemyDistance =  8;
+	var timeBetweenLoops = 20; //time in ms between loop cycle
+	var enemyTypes = 'gray'			; // 'gray | criminal | enemy | red'
+	var maxEnemyDistance =  10;
 	var useAttack = profile != null ? profile.useAttack : false;
 	var humanoidNamesToAttack = [
 		"Protector"
@@ -187,6 +192,39 @@ function CombatLoop(){
 		}
 	}
 	
+	var recoveredCorpse = false;
+
+	var RecoverCorpse = function(){
+		if(!recoveredCorpse){
+			recoveredCorpse = true;
+			var playerName = Player.Name();
+			var corpses = Orion.FindType(any, any, ground, "", 2);
+				 if (!corpses.length)
+			    {
+			        return;
+			    }
+			
+			corpses.forEach(function(corpseId){
+				var corpseObject =  Orion.FindObject(corpseId);
+				if(!corpseObject) return;
+				var props = corpseObject.Properties();
+				if(props.indexOf(playerName) > -1 && corpseId !== Player.Serial()){
+					Orion.Print("CORPSE FOUND");
+					Orion.UseObject(corpseId);
+				
+				}
+			})
+		}
+		
+		  
+	}
+	var monsterNamesToIgnore = [
+		"spectral armor",
+		"(summoned)",
+		"(tame)",
+		"(bonded)"
+	];
+	
 	var GetTarget = function(){
 		var typesToIgnore = {
 			'0x0190': true, //human male
@@ -205,6 +243,7 @@ function CombatLoop(){
 		while(dist < maxEnemyDistance){
 			var enemy = Orion.FindType("any", "any", "ground", "mobile | near | ignorefriends | ignoreself", dist.toString(), enemyTypes);		
 			dist = dist + 1;
+			if(dist > 1 && dist !== maxEnemyDistance && dist % 2 === 1) continue;
 			if(enemy && enemy.length > 0){
 				if(enemy.length > 1){
 					var firstEnemy = null;
@@ -213,10 +252,11 @@ function CombatLoop(){
 						var enemyObject = Orion.FindObject(enemy[0]);
 						if(enemyObject){
 							var props = enemyObject.Properties();							
-							if(							
-								props.indexOf("(summoned)") === -1 &&
-								props.indexOf("(tame)") === -1 &&
-								props.indexOf("(bonded)") === -1 && 
+							if(						
+								monsterNamesToIgnore.filter(function(name){
+										return props.indexOf(name) > -1;
+								}).length === 0 
+								&& 			
 								(
 									!typesToIgnore[enemyObject.Graphic()] ||
 									
@@ -691,6 +731,31 @@ function CombatLoop(){
 	
 		return false;
 	}
+	
+	var insurableText = [
+		"Of Fey Wrath",
+		"Of The Archlich"
+	];
+	function CheckBackpackUninsuredItems(){
+			var itemsInBag = Orion.FindType('any', 'any', 'backpack');
+			itemsInBag.forEach(function(itemId){
+				var itemObject = Orion.FindObject(itemId);
+				if(!itemObject) return;
+				var props = itemObject.Properties();
+				if(props.indexOf("Insured") > -1) {
+					return;
+				}
+				if(props.indexOf("Blessed") > -1) {
+					return;
+				}
+				if(insurableText.filter(function(text){
+					return props.indexOf(text) > -1;
+				}).length > 0){
+					InsureItem(itemId);
+				}
+			})
+	}
+	
 	function InsureItem(itemId)
 	{
 		Orion.Wait(200);
@@ -785,8 +850,9 @@ function CombatLoop(){
 		}
 	}
 
-
+	var checkUninsuredCounter = 0;
 	while(!Player.Dead()){
+	RecoverCorpse();
 	    Bow();
 	   	AttackTarget(GetTarget());
 		Bandage();
@@ -797,6 +863,14 @@ function CombatLoop(){
 		UseSpecials();
 	    CutCorpse();
 	    LootCorpses();
+	    if(checkUninsuredCounter > 200){
+		    Orion.Print("CheckingUninsured");
+	    	CheckBackpackUninsuredItems();
+	    	checkUninsuredCounter = 0;
+	    } else{
+	    	checkUninsuredCounter = checkUninsuredCounter + 1;
+	    }
+	    
 	    Orion.Wait(timeBetweenLoops);
 	}
 }

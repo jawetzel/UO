@@ -1,10 +1,10 @@
 function RepriceVendor(){
-	var newPercent = .4;
+	var newPercent = .7;
 	Orion.Print("Target item in container that we want to reprice");
     Orion.WaitForAddObject('containerObject');
     var containerObject = Orion.FindObject('containerObject');
-    var containerId = containerObject.Container();
-    var items =  Orion.FindType('any', 'any', containerId);
+    
+    var items =  Orion.FindType('any', 'any', containerObject.Container(), '', 'finddistance', '', true);
     var total =items.length;
     var index = 1;
     items.forEach(function(itemId){
@@ -16,6 +16,11 @@ function RepriceVendor(){
     	 
     	 var priceText = "Price: ";
     	 var priceIndex = props.indexOf(priceText);
+    	 if(priceIndex === -1) return;
+    	 
+    	 var itemObject = Orion.FindObject(itemId);
+    	 var containerId = itemObject.Container();
+    	 
     	 var afterPriceText = props.substring(priceIndex + priceText.length);
     	 var priceText = afterPriceText.split("\n")[0];
     	 var cleanPriceText = priceText.split(",").join("");
