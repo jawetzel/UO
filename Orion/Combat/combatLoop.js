@@ -244,46 +244,16 @@ function CombatLoop(){
 			var enemy = Orion.FindType("any", "any", "ground", "mobile | near | ignorefriends | ignoreself", dist.toString(), enemyTypes);		
 			dist = dist + 1;
 			if(dist > 1 && dist !== maxEnemyDistance && dist % 2 === 1) continue;
-			if(enemy && enemy.length > 0){
-				if(enemy.length > 1){
-					var firstEnemy = null;
-					enemy.forEach(function(enemyId){
-						if(playerSerial === enemyId) break;
-						var enemyObject = Orion.FindObject(enemy[0]);
-						if(enemyObject){
-							var props = enemyObject.Properties();							
-							if(						
-								monsterNamesToIgnore.filter(function(name){
-										return props.indexOf(name) > -1;
-								}).length === 0 
-								&& 			
-								(
-									!typesToIgnore[enemyObject.Graphic()] ||
-									
-									humanoidNamesToAttack.filter(function(name){
-										return props.indexOf(name) > -1;
-									}).length > 0
-								)
-							){
-								firstEnemy = enemy;
-								break;
-							}
-						}
-						else {
-							firstEnemy = enemy;
-							break;
-						}	
-					})
-					if(firstEnemy) return firstEnemy;
-				} else{
+				
+			if(enemy && enemy.length > 0){	
 					if(playerSerial !== enemy[0]){					
 						var enemyObject = Orion.FindObject(enemy[0]);
 						if(enemyObject){						
 							var props = enemyObject.Properties();
 							if(
-								props.indexOf("(summoned)") === -1 &&
-								props.indexOf("(tame)") === -1 &&
-								props.indexOf("(bonded)") === -1 && 
+								monsterNamesToIgnore.filter(function(name){
+										return props.indexOf(name) > -1;
+								}).length === 0 &&
 								(
 									!typesToIgnore[enemyObject.Graphic()] ||
 									
@@ -298,8 +268,7 @@ function CombatLoop(){
 						else {
 							return enemy;
 						}					
-					}					
-				}				
+					}									
 			}
 		}
 		return null;
