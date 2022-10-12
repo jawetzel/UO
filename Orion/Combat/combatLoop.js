@@ -221,7 +221,7 @@ function CombatLoop(){
 		  
 	}
 	var monsterNamesToIgnore = [
-		"spectral armor",
+		"Spectral Armor",
 		"(summoned)",
 		"(tame)",
 		"(bonded)"
