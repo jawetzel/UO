@@ -17,7 +17,7 @@
     ; update 3.0 changed it to use all kill method as
     ;            well as mage :P
     ;==================================
-    set %killmethod 2 ;set to 1 for pet kill, 2 for mage
+    set %killmethod 3 ;set to 1 for pet kill, 2 for mage
 
     if %killmethod = 1
     {
@@ -173,10 +173,18 @@
      }
     else
      {
-     event macro 15 36
-     target 4s
-     event macro 22
-     wait 40
+     if %killmethod = 2
+        {
+         event macro 15 36
+         target 4s
+         event macro 22
+         wait 40
+        }
+        else
+        {
+           event macro 27
+           wait 80
+        }
      }
     moveon2:
     finditem #findid

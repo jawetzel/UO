@@ -54,7 +54,8 @@ function CombatLoop(){
 		'Yumi'
 	];
 	var primaryWhirlwindWeapon = [
-		'Radiant Scimitar'
+		'Radiant Scimitar',
+		'Magical Shortbow'
 	];
 	var secondaryWhirlwindWeapon = [
 		'Double Axe'
@@ -78,9 +79,9 @@ function CombatLoop(){
 		'DootDoot'
 	]
 	// probably dont configure below here
-	var timeBetweenLoops = 20; //time in ms between loop cycle
+	var timeBetweenLoops = 50; //time in ms between loop cycle
 	var enemyTypes = 'gray'			; // 'gray | criminal | enemy | red'
-	var maxEnemyDistance =  10;
+	var maxEnemyDistance =  11;
 	var useAttack = profile != null ? profile.useAttack : false;
 	var humanoidNamesToAttack = [
 		"Protector"
@@ -122,6 +123,7 @@ function CombatLoop(){
 	var bandageBuffIcon = '0x7596';
 	var agilityPotionBuffIcon = '0x753c';
 	var strPotionBuffIcon = '0x7567';
+	var disarmBuffIcon = '0x754a';
 	var agilityPotionType = '0x0F08';
 	var strPotionType = '0x0F09';
 	var poisonBuffIcon = '0x7560';
@@ -241,15 +243,48 @@ function CombatLoop(){
 		var playerSerial = Player.Serial();
 		var dist = 0;
 		while(dist < maxEnemyDistance){
-			var enemy = Orion.FindType("any", "any", "ground", "mobile | near | ignorefriends | ignoreself", dist.toString(), enemyTypes);		
+			var enemy = Orion.FindType("any", "any", "ground", "mobile | ignoreself", dist, enemyTypes);	
 			dist = dist + 1;
 			if(dist > 1 && dist !== maxEnemyDistance && dist % 2 === 1) continue;
 				
 			if(enemy && enemy.length > 0){	
+				if(enemy.length > 1){
+					var firstEnemy = null;
+					enemy.forEach(function(enemyId){
+						if(firstEnemy) return;
+						if(playerSerial === enemyId) return;
+						var enemyObject = Orion.FindObject(enemy[0]);
+						if(enemyObject){
+							var props = enemyObject.Properties();							
+							if(						
+								monsterNamesToIgnore.filter(function(name){
+										return props.indexOf(name) > -1;
+								}).length === 0 
+								&& 			
+								(
+									!typesToIgnore[enemyObject.Graphic()] ||
+									
+									humanoidNamesToAttack.filter(function(name){
+										return props.indexOf(name) > -1;
+									}).length > 0
+								)
+							){
+								firstEnemy = enemy;
+								return;
+							}
+						}
+						else {
+							firstEnemy = enemy;
+							return;
+						}	
+					})
+					if(firstEnemy) return firstEnemy;
+				} else {
 					if(playerSerial !== enemy[0]){					
 						var enemyObject = Orion.FindObject(enemy[0]);
 						if(enemyObject){						
 							var props = enemyObject.Properties();
+							
 							if(
 								monsterNamesToIgnore.filter(function(name){
 										return props.indexOf(name) > -1;
@@ -268,7 +303,8 @@ function CombatLoop(){
 						else {
 							return enemy;
 						}					
-					}									
+					}	
+				}									
 			}
 		}
 		return null;
@@ -818,10 +854,23 @@ function CombatLoop(){
 			}
 		}
 	}
+	var Rearm = function(){
+	
+		var weaponObject = Orion.ObjAtLayer('RightHand');
+		if(!weaponObject) weaponObject = Orion.ObjAtLayer('LeftHand');
+		if(!weaponObject) {
+			if( !Orion.BuffExists(disarmBuffIcon)){
+				Orion.CreateClientMacro('EquipLastWeapon').Play(false, 1000);
+			}
+			
+		};
+	}
+
 
 	var checkUninsuredCounter = 0;
 	while(!Player.Dead()){
-	RecoverCorpse();
+		Rearm();
+		RecoverCorpse();
 	    Bow();
 	   	AttackTarget(GetTarget());
 		Bandage();
@@ -843,3 +892,4 @@ function CombatLoop(){
 	    Orion.Wait(timeBetweenLoops);
 	}
 }
+
