@@ -1,0 +1,24 @@
+// Put your code here...
+function IDOCBarrels()
+     {
+    while (!Player.Dead()) 
+        {
+        var barrels = Orion.FindType('0x0FAE|0x0E77|0x1EB5', '-1', ground, 'near', '24', ' ');
+        var barrel;
+        if (barrels.length)
+            {
+            barrel = Orion.FindObject(barrels[0]);
+            if (barrel.Serial) 
+                {
+                  var h = barrel.X();
+                   var j = barrel.Y();
+                    if(barrel.Distance() > 1)
+                        Orion.WalkTo(h, j, 0);
+                    else
+                        Orion.Attack(barrel.Serial());
+                   Orion.Wait(250);
+                   }
+               }
+        Orion.Wait(250);
+         }
+    }

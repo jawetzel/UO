@@ -37,7 +37,8 @@ function CombatLoop(){
 	var useEnemyOfOne = profile != null ? profile.useEnemyOfOne :  false;
 	var useDivineFury = profile != null ? profile.useDivineFury :  false;
 	var useConsecrateWeapon = profile != null ? profile.useConsecrateWeapon :  false;
-	
+	var useChivHeal =  profile != null ? profile.useChivHeal :  false;
+	var useHealChivFriend =  profile != null ? profile.useHealChivFriend :  false;
 	//combat settings
 	var useSpecial = profile != null ? profile.useSpecial : false;
 	var primaryArmorIgnoreWeapons = [
@@ -69,18 +70,27 @@ function CombatLoop(){
 	var useBandages =  profile != null ? profile.useBandages :  false;
 	var useEnhancementPots =  profile != null ? profile.useEnhancementPots :  false;
 	var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
-	var healPotionThreshold = 50;
+	var healPotionThreshold = 25;
 	var useHealFriend = profile != null ? profile.useHealFriend :  false;
+	var useHealPets = profile != null ? profile.useHealPets :  false;
 	var healFriendThreshold = 75; // this is a percent
 	var healFriendNames = [
 		'BabbyShark',
 		'MommyShark',
 		'DaddyShark',
-		'DootDoot'
+		'DootDoot',
+		'PupperSnoot',
+		'Ron',
+		'Mozeltof',
+		'Ricky',
+		'[UWF]',
+		'United We Fight',
+		'eviathin',
+		'Rotodolo'
 	]
 	// probably dont configure below here
 	var timeBetweenLoops = 50; //time in ms between loop cycle
-	var enemyTypes = 'gray'			; // 'gray | criminal | enemy | red'
+	var enemyTypes = 'gray|criminal|enemy'			; // 'gray | criminal | enemy | red'
 	var maxEnemyDistance =  11;
 	var useAttack = profile != null ? profile.useAttack : false;
 	var humanoidNamesToAttack = [
@@ -153,6 +163,22 @@ function CombatLoop(){
 		}
 	}
 	
+	var ChivHeal = function(){
+		if(useChivHeal){
+			if(Player.Poisoned() || Player.Hits() < (Player.MaxHits() - 30)){
+				if(Player.Poisoned()){
+					Orion.Cast('201'); //cure chiv
+				} else {
+					Orion.Cast('202'); //heal chiv
+				}							
+				if (Orion.WaitForTarget(1500))
+					Orion.TargetObject(Player.Serial());
+				Orion.Wait(200);
+			}
+			
+		}
+	}
+	
 	var EnhancementPots = function(){
 		if(useEnhancementPots){
 			if(Orion.FindType(agilityPotionType).length > 0 && !Orion.BuffExists(agilityPotionBuffIcon)){
@@ -221,10 +247,11 @@ function CombatLoop(){
 		  
 	}
 	var monsterNamesToIgnore = [
-		"Spectral Armor",
 		"(summoned)",
 		"(tame)",
-		"(bonded)"
+		"(bonded)",
+		"spectral armor",
+		"Spectral Armor",
 	];
 	
 	var GetTarget = function(){
@@ -243,19 +270,18 @@ function CombatLoop(){
 		var playerSerial = Player.Serial();
 		var dist = 0;
 		while(dist < maxEnemyDistance){
-			var enemy = Orion.FindType("any", "any", "ground", "mobile | ignoreself", dist, enemyTypes);	
+			var enemy = Orion.FindType("any", "any", "ground", "live|ignoreself|inlos", dist, enemyTypes);	
 			dist = dist + 1;
 			if(dist > 1 && dist !== maxEnemyDistance && dist % 2 === 1) continue;
-				
+		
 			if(enemy && enemy.length > 0){	
-				if(enemy.length > 1){
-					var firstEnemy = null;
+				var firstEnemy = null;
 					enemy.forEach(function(enemyId){
 						if(firstEnemy) return;
 						if(playerSerial === enemyId) return;
-						var enemyObject = Orion.FindObject(enemy[0]);
+						var enemyObject = Orion.FindObject(enemyId);
 						if(enemyObject){
-							var props = enemyObject.Properties();							
+							var props = enemyObject.Properties();				
 							if(						
 								monsterNamesToIgnore.filter(function(name){
 										return props.indexOf(name) > -1;
@@ -278,33 +304,7 @@ function CombatLoop(){
 							return;
 						}	
 					})
-					if(firstEnemy) return firstEnemy;
-				} else {
-					if(playerSerial !== enemy[0]){					
-						var enemyObject = Orion.FindObject(enemy[0]);
-						if(enemyObject){						
-							var props = enemyObject.Properties();
-							
-							if(
-								monsterNamesToIgnore.filter(function(name){
-										return props.indexOf(name) > -1;
-								}).length === 0 &&
-								(
-									!typesToIgnore[enemyObject.Graphic()] ||
-									
-									humanoidNamesToAttack.filter(function(name){
-										return props.indexOf(name) > -1;
-									}).length > 0
-								)
-							){
-								return enemy;
-							}
-						}
-						else {
-							return enemy;
-						}					
-					}	
-				}									
+					if(firstEnemy) return firstEnemy;								
 			}
 		}
 		return null;
@@ -335,29 +335,33 @@ function CombatLoop(){
 		if(CanUseAnotherSpell() && Player.Mana() > minimumManaForSpells) {
 	    	if(useEnemyOfOne && !Orion.BuffExists('0x754e')){
 	    		Orion.Cast('Enemy of One');
-	    		SetNextSpellTime(1500)
-	    		Orion.Wait(500) //handle fcr
+	    		SetNextSpellTime(2000)
+	    		//Orion.Wait(500) //handle fcr
 	    	} else if(useDivineFury && !Orion.BuffExists('0x754d')){
 	    		Orion.Cast('Divine Fury');
-	    		SetNextSpellTime(1250);
-	    		Orion.Wait(500) //handle fcr
+	    		SetNextSpellTime(2000);
+	    		//Orion.Wait(500) //handle fcr
 	    	} else if(useConsecrateWeapon && !Orion.BuffExists('0x75a7')){
 	    		Orion.Cast('Consecrate Weapon');
-	    		SetNextSpellTime(1000);
-	    		Orion.Wait(500) //handle fcr
+	    		SetNextSpellTime(1500);
+	    		//Orion.Wait(500) //handle fcr
 	    	}    
 	    }
 	}
+	
+	
+	
+	
 	
 	var UseSpecials = function(){
 		if(Player.Mana() > 20) {
 	    	if(useMomentumStrike && !Orion.BuffExists('0x75fb')){
 		    	Orion.Cast('Momentum Strike');
-		    	Orion.Wait(250);
+		    	Orion.Wait(250);  //there is a delay between using the skill and seeing the buff
 	    	}
 	    	if(useLightningStrike && !Orion.BuffExists('0x75fa')){
 		    	Orion.Cast('Lightning Strike');
-		    	Orion.Wait(250);
+		    	Orion.Wait(250); //there is a delay between using the skill and seeing the buff
 	    	}
 	    	if(useSpecial){
 	    		var weaponObject = Orion.ObjAtLayer('RightHand');
@@ -370,7 +374,7 @@ function CombatLoop(){
 					}).length > 0){
 					if(!Orion.AbilityStatus('Primary')){
 						Orion.UseAbility('Primary');
-		    			Orion.Wait(250);
+		    			Orion.Wait(250); //there is a delay between using the skill and seeing the buff
 					}
 					return;
 				}
@@ -380,7 +384,7 @@ function CombatLoop(){
 					}).length > 0){
 					if(!Orion.AbilityStatus('Secondary')){
 						Orion.UseAbility('Secondary');
-		    			Orion.Wait(250);
+		    			Orion.Wait(250); //there is a delay between using the skill and seeing the buff
 					}
 					return;
 				}
@@ -390,7 +394,7 @@ function CombatLoop(){
 					}).length > 0){
 					if(!Orion.AbilityStatus('Primary')){
 						Orion.UseAbility('Primary');
-		    			Orion.Wait(250);
+		    			Orion.Wait(250); //there is a delay between using the skill and seeing the buff
 					}
 					return;
 				}
@@ -400,7 +404,7 @@ function CombatLoop(){
 					}).length > 0){
 					if(!Orion.AbilityStatus('Secondary')){
 						Orion.UseAbility('Secondary');
-		    			Orion.Wait(250);
+		    			Orion.Wait(250); //there is a delay between using the skill and seeing the buff
 					}
 					return;
 				}
@@ -827,20 +831,22 @@ function CombatLoop(){
 		}
 	}
 	
-	function HealFriend(){
-		if(useHealFriend){
+	
+	function HealPets(){
+		if(useHealPets){
 			var friendlys = Orion.FindType("any", "any", "ground", "mobile | ignoreself", '2', 'green | blue');		
 			if(friendlys && friendlys.length > -1){
 				friendlys.forEach(function(friendId){					
-					if(Orion.BuffExists('healing skill')) return;
+					if(Orion.BuffExists('healing skill') || Orion.BuffExists('veterinary')) return;
 					var friendObject = Orion.FindObject(friendId);
 					if(!friendObject) return;
 					var friendProps = friendObject.Properties();
+					if(friendProps.indexOf("(bonded)") === -1) return; 
 					var namesFound = healFriendNames.filter(function(name){
 						return friendProps.indexOf(name) > -1;
 					});
 					if(namesFound.length === 0) return;
-					Orion.ShowStatusbar(friendId, 740, 175);
+					Orion.ShowStatusbar(friendId, 740, 75);
 					Orion.GetStatus(friendId);
 					if(friendObject.Distance() <= 2 && ((friendObject.Hits() * 4) < healFriendThreshold)){
 						WaitForObjectTimeout();
@@ -854,6 +860,74 @@ function CombatLoop(){
 			}
 		}
 	}
+
+	function HealFriend(){
+		if(useHealFriend){
+			var friendlys = Orion.FindType("any", "any", "ground", "mobile | ignoreself", '2', 'green | blue');		
+			if(friendlys && friendlys.length > -1){
+				friendlys.forEach(function(friendId){					
+					if(Orion.BuffExists('healing skill') || Orion.BuffExists('veterinary')) return;
+					var friendObject = Orion.FindObject(friendId);
+					if(!friendObject) return;
+					var friendProps = friendObject.Properties();
+					if(friendProps.indexOf("(summoned)") > -1) return; 
+					if(friendProps.indexOf("(tame)") > -1) return; 
+					if(friendProps.indexOf("(bonded)") > -1) return; 
+					var namesFound = healFriendNames.filter(function(name){
+						return friendProps.indexOf(name) > -1;
+					});
+					if(namesFound.length === 0) return;
+					Orion.ShowStatusbar(friendId, 740, 25);
+					Orion.GetStatus(friendId);
+					if(friendObject.Distance() <= 2 && ((friendObject.Hits() * 4) < healFriendThreshold)){
+						WaitForObjectTimeout();
+						if(!Orion.BuffExists('healing skill') && ((friendObject.Hits() * 4) < healFriendThreshold)){
+							Orion.BandageTarget(friendObject.Serial());
+							lastObjectUsedTime = new Date().getTime();
+							Orion.Wait(100);
+						}
+					}
+				})
+			}
+		}
+	}
+	
+	function HealChivFriend(){
+		if(useHealChivFriend){
+			var friendlys = Orion.FindType("any", "any", "ground", "mobile | ignoreself", '2', 'green | blue');		
+			if(friendlys && friendlys.length > -1){
+				friendlys.forEach(function(friendId){
+					var friendObject = Orion.FindObject(friendId);
+					if(!friendObject) return;
+					var friendProps = friendObject.Properties();
+					if(friendProps.indexOf("(summoned)") > -1) return; 
+					if(friendProps.indexOf("(tame)") > -1) return; 
+					if(friendProps.indexOf("(bonded)") > -1) return; 
+					var namesFound = healFriendNames.filter(function(name){
+						return friendProps.indexOf(name) > -1;
+					});
+					if(namesFound.length === 0) return;
+					Orion.ShowStatusbar(friendId, 740, 25);
+					Orion.GetStatus(friendId);
+					if(friendObject.Distance() <= 2 && ((friendObject.Hits() * 4) < healFriendThreshold)){
+						WaitForObjectTimeout();
+						if(((friendObject.Hits() * 4) < healFriendThreshold)){
+							if(friendObject.Poisoned()){
+								Orion.Cast('201'); //cure chiv
+							} else {
+								Orion.Cast('202'); //heal chiv
+							}							
+							if (Orion.WaitForTarget(1500))
+								Orion.TargetObject(friendObject.Serial());
+							Orion.Wait(200);
+						}
+					}
+				})
+			}
+		}
+	}
+	
+	
 	var Rearm = function(){
 	
 		var weaponObject = Orion.ObjAtLayer('RightHand');
@@ -866,7 +940,6 @@ function CombatLoop(){
 		};
 	}
 
-
 	var checkUninsuredCounter = 0;
 	while(!Player.Dead()){
 		Rearm();
@@ -874,7 +947,10 @@ function CombatLoop(){
 	    Bow();
 	   	AttackTarget(GetTarget());
 		Bandage();
+		ChivHeal();
 		HealFriend();
+		HealPets();
+		HealChivFriend();
 		EnhancementPots();
 		RestorePotions();
 		CastSpells();

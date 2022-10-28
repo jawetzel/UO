@@ -1,12 +1,7 @@
 var i = 0;
 while(true){
-	i++;
-	if(i > 3){
-		Orion.EmoteAction('bow');
-		Orion.Say("All follow me");
-		i = 0;
-	}
-	Orion.Cast('last');
-	Orion.Wait(10000);
+	Orion.SayWhisper("All follow me");
+	Orion.SayWhisper("All guard me");
+	Orion.Wait(30000);
 	
 }

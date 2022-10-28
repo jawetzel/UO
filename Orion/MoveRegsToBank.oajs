@@ -1,4 +1,4 @@
-var bankId = '0x4534C3AA';
+var bankId = '0x459F7444';
 
 var moveItem = function(item){
 	Orion.MoveItem(item, 1000, bankId);

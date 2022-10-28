@@ -1,0 +1,75 @@
+var axe = '0x432A2ED2';
+var resourceBag = '0x433E9EEA';
+var decanter = '0x4213AF75';
+
+
+var boxGrpahic = '0x09A9';
+var dirtGraphic = '0x1602';
+
+var plantBowlGraphic = '0x15FD';
+
+function PlantTender(){
+
+}
+
+//will fill all empty bowls when stanging over dirt to fill in backpackpack and open subcontainers.
+function FillBowlsInBackpack(){
+	var plantBowlGraphic = '0x15FD';
+	var bowls = Orion.FindType(plantBowlGraphic, "any", "backpack", " " , "finddistance", " ", true);
+	Orion.Print(bowls)
+	bowls.forEach(function(bowl){
+		Orion.UseObject(bowl);
+		if (Orion.WaitForTarget(1000))
+			Orion.TargetTile('any', Player.X(), Player.Y(), Player.Z());
+		Orion.Wait(1200);
+	})
+}
+
+function MoveBowlsToCrates(){
+	
+	var boxes = Orion.FindType(boxGrpahic, "any", "backpack", " " , "finddistance", " ", false);
+	Orion.Print(boxes)
+	if(!boxes || boxes.length === 0) return;
+	var box = boxes[0];
+	
+	var dirts = Orion.FindType(dirtGraphic, "any", "backpack", " " , "finddistance", " ", true);
+	Orion.Print(dirts)
+	dirts.forEach(function(dirt){
+		var dirtObject = Orion.FindObject(dirt);
+		if(dirtObject.Container() === box) return;
+		Orion.MoveItem(dirt, 1, box);
+		Orion.Wait(1250);
+	});
+	
+	Orion.OpenContainer(resourceBag);
+	
+	//destroy box
+	Orion.Wait(1250);
+	Orion.UseObject(axe);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetObject(box);
+		
+}
+
+function LockDownDirts(){
+	var groundDirts = Orion.FindType(dirtGraphic, "any", "ground", "" , "2");
+	if(!groundDirts || groundDirts.length < 1) return;
+	groundDirts.forEach(function(groundDirt){
+		var dirtObject = Orion.FindObject(groundDirt);
+		var props = dirtObject.Properties();
+		if(props.indexOf("Locked Down") === -1){
+			Orion.Say("I Wish To Lock This Down");
+			if (Orion.WaitForTarget(1000))
+				Orion.TargetObject(groundDirt);
+			Orion.Wait(1000);
+		}
+	});
+}
+
+function TendPlant(){
+	
+	var gump =	Orion.GetGump('0x431D236A', '0x00007492');
+	Orion.Print(gump.Text());
+	//Serial=0x430EA563
+//ID=0x00007492
+}

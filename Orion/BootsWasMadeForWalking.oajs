@@ -1,0 +1,15 @@
+while(!Player.Dead()){
+	var DoAStep = function(direction){
+		var running0 = false;
+		Orion.Step((direction), running0);
+		Orion.Wait(12000);
+	}
+	for(var i = 0; i < 22; i++){
+		DoAStep(6);
+	}
+	DoAStep(4);
+	for(var i = 0; i < 22; i++){
+		DoAStep(2);
+	}
+	DoAStep(0);
+}
