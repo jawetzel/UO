@@ -14,20 +14,60 @@ function CombatLoop(){
 			useHonor: true
 		},
 		Spawn: {
-			useSpecial: true,
+			//useSpecial: true,
 			useAttack: true,
+			
 		},
 		JunkoSamp: {
 			useSpecial: true,
 			useAttack: true,
-			useLootCorpses: true,
-			useInsureItem: true,
 			useHealFriend: true,
+			useBandages: true,
+			useChivHeal: true,
+			useHealChivFriend: true,
+		},
+		EventThrower: {
+			useSpecial: true,
+			useAttack: true,
+			useHealFriend: true,
+			useBandages: true,
+			useChivHeal: true,
+			useHealChivFriend: true,
+			useSkipTypesToIgnore: true
+		},
+		
+		PvpDexer: {
+			useBandages: true,
+			useEnhancementPots: true,
+			useRestorePotions: true
+		},
+		Temp: {
+			useAttack: true,
+			useLightningStrike: true,
+			useBandages: true
+		},
+		Thrower: {
+			useSpecial: true,
+			useAttack: true,
+			useBandages: true
+		},
+		loot:{
+			useLootCorpses: true,
+		},
+		sampTamer: {
+			useSpecial: true,
+			useAttack: true,
+			//useDivineFury: true,
+			//useConsecrateWeapon: true,
+			useHealPets: true,
+			useChivHeal: true,
+			useHealChivFriend: true,
+			useLootCorpses: true,
 		}
 	}
 	
 	
-	var profile = profiles.Spawn;
+	var profile = profiles.EventThrower;
 	
 	
 	//if you want to cut corpses get a butchers war cleaver
@@ -67,6 +107,9 @@ function CombatLoop(){
 	var useLightningStrike =profile != null ? profile.useLightningStrike :   false;
 	var useHonor = profile != null ? profile.useHonor :  false;
 	
+	
+	var useSkipTypesToIgnore =  profile != null ? profile.useSkipTypesToIgnore :  false;
+	
 	var useBandages =  profile != null ? profile.useBandages :  false;
 	var useEnhancementPots =  profile != null ? profile.useEnhancementPots :  false;
 	var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
@@ -90,7 +133,7 @@ function CombatLoop(){
 	]
 	// probably dont configure below here
 	var timeBetweenLoops = 50; //time in ms between loop cycle
-	var enemyTypes = 'gray|criminal|enemy'			; // 'gray | criminal | enemy | red'
+	var enemyTypes = 'gray|criminal|enemy|red'			; // 'gray | criminal | enemy | red'
 	var maxEnemyDistance =  11;
 	var useAttack = profile != null ? profile.useAttack : false;
 	var humanoidNamesToAttack = [
@@ -288,7 +331,7 @@ function CombatLoop(){
 								}).length === 0 
 								&& 			
 								(
-									!typesToIgnore[enemyObject.Graphic()] ||
+									(!typesToIgnore[enemyObject.Graphic()] || useSkipTypesToIgnore) ||
 									
 									humanoidNamesToAttack.filter(function(name){
 										return props.indexOf(name) > -1;
