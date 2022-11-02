@@ -5,26 +5,18 @@
 function CombatLoop(){
 
 	var profiles = {
-		startingProfile: {
-			useSpecial: true,
-			useAttack: true,
-			useLootCorpses: true,
-			useInsureItem: true,
-			useLootTMaps: true,
-			useHonor: true
-		},
+		
 		Spawn: {
-			//useSpecial: true,
-			useAttack: true,
-			
+			useSpecial: true,
+			useAttack: true
 		},
 		JunkoSamp: {
 			useSpecial: true,
 			useAttack: true,
 			useHealFriend: true,
 			useBandages: true,
-			useChivHeal: true,
-			useHealChivFriend: true,
+			useLootCorpses: true,
+			useInsureItem: true
 		},
 		EventThrower: {
 			useSpecial: true,
@@ -33,7 +25,9 @@ function CombatLoop(){
 			useBandages: true,
 			useChivHeal: true,
 			useHealChivFriend: true,
-			useSkipTypesToIgnore: true
+			useSkipTypesToIgnore: true,
+			useConsecrateWeapon: true,
+			useLootCorpses: true,
 		},
 		
 		PvpDexer: {
@@ -41,18 +35,15 @@ function CombatLoop(){
 			useEnhancementPots: true,
 			useRestorePotions: true
 		},
-		Temp: {
-			useAttack: true,
-			useLightningStrike: true,
-			useBandages: true
-		},
-		Thrower: {
-			useSpecial: true,
-			useAttack: true,
-			useBandages: true
-		},
 		loot:{
 			useLootCorpses: true,
+		},
+		soloFarm: {
+			useSpecial: true,
+			useAttack: true,
+			useLootCorpses: true,
+			useHonor: true,
+			useInsureItem: true
 		},
 		sampTamer: {
 			useSpecial: true,
@@ -62,12 +53,11 @@ function CombatLoop(){
 			useHealPets: true,
 			useChivHeal: true,
 			useHealChivFriend: true,
-			useLootCorpses: true,
 		}
 	}
 	
 	
-	var profile = profiles.EventThrower;
+	var profile = profiles.JunkoSamp;
 	
 	
 	//if you want to cut corpses get a butchers war cleaver
@@ -87,6 +77,7 @@ function CombatLoop(){
 		'Soul Glaive',
 		'Composite Bow',
 		'Boomerang',
+		'Longsword'
 	];
 	var secondaryArmorIgnoreWeapons = [
 		'Katana',
@@ -129,7 +120,9 @@ function CombatLoop(){
 		'[UWF]',
 		'United We Fight',
 		'eviathin',
-		'Rotodolo'
+		'Rotodolo',
+		'Scan',
+		"Brain"
 	]
 	// probably dont configure below here
 	var timeBetweenLoops = 50; //time in ms between loop cycle
@@ -149,27 +142,38 @@ function CombatLoop(){
 		'0x400B': true, //shame crystals
 		'0x0F87': true, // lucky coin
 		'0x226F': true, //wraith form
-		'0x2D51': true, //SW spell
-		'0x2D52': true, //SW spell
-		'0x2D53': true, //immolating weapon SW Spell
-		'0x2D54': true, //SW spell
-		'0x2D55': true, //SW Spell
-		'0x2D56': true, //SW Spell
-		'0x2D57': true, //SW Spell
-		'0x2D58': true, //SW Spell
-		'0x2D59': true, //SW Spell
-		'0x2D5A': true, //SW Spell
-		'0x2D5B': true, //SW Spell
-		'0x2D5C': true, //SW Spell
-		'0x2D5D': true, //SW Spell
-		'0x2D5E': true, //word of death SW spell
-		'0x2D5F': true, //Gift Of Life SW spell
-		'0x2D60': true, //Gift Of Life SW spell
+		//'0x2D51': true, //SW spell
+		//'0x2D52': true, //SW spell
+		//'0x2D53': true, //immolating weapon SW Spell
+		//'0x2D54': true, //SW spell
+		//'0x2D55': true, //SW Spell
+		//'0x2D56': true, //SW Spell
+		//'0x2D57': true, //SW Spell
+		//'0x2D58': true, //SW Spell
+		//'0x2D59': true, //SW Spell
+		//'0x2D5A': true, //SW Spell
+		//'0x2D5B': true, //SW Spell
+		//'0x2D5C': true, //SW Spell
+		//'0x2D5D': true, //SW Spell
+		//'0x2D5E': true, //word of death SW spell
+		//'0x2D5F': true, //Gift Of Life SW spell
+		//'0x2D60': true, //Gift Of Life SW spell
 		'0x573E': true, //void Orion
 		'0x5728': true, //void core
 		//'0x0E21': true, //bandages
 		'0x0F80': true, // demon bone
 	}
+	var weaponNamesToIgnore = [
+		'Elven Machete',
+		'Radiant Scimitar',
+		'Wild Staff',
+		'Lance',
+		'Skinning Knife',
+		'Hammer',
+		'Cutlass',
+		'Diamond Mace',
+	];
+	
 	//constants
 	
 	var timeBetweenBows = 300000; // time in ms between bows (ensure keep logged in)
@@ -269,7 +273,7 @@ function CombatLoop(){
 		if(!recoveredCorpse){
 			recoveredCorpse = true;
 			var playerName = Player.Name();
-			var corpses = Orion.FindType(any, any, ground, "", 2);
+			var corpses = Orion.FindType(any, any, ground, "inlos", 2);
 				 if (!corpses.length)
 			    {
 			        return;
@@ -468,7 +472,7 @@ function CombatLoop(){
 	{
 		if(useCutCorpses){
 	    	Orion.UseIgnoreList('ignore');
-		    var corpses = Orion.FindType(0x2006, any, ground, "", 2);
+		    var corpses = Orion.FindType(0x2006, any, ground, "inlos", 2);
 		    if (!corpses.length)
 		    {
 		        return;
@@ -591,7 +595,11 @@ function CombatLoop(){
 		if(isSplinter){
 				var isHitSpell = isFireball || isLightning || isHarm || isMagicArrow;
 					
-				if((isHitSpell || isLowerD) && isOverCapSplinter){
+				if(isAntique || isBrittle){
+					return false;
+				}	
+									
+				if(isHitSpell && isOverCapSplinter){
 					return true;
 				}
 			
@@ -607,15 +615,8 @@ function CombatLoop(){
 				//Keep hit spell bokutos
 				if (isBokuto && isHitSpell) {
 					return true;
-				}
-			
-			
-				if(isAntique || isBrittle){
-					return false;
-				}
-				
-	
-	
+				}	
+
 				//Lets Figure out how many imbue slots are open;
 				var modCount = 0;
 				var physDamageType = '\nPhysical Damage';
@@ -657,13 +658,10 @@ function CombatLoop(){
 				Orion.Print(imbueSlotsOpen);
 				Orion.Print(modsSubstring);
 	
-				if(imbueSlotsOpen > 0 && (isHitSpell || isLowerD || isBokuto || isOverCapSplinter)){
+				if(imbueSlotsOpen > 0 && (isBokuto)){
 					return true;
 				} 
-				else if(imbueSlotsOpen > 1){ //todo: we need to condition is imbueable here 
-					return true;
-				}
-				 else {
+				else {
 					return false;
 				}
 				
@@ -679,10 +677,11 @@ function CombatLoop(){
 	}
 	
 	
+	
+	
 	function ShouldKeepItem(itemId){
 		var item = Orion.FindObject(itemId);
 		if(!item) return false;
-		
 		
 		//loot by type
 		if(lootItems[item.Graphic()]) return true;
@@ -707,25 +706,16 @@ function CombatLoop(){
 		if(is2hWeapon){ // I want to exclude all 2h except spears, ornate axes and hatchets
 			if( 
 				!(props.indexOf('Hatchet') > -1) && 
-				!(props.indexOf( 'Spear') > -1 && props.indexOf('Weapon Speed 2.75') > -1) && 
-				!(props.indexOf('Pitchfork') > -1) && 
-				!(props.indexOf( 'No-Dachi') > -1) && 
-				!(props.indexOf('Double Axe') > -1) && 
-				!(props.indexOf('Bladed Staff') > -1 && props.indexOf('Double Bladed Staff') === -1) && 
-				!(props.indexOf('Gnarled Staff') > -1)
+				!(props.indexOf( 'No-Dachi') > -1)
 			){
 				return false;
 			}
 		}
 		if(is1hWeapon) { //I want to exclude specific 1h weapons
 			if(
-				props.indexOf('Elven Machete') > -1 ||
-				props.indexOf( 'Radiant Scimitar') > -1 || 
-				props.indexOf('Wild Staff') > -1 ||
-				props.indexOf( 'Lance') > -1 ||
-				props.indexOf('Skinning Knife') > -1 ||
-				props.indexOf('Sledge Hammer') > -1 ||
-				props.indexOf('Cutlass') > -1
+				weaponNamesToIgnore.filter(function(name){
+					return props.indexOf(name) > -1
+				}).length > 0
 			){
 				return false;
 			}
@@ -752,8 +742,9 @@ function CombatLoop(){
 	
 		if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
 		
+		//fuck sheilds
 		if(!isArmor && !isJewlery && !is2hWeapon && !is1hWeapon){
-			//if(ShouldKeepItem_LuckShield(props)) return true;
+			return false;
 		}
 		
 		
@@ -766,6 +757,17 @@ function CombatLoop(){
 				(props.indexOf("Of Wizardry") > -1 || props.indexOf("Of Sorcery") > -1)){
 				return false;
 			}
+			
+			var hasMr2 = props.indexOf("Mana Regeneration 2") > -1;
+			var hasMr3 = props.indexOf("Mana Regeneration 3") > -1;
+			var hasMr4 = props.indexOf("Mana Regeneration 4") > -1;
+			var hasHpr2 = props.indexOf("Hit Point Regeneration 2") > -1;
+			var hasHpr3 = props.indexOf("Hit Point Regeneration 3") > -1;
+			var hasHpr4 = props.indexOf("Hit Point Regeneration 4") > -1;
+			
+			if(!(hasMr2 || hasMr3 || hasMr4 || hasHpr2 || hasHpr3 || hasHpr4)){
+				 return false;
+			}
 		}
 		
 		//Handle Legendary
@@ -777,10 +779,9 @@ function CombatLoop(){
 				return true;
 			}
 			else {
-				//return false; // we cant decide if we want to throw out majjor arti armor
+				return false;
 			}
-		}
-	
+		}	
 		return false;
 	}
 	
@@ -822,7 +823,7 @@ function CombatLoop(){
 		var corpseGraphic = '0x2006'
 	
 		if(useLootCorpses){
-			var corpses = Orion.FindType(0x2006, any, ground, "", 2);
+			var corpses = Orion.FindType(0x2006, any, ground, "inlos", 2);
 			 if (!corpses.length)
 		    {
 		        return;
@@ -877,7 +878,7 @@ function CombatLoop(){
 	
 	function HealPets(){
 		if(useHealPets){
-			var friendlys = Orion.FindType("any", "any", "ground", "mobile | ignoreself", '2', 'green | blue');		
+			var friendlys = Orion.FindType("any", "any", "ground", "mobile|ignoreself|inlos", '2', 'green|blue');		
 			if(friendlys && friendlys.length > -1){
 				friendlys.forEach(function(friendId){					
 					if(Orion.BuffExists('healing skill') || Orion.BuffExists('veterinary')) return;
@@ -906,7 +907,7 @@ function CombatLoop(){
 
 	function HealFriend(){
 		if(useHealFriend){
-			var friendlys = Orion.FindType("any", "any", "ground", "mobile | ignoreself", '2', 'green | blue');		
+			var friendlys = Orion.FindType("any", "any", "ground", "mobile|ignoreself|inlos", '2', 'green|blue');		
 			if(friendlys && friendlys.length > -1){
 				friendlys.forEach(function(friendId){					
 					if(Orion.BuffExists('healing skill') || Orion.BuffExists('veterinary')) return;
@@ -937,7 +938,7 @@ function CombatLoop(){
 	
 	function HealChivFriend(){
 		if(useHealChivFriend){
-			var friendlys = Orion.FindType("any", "any", "ground", "mobile | ignoreself", '2', 'green | blue');		
+			var friendlys = Orion.FindType("any", "any", "ground", "mobile|ignoreself|inlos", '2', 'green|blue');		
 			if(friendlys && friendlys.length > -1){
 				friendlys.forEach(function(friendId){
 					var friendObject = Orion.FindObject(friendId);
