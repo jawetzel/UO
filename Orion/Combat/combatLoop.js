@@ -122,7 +122,12 @@ function CombatLoop(){
 		'eviathin',
 		'Rotodolo',
 		'Scan',
-		"Brain"
+		"Brain",
+		"my pet",
+		"killer",
+		"house holder",
+		"skills"
+		
 	]
 	// probably dont configure below here
 	var timeBetweenLoops = 50; //time in ms between loop cycle
