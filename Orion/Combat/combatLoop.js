@@ -249,9 +249,13 @@ function CombatLoop(){
 		"wetze",
 		'Knuckle',
 		"Floof",
-		'T0SS'
+		'T0SS',
+		"my pet",
+		"killer",
+		"house holder",
+		"skills"
 	]);
-
+		
 	// probably dont configure below here
 	var timeBetweenLoops = 100; //time in ms between loop cycle
 	var enemyTypes = 'gray|criminal|enemy|red'			; // 'gray | criminal | enemy | red'
