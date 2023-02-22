@@ -1,0 +1,13 @@
+function shear(){
+	var sheeps = Orion.FindType('0x00CF', any, ground, "inlos", 12, 'near');
+	if(sheeps && sheeps.length > 0){
+		Orion.UseObject(0x4133A7AC);
+		Orion.WaitForTarget();
+		Orion.TargetObject(sheeps[0]);
+		Orion.Wait(600);
+		Orion.Attack(sheeps[0]);
+		Orion.Wait(600);
+	}
+	Orion.Wait(200);
+	shear();
+}

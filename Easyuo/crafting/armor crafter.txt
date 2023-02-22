@@ -6,13 +6,13 @@
 
 ;==========================
 ;set this to item type or armor being made
-set %armortype ALH
+set %armortype YKH
 ;set these to minimum resists
-set %Physical 5
-set %Fire 5
-set %Cold 5
-set %Poison 5
-set %Energy 5
+set %Physical 6
+set %Fire 6
+set %Cold 7
+set %Poison 8
+set %Energy 6
 ;===========================
 set %ps1 %Physical
 set %f1 %Fire

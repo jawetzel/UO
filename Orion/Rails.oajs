@@ -1,0 +1,137 @@
+// Paste your code here :)
+var repoFilePath = Orion.CurrentScriptDirPath();
+var railFiles = {
+	fire: repoFilePath +  '/GeneratedFiles/spawns/fire.json',
+	destard:  repoFilePath +  '/GeneratedFiles/spawns/destard.json',
+	deceit: repoFilePath +  '/GeneratedFiles/spawns/deceit.json',
+	despise:  repoFilePath +  '/GeneratedFiles/spawns/despise.json',
+	
+	icewest:  repoFilePath +  '/GeneratedFiles/spawns/icewest.json',
+	deceitEntrance: repoFilePath +  '/GeneratedFiles/spawns/deceitEntrance.json',
+	tmp: repoFilePath +  '/GeneratedFiles/spawns/tmp.json',
+};
+
+
+var railFile = railFiles.tmp;
+
+var waitTimeAtEachLocation = 25000;
+
+
+var enemyTypes = 'gray|criminal|enemy|red'			; // 'gray | criminal | enemy | red'
+var maxEnemyDistance =  7;
+var minEnemiesInArea = 4;
+var typesToIgnore = {
+			'0x0190': true, //human male
+			'0x0191': true, //human female
+			'0x025D': true, //elf male
+			'0x025E': true, //elf female
+			'0x029A': true, //garg male
+			'0x029B': true, //garg Female
+			'0x02E8': true, //vamp male,
+			'0x02E9': true, //vamp female
+			'0x02EB': true, //writh female
+			'0x02EC': true, //wraith male	
+			
+			'0x00D9': true, //animal form dog
+		};
+var monsterNamesToIgnore = [
+		"(summoned)",
+		"(tame)",
+		"(bonded)",
+		"spectral armor",
+		"Spectral Armor",
+	];
+
+function AppendWaypointToTmpFile(){
+
+	var tmpFilePath = Orion.CurrentScriptDirPath() + '/GeneratedFiles/spawns/tmp.json';
+	var recordingX = Player.X();
+	var recordingY = Player.Y();
+	var railPoint = {x: recordingX, y: recordingY};
+	
+	var tmpFile = Orion.NewFile();
+	tmpFile.Open(tmpFilePath);
+	var fileJson = [];
+	var filestring = tmpFile.ReadAll();
+	if(filestring){
+		fileJson = JSON.parse(filestring);
+	}
+	tmpFile.Close();
+
+	var lastIndex = fileJson.length > 0 ? fileJson[fileJson.length -1].index : -1;
+	railPoint.index = lastIndex + 1
+	Orion.Print("Recording To Path: " + tmpFilePath);
+	Orion.Print("Recording Rail Point: " + JSON.stringify(railPoint) );
+	fileJson.push(railPoint);
+	
+	tmpFile = Orion.NewFile();
+	tmpFile.Remove(tmpFilePath);
+	tmpFile.Append(tmpFilePath);
+	tmpFile.Write(JSON.stringify(fileJson));
+	
+	tmpFile.Close();	
+}
+
+var lastRecordX = 0;
+var lastRecordY = 0;
+
+function Run(){
+	var file =null;
+	var rail = [];
+	
+	file = Orion.NewFile();
+	file.Open(railFile);
+	var filestring = file.ReadAll();
+	Orion.Print(filestring)
+	var fileJson = JSON.parse(filestring);
+	rail = fileJson;
+	
+	var index = 0;
+	while(!Player.Dead()){
+		var checkForMobs = function(){
+			var enemies = Orion.FindType("any", "any", "ground", "live|ignoreself|inlos", maxEnemyDistance, enemyTypes);
+			if(!enemies || enemies.length < minEnemiesInArea) return false;
+			
+			var validEnemies = enemies.filter(function(enemyId){
+				var enemyObject = Orion.FindObject(enemyId);
+				if(!enemyObject) return false;
+				if(typesToIgnore[enemyObject.Graphic()]) return false;
+				
+				var props = enemyObject.Properties();
+				
+				if(monsterNamesToIgnore.filter(function(name){
+						return props.indexOf(name) > -1;
+					}).length > 0) return false;	
+				return true;					
+			});
+			Orion.Print(validEnemies.length)
+			return validEnemies.length >= minEnemiesInArea
+		}
+		var stoodStill = 0;
+		rail.forEach(function(location){
+			if(Player.Dead()) return;
+			Orion.SetGlobal('moving', 'value');
+			while(!Player.Dead() && Orion.GetDistance(location.x, location.y) > 2){
+				
+				if(checkForMobs() && stoodStill < 30){
+					Orion.SetGlobal('moving', null);
+					Orion.Wait(1000);
+					stoodStill++;
+				} else {
+					Orion.SetGlobal('moving', 'value');
+					Orion.WalkTo(location.x, location.y, 0, 2, 255, 1, 1, stoodStill === 30 ? 6000 : 500);
+					stoodStill = 0;
+				}
+			}
+			
+			Orion.SetGlobal('moving', null);
+			if(waitTimeAtEachLocation > 0){
+				Orion.Wait(waitTimeAtEachLocation);	
+			}
+			
+		})
+	}
+}
+
+
+

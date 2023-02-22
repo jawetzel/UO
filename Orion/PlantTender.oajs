@@ -1,32 +1,95 @@
-var axe = '0x432A2ED2';
-var resourceBag = '0x433E9EEA';
-var decanter = '0x4213AF75';
+//secure malas 0x46D9BEAE
+//secure fel 0x460ACA94
+var secureId = '0x46D9BEAE';
+if(Player.X() === 2101 && Player.Y() === 196){
+	secureId = '0x460ACA94';
+}
 
 
-var boxGrpahic = '0x09A9';
+
+var boxGrpahic = '0x0E7E|0x09A9';
 var dirtGraphic = '0x1602';
-
 var plantBowlGraphic = '0x15FD';
 
-function PlantTender(){
+var fertileDirtGraphic = '0x0F81';
 
-}
+var  ids_plants = [
+	0x1602, //brown bowl
+	0x1600, //green bowl
+     0x0C94, //# bulrushes plant       - bright orange - orange petals
+     0x0CA5, //# pampas grass plant    - bright orange - orange petals
+     0x0C86, //# poppies plant         - bright orange - orange petals
+     0x0D26, //# barrel cactus plant   - bright green  - green thorns
+     0x0CA9, // # snake plant           - bright green  - green thorns
+     0x0C9E, //# cocoa tree                            - cocoa pulp
+     0x0000, //# century plant                         - red leaves
+     0x0C97, //# elephant ear plant                    - red leaves
+     0x0CA6, //# ponytail palms                        - red leaves
+     0x4B8C, //# vanilla plant                         - vanilla
+     0x246C, //# sugar canes                           - sack of sugar
+     0x1A9A, //# peculiar flax                         - flax bundle
+     ];
+     
+var pickablePlants = [
+	0x0C94, //# bulrushes plant       - bright orange - orange petals
+     0x0CA5, //# pampas grass plant    - bright orange - orange petals
+     0x0C86, //# poppies plant         - bright orange - orange petals
+     0x0D26, //# barrel cactus plant   - bright green  - green thorns
+     0x0CA9, // # snake plant           - bright green  - green thorns
+     0x0C9E, //# cocoa tree                            - cocoa pulp
+     0x0000, //# century plant                         - red leaves
+     0x0C97, //# elephant ear plant                    - red leaves
+     0x0CA6, //# ponytail palms                        - red leaves
+     0x4B8C, //# vanilla plant                         - vanilla
+     0x246C, //# sugar canes                           - sack of sugar
+     0x1A9A, //# peculiar flax                         - flax bundle
+]
 
 //will fill all empty bowls when stanging over dirt to fill in backpackpack and open subcontainers.
-function FillBowlsInBackpack(){
-	var plantBowlGraphic = '0x15FD';
+function FillBowlsInBackpackAndMoveToCrate(){
+	Orion.UseObject(secureId);
+	Orion.Wait(2000);
+
 	var bowls = Orion.FindType(plantBowlGraphic, "any", "backpack", " " , "finddistance", " ", true);
-	Orion.Print(bowls)
+	bowls = bowls.filter(function(bowlId){
+		return Orion.FindObject(bowlId).Properties().indexOf('Dirt') === -1;
+	});
+	
+	var checkStock = function(){
+		var fertileDirts = Orion.FindType(fertileDirtGraphic, 'any', 'backpack');
+		if(!fertileDirts || fertileDirts.length === 0 || Orion.FindObject(fertileDirts[0]).Count < 20){
+			var secureDirts = Orion.FindType(fertileDirtGraphic, 'any', secureId);
+			if(!secureDirts || secureDirts.length === 0) return;
+			Orion.Wait(1200);
+			Orion.MoveItem(secureDirts[0], 1000, 'backpack');
+			Orion.Wait(1200);
+			var fertileDirts = Orion.FindType(fertileDirtGraphic, 'any', 'backpack');
+			if(!fertileDirts || fertileDirts.length === 0 || Orion.FindObject(fertileDirts[0]).Count < 20){
+				var secureDirts = Orion.FindType(fertileDirtGraphic, 'any', secureId);
+				if(!secureDirts || secureDirts.length === 0) return;
+				Orion.Wait(1200);
+				Orion.MoveItem(secureDirts[0], 1000, 'backpack');
+			}
+		}
+	}
+	
 	bowls.forEach(function(bowl){
 		Orion.UseObject(bowl);
-		if (Orion.WaitForTarget(1000))
-			Orion.TargetTile('any', Player.X(), Player.Y(), Player.Z());
+		if (!Orion.WaitForTarget(1000)){
+			Orion.Wait(1200);
+			Orion.UseObject(bowl);
+			Orion.WaitForTarget(1000);
+		}
+		checkStock();
+		var fertileDirts = Orion.FindType(fertileDirtGraphic, 'any', 'backpack');
+		if(!fertileDirts || fertileDirts.length === 0) return;
+		var validFertiles = fertileDirts.filter(function(dirtId){
+			return Orion.FindObject(dirtId).Count() > 19;
+		});
+		if(validFertiles.length < 1) return;
+		Orion.TargetObject(validFertiles[0]);
 		Orion.Wait(1200);
 	})
-}
-
-function MoveBowlsToCrates(){
-	
 	var boxes = Orion.FindType(boxGrpahic, "any", "backpack", " " , "finddistance", " ", false);
 	Orion.Print(boxes)
 	if(!boxes || boxes.length === 0) return;
@@ -38,21 +101,17 @@ function MoveBowlsToCrates(){
 		var dirtObject = Orion.FindObject(dirt);
 		if(dirtObject.Container() === box) return;
 		Orion.MoveItem(dirt, 1, box);
-		Orion.Wait(1250);
+		Orion.Wait(1200);
+		if(Orion.FindObject(dirt).Container() !== box){
+			Orion.MoveItem(dirt, 1, box);
+			Orion.Wait(1200);
+		}
 	});
-	
-	Orion.OpenContainer(resourceBag);
-	
-	//destroy box
-	Orion.Wait(1250);
-	Orion.UseObject(axe);
-	if (Orion.WaitForTarget(1000))
-		Orion.TargetObject(box);
-		
 }
 
 function LockDownDirts(){
 	var groundDirts = Orion.FindType(dirtGraphic, "any", "ground", "" , "2");
+	Orion.Print(groundDirts.length);
 	if(!groundDirts || groundDirts.length < 1) return;
 	groundDirts.forEach(function(groundDirt){
 		var dirtObject = Orion.FindObject(groundDirt);
@@ -66,10 +125,323 @@ function LockDownDirts(){
 	});
 }
 
+function ApplyLastObjectSeeds(){
+	var lastObjectSeed = Orion.FindObject(lastobject);
+	var lastObjectSeedId = lastObjectSeed.Serial();
+	var lastObjectSeedGraphic = lastObjectSeed.Graphic();
+	var lastObjectSeedColor = lastObjectSeed.Color();
+	var lastObjectSeedContainer = lastObjectSeed.Container();
+
+	var checkSeedStock = function(){
+		var backpackSeeds = Orion.FindType(lastObjectSeedGraphic, lastObjectSeedColor, 'backpack');
+		var lastObjectSeedCurrent = Orion.FindObject(lastObjectSeedId);
+		if(!lastObjectSeedCurrent || lastObjectSeedCurrent.Container() !== lastObjectSeedContainer) return;
+		if(backpackSeeds && backpackSeeds.length > 0 && Orion.FindObject(backpackSeeds[0]).Count() > 5) return;		
+		 Orion.MoveItem(lastObjectSeedId, 50, 'backpack');
+		 Orion.Wait(1200);
+	}
+
+	var groundDirts = Orion.FindType(dirtGraphic, "any", "ground", "" , "1");
+	if(!groundDirts || groundDirts.length < 1) return;
+	groundDirts.forEach(function(groundDirt){
+		checkSeedStock();
+		var backpackSeeds = Orion.FindType(lastObjectSeedGraphic, lastObjectSeedColor, 'backpack');
+		var dirtObject = Orion.FindObject(groundDirt);
+		var props = dirtObject.Properties();
+		
+		if(props.indexOf("Vibrant") === -1){
+			Orion.Print(props);
+			Orion.UseObject(backpackSeeds[0]);
+			Orion.WaitForTarget(3000);
+			Orion.TargetObject(groundDirt);
+			Orion.Wait(1200);
+		}
+	});	
+}
+
+function PickPlants(){
+	var resourceTypes = [
+		'0x0DCF', //seed
+		'0x5736', //seed renewal
+		'0x0F42', //green thorn
+		'0x1021', //orange petal
+	];
+
+
+	
+	Orion.OpenContainer(secureId);
+	Orion.Wait(1200);
+	
+	var plantGumpId = '0x00007492';
+	var pickingGumpId = '0x000056CE';
+	
+	var plants = Orion.FindType(pickablePlants.join("|"), 'any', 'ground', ' ', 2);
+	
+	var depositResources = function(ignoreWeight){
+		if(Player.Weight() > 400 || ignoreWeight){
+			var found = Orion.FindType(resourceTypes.join("|"), 'any', 'backpack');
+			if(found && found.length > 0){
+				found.forEach(function(resourceId){
+					Orion.MoveItem(resourceId, 60000, secureId);
+					Orion.Wait(1200);
+				});
+			}
+		}
+	}
+	
+	
+	var pickPlant = function (plantId){
+		depositResources();
+		Orion.UseObject(plantId);
+		var startTime = new Date().getTime();
+		if(!Orion.WaitForGump(3000)){
+			Orion.Wait(1200);
+			Orion.UseObject(plantId);
+			Orion.WaitForGump(3000);
+			Orion.Wait(1200);
+		}
+		var plantObject = Orion.FindObject(plantId);
+		var props = plantObject.Properties();
+		if (
+			props.toLowerCase().indexOf("green") > -1 || 
+			props.toLowerCase().indexOf("orange") > -1
+			){
+			
+			Orion.GetGump(plantId, plantGumpId).Select(Orion.CreateGumpHook(1));
+			Orion.WaitForGump(3000);
+			
+			while(Orion.GetGump(plantId, pickingGumpId).TextList()[2].indexOf( "0/") === -1){
+				var gump = Orion.GetGump(plantId, pickingGumpId).Select(Orion.CreateGumpHook(8));
+				Orion.WaitForGump(3000);
+			}
+			while(Orion.GetGump(plantId, pickingGumpId).TextList()[1].indexOf( "0/") === -1){
+				var gump = Orion.GetGump(plantId, pickingGumpId).Select(Orion.CreateGumpHook(6));
+				Orion.WaitForGump(3000);
+			}
+			
+			if(
+			Orion.GetGump(plantId, pickingGumpId).TextList()[2].indexOf( "0/0") > -1 && 
+			Orion.GetGump(plantId, pickingGumpId).TextList()[1].indexOf( "0/0") > -1
+			){
+				Orion.Say("I wish to release this");
+				Orion.WaitForTarget(1000);
+				Orion.TargetObject(plantId);
+				Orion.Wait(200);
+			}
+			
+		}
+		Orion.GetGump(plantId, pickingGumpId).Close();
+		Orion.Wait(1200 - (new Date().getTime() - startTime));
+	}
+	
+	
+	var index = 0;
+	plants.forEach(function(plantId){
+		index++;
+		Orion.Print("Working on plant: " + index + " / " + plants.length)
+		pickPlant(plantId);
+	});
+	
+	depositResources(true);
+	
+}
+
+
 function TendPlant(){
 	
-	var gump =	Orion.GetGump('0x431D236A', '0x00007492');
-	Orion.Print(gump.Text());
-	//Serial=0x430EA563
-//ID=0x00007492
+	Orion.OpenContainer(secureId);
+	Orion.Wait(1200);
+	
+	var plantGumpId = '0x00007492';
+	var pots = [
+		'0x0F0A', // greater poison
+		'0x0F09', // str
+		'0x0F0C', // heal
+		'0x0F07', // cure
+	];
+	var DepositResources = function(){
+		var resourceTypes = pots.join("|") + "|" + '0x0F0E';
+		var found = Orion.FindType(resourceTypes, 'any', 'backpack');
+		if(!found || found.length === 0) return;
+		found.forEach(function(foundId){
+			Orion.MoveItem(foundId, 60000,secureId );
+			Orion.Wait(1200);
+		});
+	}
+	var PullResource = function(type){
+		var found = Orion.FindType(type, 'any', secureId);
+		if(!found || found.length === 0) return;
+		Orion.MoveItem(found[0], 30, 'backpack');
+		Orion.Wait(1200);
+	}
+	var DepositEmptyBottles = function(){
+		var found = Orion.FindType('0x0F0E', 'any', 'backpack');
+		if(!found || found.length === 0) return;
+		Orion.MoveItem(found[0], 1000, secureId);
+		Orion.Wait(1200);
+	}
+	var CheckResources = function(){
+		pots.forEach(function(pot){
+			var backpackfind = Orion.FindType(pot, 'any' ,'backpack');
+			if(backpackfind && backpackfind.length > 0){
+				var item = Orion.FindObject(backpackfind[0]);
+				if(item && item.Count() < 5) {
+					PullResource(pot);
+					DepositEmptyBottles();
+				}
+			} else {
+				backpackfind = Orion.FindType(pot, 'any','backpack');
+				if(backpackfind && backpackfind.length > 0){
+					var item = Orion.FindObject(backpackfind[0]);
+					if(item && item.Count() < 5) PullResource(pot);
+				} else {
+					PullResource(pot);
+					DepositEmptyBottles();
+				}		
+			}
+		});
+	}
+	
+
+	var plantActions = {
+		water: function(gumpSerial){
+			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(6));
+			Orion.WaitForGump();
+		},
+		poison: function(gumpSerial){
+			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(7));
+			Orion.WaitForGump();
+		},
+		cure: function(gumpSerial){
+			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(8));
+			Orion.WaitForGump();
+		},
+		heal: function(gumpSerial){
+			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(9));
+			Orion.WaitForGump();
+		},
+		str: function(gumpSerial){
+			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(10));
+			Orion.WaitForGump();
+		}
+	};
+	
+	var plantNeeds = {
+		water: function(gumpSerial){
+			while(Orion.GetGump(gumpSerial, plantGumpId).Text(16) < 3){
+				plantActions.water(gumpSerial);
+			}
+		},
+		poison: function(gumpSerial){
+			var number = Orion.GetGump(gumpSerial, plantGumpId).Text(14);
+			var applied = Orion.GetGump(gumpSerial, plantGumpId).Text(0);
+			number = number - applied;
+			if(number == 4){
+				plantActions.poison(gumpSerial);
+			}
+			if(number == 5){
+				plantActions.poison(gumpSerial);
+			}
+		},
+		cure: function(gumpSerial){
+			var number = Orion.GetGump(gumpSerial, plantGumpId).Text(15);
+			var applied = Orion.GetGump(gumpSerial, plantGumpId).Text(1);
+			number = number - applied;
+			if(number == 4){
+				plantActions.cure(gumpSerial);
+			}
+			if(number == 5){
+				plantActions.cure(gumpSerial);
+			}
+		},
+		heal: function(gumpSerial){
+			var number = Orion.GetGump(gumpSerial, plantGumpId).Text(14);
+			var applied = Orion.GetGump(gumpSerial, plantGumpId).Text(2);
+			number = number - applied;
+			if(number == 4){
+				plantActions.heal(gumpSerial);
+			}
+			if(number == 5){
+				plantActions.heal(gumpSerial);
+			}
+		},
+		str: function(gumpSerial){
+			var number = Orion.GetGump(gumpSerial, plantGumpId).Text(15);
+			var applied = Orion.GetGump(gumpSerial, plantGumpId).Text(3);
+			number = number - applied;
+			if(number == 4){
+				plantActions.str(gumpSerial);
+			}
+			if(number == 5){
+				plantActions.str(gumpSerial);
+			}
+		},
+	}
+	
+	var hardDirtNeeds = {
+		water: function(gumpSerial){
+			while(Orion.GetGump(gumpSerial, plantGumpId).Text(14) < 3){
+				plantActions.water(gumpSerial);
+			}
+		}
+	}
+	
+	var applyNeeds = function(plantId){
+		Orion.UseObject(plantId);
+		var startTime = new Date().getTime();
+		if(!Orion.WaitForGump(3000)){
+			Orion.Wait(1200);
+			Orion.UseObject(plantId);
+			Orion.WaitForGump(3000);
+			Orion.Wait(1200);
+		}
+		var plantObject = Orion.FindObject(plantId);
+		var props = plantObject.Properties();
+		if (
+			props.toLowerCase().indexOf("with a") > -1 || 
+			props.toLowerCase().indexOf("green") > -1 || 
+			props.toLowerCase().indexOf("orange") > -1
+			){
+			
+			plantNeeds.water(plantId);
+			plantNeeds.poison(plantId);
+			plantNeeds.cure(plantId);
+			//plantNeeds.heal(plantId);
+			//plantNeeds.str(plantId);
+		} else {
+			hardDirtNeeds.water(plantId);
+		}
+		Orion.GetGump(plantId, plantGumpId).Close();
+		Orion.Wait(1200 - (new Date().getTime() - startTime));
+	}
+
+
+	// Gump text:
+	//  [16] is water and 3 means good, 2 is yellow need, 1 is red need
+	//11-16 should be what we need
+	
+	//0-3 should be how many pots we got going on, it retuns a count of how many pots are on plant
+	// 0 is poison pots
+	// 1 is Cure pots
+	// 2 is heal pots
+	// 3 is str pots 
+	//Orion.InfoGump()
+	//return;
+	var skip = 0;
+	var plants = Orion.FindType(ids_plants.join("|"), 'any', 'ground', ' ', 2);
+	var index = 0;
+	plants.forEach(function(plantId){
+		index++;
+		if(skip > index) return;
+		var props = Orion.FindObject(plantId).Properties();
+		if(props.toLowerCase().indexOf("locked down") === -1){
+			return;
+		}
+		
+		CheckResources();
+		Orion.Print("Working on plant: " + index + " / " + plants.length)
+		applyNeeds(plantId);
+	});
+	DepositResources();
+	
 }

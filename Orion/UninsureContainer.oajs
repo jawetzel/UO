@@ -1,0 +1,23 @@
+
+function InsureItem(itemId)
+{
+	Orion.Wait(200);
+	Orion.RequestContextMenu('self');
+	Orion.WaitContextMenuID('self', 418);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetObject(itemId);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetObject('0x00000000');
+}
+
+
+function run(){
+	var items = Orion.FindType('any', 'any', lastobject);
+	Orion.Print(items);
+	items.forEach(function(itemId){
+		var item = Orion.FindObject(itemId);
+		if(item.Properties().indexOf("nsured") > -1){
+			InsureItem(itemId);
+		}
+	});
+}

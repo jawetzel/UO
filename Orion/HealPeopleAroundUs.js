@@ -1,7 +1,7 @@
 
 		
 function Run(){
-
+	var lasthealed = null;
 	function HealFriend() {
 	
 		var healThreshold = 80;
@@ -23,7 +23,15 @@ function Run(){
 	        '-GL-',
 	        "lil",
 	        'spw',
-	        'blunt'
+	        'blunt',
+	        'jan',
+	        'fred',
+	        'knuckle',
+	        'flip',
+	        'flop',
+	        'poof',
+	        'MvP',
+	        '-G-'
 	    ];
 	    var playerSerial = Player.Serial();
 	    var playerObject = Orion.FindObject(playerSerial);
@@ -96,12 +104,26 @@ function Run(){
 	    var target = FindMeATarget();
 	    if (target !== null) {
 	    	var targetObject = Orion.FindObject(target);
-	    	if(target !== playerSerial){	    
+	    	if(target !== Player.Serial()){
 		    	Orion.GetStatus(target);	    	
 		    	Orion.ShowStatusbar(target, 740, 175);
 	    	}
+	    	if(targetObject){
+	    		if(lasthealed === target) {
+	    			Orion.Wait(250);
+	    			if(targetObject.Hits() * 4 >= healThreshold && targetObject.Hits() > 0){
+	    				if(target !== Player.Serial()){
+	    					Orion.CloseStatusbar(target);
+	    					return;
+	    				}
+		    			
+	    			}
+	    		}
+	    	}
 	    	
-	    	if(targetObject.Poisoned()){
+	    	lasthealed = target;
+	    	
+	    	if(targetObject && targetObject.Poisoned()){
 	    		Orion.Cast('25');
 	    	} else {
 	    		Orion.Cast('29');
@@ -111,7 +133,7 @@ function Run(){
 			
 			if (Orion.WaitForTarget(3000))
 				Orion.TargetObject(target);
-			Orion.Wait(400);
+			Orion.Wait(500);
 			if(playerSerial !== target)
 				Orion.CloseStatusbar(target);
 		}

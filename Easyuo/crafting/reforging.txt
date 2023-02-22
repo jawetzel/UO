@@ -87,6 +87,15 @@ if #findkind = -1
  {
  halt
  }
+set #property $
+event property #findid
+if Exc notin #property
+ {
+  ignoreitem #findid
+  goto main
+ }
+
+
 set %item #findid
 exevent drag #findid #findstack
 exevent dropc #backpackid

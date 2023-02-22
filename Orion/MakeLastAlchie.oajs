@@ -1,8 +1,8 @@
-var secureId = '0x4598B31A';
+var secureId = '0x46D9BEAE';
 
 //cure, heal, agility, refresh, str
 //this list is incomplete, as we make more things we should add more to the list.
-var pots = ['0x0F07', '0x0F0C', '0x0F08', '0x0F0B', '0x0F09'];
+var pots = ['0x0F07', '0x0F0C', '0x0F08', '0x0F0B', '0x0F09', '0x0F0A'];
 
 
 // you should not need to configure below this point
@@ -14,8 +14,9 @@ var regs = ['0x0F8D', '0x0F88', '0x0F8C', '0x0F85', '0x0F86', '0x0F84', '0x0F7B'
 var lastToolId = null;
 var FindTool = function(hardReset){
 	if(hardReset || !lastToolId || !Orion.FindObject(lastToolId)){
-		var find = Orion.FindType('0x0E9B', -1, 'backpack');
-		if(Orion.UseObject(find[0])){
+		var find = Orion.FindType('0x0E9B', 'any', 'backpack');
+		Orion.UseObject(find[0])
+		if(Orion.WaitForGump(3000)){
 			lastToolId = find[0];
 		}
 		Orion.Wait(1250)
@@ -23,8 +24,9 @@ var FindTool = function(hardReset){
 }
 
 var PullResource = function(type){
-	var found = Orion.FindType(type, -1, secureId);
-	Orion.MoveItem(found, 50, 'backpack');
+	var found = Orion.FindType(type, 'any', secureId);
+	if(!found || found.length === 0) return;
+	Orion.MoveItem(found[0], 100, 'backpack');
 	Orion.Wait(1200);
 }
 var DepositCrafted = function(){
@@ -45,7 +47,7 @@ var DepositCraftedAndGetBottles = function(){
 			PullResource(bottleType);
 		}
 	} else {
-		Orion.Wait(2000);
+		//Orion.Wait(2000);
 		bottleBackpackFind = Orion.FindType(bottleType, -1, 'backpack');
 		if(bottleBackpackFind && bottleBackpackFind.length > 0){
 			var item = Orion.FindObject(bottleBackpackFind[0]);
@@ -63,22 +65,22 @@ var DepositCraftedAndGetBottles = function(){
 
 var CheckResources = function(){
 	regs.forEach(function(reg){
-		var backpackfind = Orion.FindType(reg, -1,'backpack');
+		var backpackfind = Orion.FindType(reg, 'any' ,'backpack');
 		if(backpackfind && backpackfind.length > 0){
 			var item = Orion.FindObject(backpackfind[0]);
-			if(item && item.Count() < 15) PullResource(reg);
+			if(item && item.Count() < 15) {
+				PullResource(reg);
+			}
 		} else {
-			Orion.Wait(2000);
-			backpackfind = Orion.FindType(reg, -1,'backpack');
+			backpackfind = Orion.FindType(reg, 'any','backpack');
 			if(backpackfind && backpackfind.length > 0){
 				var item = Orion.FindObject(backpackfind[0]);
 				if(item && item.Count() < 15) PullResource(reg);
 			} else {
-				 PullResource(reg);
+				PullResource(reg);
 			}		
 		}
 	});
-	
 }
 
 while(true){
@@ -86,9 +88,9 @@ while(true){
 	 CheckResources();
 	 DepositCraftedAndGetBottles();
 	 var gump0 = Orion.GetGump('last');
-	 if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000001CC'))
+	 if (gump0.ID() === '0x000001CC')
 	{
 		gump0.Select(Orion.CreateGumpHook(1999));
-		Orion.Wait(100);
+		Orion.WaitForGump(3000);
 	}
 }

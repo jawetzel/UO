@@ -1,113 +1,182 @@
-var bankId = '0x459F7444';
 
 var moveItem = function(item){
-	Orion.MoveItem(item, 1000, bankId);
+	Orion.MoveItem(item, 1000, Player.BankSerial());
 	Orion.Wait(1200);
 }
+
+var resources = [
+	 '0x0F7A',
+	 '0x0F7B',
+	 '0x0F84',
+	 '0x0F85',
+	 '0x0F86',
+	 '0x0F88',
+	 '0x0F8C',
+	 '0x0F8D',
+	 '0x0EF3',
+	 '0x0F7A',
+	 '0x0F7B',
+	 '0x0F84',
+	 '0x0F85',
+	 '0x0F86',
+	 '0x0F88',
+	 '0x0F8C',
+	 '0x0F8D',
+	 '0x0EF3'
+]
+
+function DeedFullStacksInLastObject(){
+	var deeds = Orion.FindType('0x14F0', '0x0047', backpack);
+	var regs = Orion.FindType('any', 'any', lastobject);
+	var deedIndex = 0;
+	
+	var deedItem = function(itemId){
+		if(Orion.FindObject(itemId).Count() !== 60000) return;
+		Orion.MoveItem(deeds[deedIndex], 1, Player.BankSerial());
+		Orion.Wait(1200);
+		Orion.UseObject(deeds[deedIndex]);
+		Orion.WaitForTarget(1000);
+		Orion.TargetObject(itemId);
+		Orion.Wait(1200);
+		deedIndex++;
+	}
+	
+	regs.forEach(function(reg){
+		deedItem(reg);
+	})
+}
+
+function CombineStacks () {
+	var lastObjectItem = Orion.FindObject(lastobject);
+	resources.forEach(function(resource){
+		var items = Orion.FindType(resource, 'any', Player.BankSerial())
+		if(items && items.length > 0){
+			items.forEach(function(itemId){
+				var currentItem = Orion.FindObject(itemId);
+				var count = currentItem.Count();
+				var bagItems = Orion.FindType(resource, 'any', lastObjectItem.Serial());
+				bagItems.forEach(function(bagItem){
+					var bagItemCount =  Orion.FindObject(bagItem).Count();
+					if(count > 0 && bagItemCount !== 60000){
+						var qtyToMove = 60000 - bagItemCount > count ? count : 60000 - bagItemCount;
+						Orion.MoveItem(itemId, qtyToMove, bagItem);
+						count = qtyToMove;
+						Orion.Wait(1200);
+					}				
+				});
+				if(count > 0) {
+					var posx = resources.indexOf(resource);
+					Orion.Print(posx);
+					Orion.MoveItem(itemId, 60000, lastObjectItem.Serial(), 45 + (posx * 12), 20);
+					Orion.Wait(1200);
+				}
+			});
+		}
+	});
+	
+	var  baggedResources = Orion.FindType(resources.join("|"), 'any', lastObjectItem.Serial());
+	baggedResources.forEach(function(resource){
+		var count = Orion.FindObject(resource).Count();
+		if(count < 60000){
+			Orion.MoveItem(resource, 60000, Player.BankSerial());
+			Orion.Wait(1200);
+		}
+	});
+	
+	
+}
+
 
 var FindItems = function(){
-	var item = Orion.FindType('0x0F7A', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F7B', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F84', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F85', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F86', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F88', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F8C', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F8D', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0EF3', -1, 'ground', '', '0');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
+	var foundItem = false;
+	resources.forEach(function(resource){
+		if(foundItem) return;
+		var item = Orion.FindType(resource, 'any', 'ground', ' ', 0);
+		if(item && item.length > 0){
+			moveItem(item);
+			foundItem = true;
+		}
+	});
+	resources.forEach(function(resource){
+		if(foundItem) return;
+		item = Orion.FindType(resource, 'any','backpack');
+		if(item && item.length > 0){
+			moveItem(item);
+			foundItem = true;
+		}
+	});
+	return foundItem;
+}
+
+function FindVendors () {
+	var vendorTitles = [
+		'Mage',
+		'Herbalist',
+		'Alchemist'
+	];
+	var yellows = Orion.FindType("any", "any", "ground", 'mobile', '8', 'yellow' );
 	
-	item = Orion.FindType('0x0F7A', -1,'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
+	var nonGuild = yellows.filter(function(vendorId){
+		var object = Orion.FindObject(vendorId);
+		var title = object.Properties();
+		if(title.indexOf("Guild") > -1){
+			 return false;
+		}
 		return true;
-	}
-	item = Orion.FindType('0x0F7B', -1, 'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
+	});
+	
+	var vendors = nonGuild.filter(function(vendorId){
+		var object = Orion.FindObject(vendorId);
+		var title = object.Properties();
+		if(
+			vendorTitles.filter(function(vendorTitle){ 
+				if(title.indexOf(vendorTitle) > -1) return true 
+			}).length === 0
+		) {
+			return false;
+		}
 		return true;
+	});
+	return vendors;
+}
+function Run (){
+	var vendorIndex = 0;
+	var skipIndex = 0;
+	while(true){
+		if(!Player.Hidden()) {
+			Orion.UseSkill("Hiding");
+		}
+		skipIndex++;
+		if(skipIndex > 19){
+			skipIndex = 0;
+			var vendors = FindVendors();			
+			Orion.RequestContextMenu(vendors[vendorIndex]);
+			Orion.WaitContextMenuID(vendors[vendorIndex], 110);
+			if(vendorIndex >= vendors.length - 1){
+				vendorIndex = 0;
+			} else {
+				vendorIndex++;
+			}
+		}
+		
+		while(FindItems()){}
+		Orion.Wait(1200);
 	}
-	item = Orion.FindType('0x0F84', -1, 'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F85', -1, 'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F86', -1, 'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F88', -1, 'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F8C', -1, 'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0F8D', -1, 'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	item = Orion.FindType('0x0EF3', -1, 'backpack');
-	if(item && item.length > 0){
-		moveItem(item);
-		return true;
-	}
-	return false;
 }
 
 
 
-while(true){
-	
-	while(FindItems()){}
-	Orion.Wait(1200);
+
+function Autostart()
+{
+	Orion.Wait(10000);
+	if(Player.Y() === 523 && Player.X() === 1000) {
+		Orion.Print("Starting");
+		Orion.Say("Bank");
+		Orion.Wait(2000);
+		Orion.UseObject(backpack);
+		Orion.Wait(2000);
+		Run();
+	}
 }
-
-
-
 

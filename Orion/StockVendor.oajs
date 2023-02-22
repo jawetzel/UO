@@ -1,0 +1,79 @@
+var InsureItem = function(itemId)
+{
+	Orion.Wait(200);
+	Orion.RequestContextMenu('self');
+	Orion.WaitContextMenuID('self', 418);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetObject(itemId);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetObject('0x00000000');
+}
+
+function StockLobjectVendorWithLtargetBag(){	
+	var type = '0x1086|0x1F06';//bracelets
+	//type = '0x1F09|0x108A'; //rings 
+
+	var soirceBag = Orion.ClientLastTarget();
+	var targetBag = Orion.FindObject(lastobject).Serial();
+
+	Orion.Print('Uninsuring Source');
+	var sourceItems = Orion.FindType(type, 'any', soirceBag, " ", ' ', " ", true);
+	if(sourceItems && sourceItems.length > 0){
+		sourceItems.forEach(function(item){
+			var itemProps = Orion.FindObject(item).Properties();
+			if(itemProps.indexOf('nsured') > -1)  InsureItem(item);
+		})
+	}
+	
+	var currentDate = new Date();
+	var dateString = '-DT' + 
+	currentDate.getFullYear().toString() +
+	((currentDate.getMonth() + 1).toString().length === 1 ? '0' : '') + (currentDate.getMonth() + 1).toString() +
+	 (currentDate.getDate().toString().length === 1 ? '0' : '') + currentDate.getDate().toString() + 
+	  "DT-";
+	
+	Orion.Print('Stocking From Source');
+	if(sourceItems && sourceItems.length > 0){
+		sourceItems.forEach(function(item){
+			var destItems = Orion.FindType(type, 'any', targetBag);
+			if(destItems.length > 123) return;
+			Orion.MoveItem(item, 1, targetBag);
+			Orion.Wait(600);
+			if(Orion.FindObject(item).Container() === soirceBag){
+				Orion.MoveItem(item, 1, targetBag);
+				Orion.Wait(600);
+			}
+			Orion.SendPrompt("20000000 " + dateString)
+			Orion.Wait(600);
+		})
+	}
+	
+	
+	var destItems = Orion.FindType(type, 'any', targetBag);
+	Orion.Print("Orginizing vendor");
+	if(destItems && destItems.length > 0){
+		var startx = 44;
+		var endx = 135;
+		var starty = 65;
+		var endy = 120;
+		
+		var findPosFromIndex = function(posIndex){
+			var y = starty;
+			var x = startx;
+			
+			y += Math.floor((posIndex / 17)) * 12;  
+			x += (posIndex % 17) * 5;  
+			return {x: x, y: y};
+		}
+	
+		var index = 0;
+		destItems.forEach(function(item){
+			var position = findPosFromIndex(index);
+			Orion.Print(JSON.stringify(position));
+			index++;
+			Orion.MoveItem(item, 1, targetBag, position.x, position.y);
+			Orion.Wait(1200);
+		})
+	}
+	
+}
