@@ -113,7 +113,7 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 	WaitForObjectTimeout();
 	
 	if(useCutCorpses){
-		var backpackCutter = Orion.FindType('0x2D23', 'any', 'backpack');
+		var backpackCutter = Orion.FindType('0x0902', 'any', 'backpack');
 		if(backpackCutter && backpackCutter.length > 0) {
 			WaitForObjectTimeout()
 			Orion.UseObject(backpackCutter[0]);
@@ -138,7 +138,10 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 			if(ShouldKeepItem(item)){
 				WaitForObjectTimeout()
 				var movedItem = Orion.FindObject(item);
-				if(lootbag && lootbag.length > 0){
+				if(lootbag && lootbag.length > 0 && 
+					itemGraphic !== '0x0EED' && //not gold
+					itemGraphic !== '0x0E21' //not bandages
+					){ 
 					Orion.MoveItem(item, 5000, lootbag[0]);
 					RegisterUseObjectTimeout()
 				}

@@ -21,14 +21,16 @@ function CombatLoop(){
 			useRunToTarget: true,
 		},
 		JunkoSamp: {
-			useSpecial: true,
+			//useSpecial: true,
 			useAttack: true,
 			useHealFriend: true,
 			useBandages: true,
 			useLootCorpses: true,
-			useInsureItem: true,
-			useEnemyOfOne: true,
+			//useInsureItem: true,
+			//useEnemyOfOne: true,
 			//useRunToTarget: true,
+			//useHonor: true,
+			//useIgnoreReset: true,
 		},
 		JunkoSampNoLoot: {
 			useSpecial: true,
@@ -70,23 +72,23 @@ function CombatLoop(){
 		},
 		soloFarm: {
 			//useMomentumStrike: true,
-			//useSpecial: true,
+			useSpecial: true,
 			useAttack: true,
 			useLootCorpses: true,
-			useHonor: true,
-			useInsureItem: true,			
-			useLootTMaps: true,
+			//useHonor: true,
+			//useInsureItem: true,			
+			//useLootTMaps: true,
 			//useIgnoreReset: true,
 			//useEnemyOfOne: true,
 			//useIgnoreReset: true,
-			useLightningStrike: true,
+			//useLightningStrike: true,
 			//useMomentumStrike: true,
 			useConfidence: true,
-			//useEvasion: true,
-			useBandages: true,
-			//useEnemyOfOne: true,
+			useEvasion: true,
+			//useBandages: true,
+			useEnemyOfOne: true,
 			//useDivineFury: true,
-			useConsecrateWeapon: true,
+			//useConsecrateWeapon: true,
 		},
 		sampTamer: {
 			//useHonor: true,
@@ -121,15 +123,16 @@ function CombatLoop(){
 			useHonor: true,
 			useLootTMaps: true,
 			useLightningStrike: true,
-			//useMomentumStrike: true,
+			useMomentumStrike: true,
 			useConfidence: true,
-			//useEvasion: true,
+			useEvasion: true,
 			useBandages: true,
 			useEnemyOfOne: true,
 			//useDivineFury: true,
 			//useConsecrateWeapon: true,
 			//useRunToTarget: true,
-			useRearm: true,
+			//useRearm: true,
+			useHealFriend: true,
 		},
 		
 		allFeatures: {
@@ -160,7 +163,28 @@ function CombatLoop(){
 	}
 	
 	
-	var profile = profiles.JunkoSamp;
+	var profile = profiles.siege;
+	
+	if(Player.Name() === 'Swiggity'){
+		Orion.Print("using swiggity profile");
+		profile = {
+			//useSpecial: true,
+			useAttack: true,
+			useLootCorpses: true,
+			useHonor: true,
+			useLootTMaps: true,
+			useLightningStrike: true,
+			useConfidence: true,
+			useBandages: true,
+			//useEnemyOfOne: true,
+			//useDivineFury: true,
+			//useConsecrateWeapon: true,
+			//useRunToTarget: true,
+			useRearm: true,
+			useHealFriend: true,
+		}
+	}
+	
 	
 	UseLootEvalPassword("12345");
 
@@ -253,7 +277,9 @@ function CombatLoop(){
 		"my pet",
 		"killer",
 		"house holder",
-		"skills"
+		"skills",
+		'[-G-]',
+		'TABOO'
 	]);
 		
 	// probably dont configure below here
@@ -296,6 +322,12 @@ function CombatLoop(){
 			'0x0F09': true, //str pot
 			'0x0F0C': true, //heal pot
 			'0x0F07': true, //cure
+			'0x0F7D': true, //deamon Bloodd
+			'0x0F8A': true, //pig iron
+			'0x0F8E': true, //nox crystal 
+			'0x0F78': true, //batwing
+			'0x0F8F': true, // grave dist 
+			
 		});
 	} else {
 		SetLootItems({
@@ -321,7 +353,7 @@ function CombatLoop(){
 			//'0x2D60': true, //Gift Of Life SW spell
 			'0x573E': true, //void Orion
 			'0x5728': true, //void core
-			//'0x0E21': true, //bandages
+			'0x0E21': true, //bandages
 			'0x0F80': true, // demon bone
 			'0x0EED': true, // gold
 			

@@ -93,27 +93,27 @@ var ShouldKeepItem_Splinter = function (props){
 		var splinter = "Splintering Weapon";
 		var isOverCapSplinter = props.indexOf(splinter + " 25") > -1 || props.indexOf(splinter + " 30") > -1;
 		var isSplinter =  props.indexOf(splinter + " 20") > -1 || isOverCapSplinter;
-		
+		if(Orion.ShardName() === 'Siege Perilous' && props.indexOf("Skill Required") > -1){
+			isSplinter = true;
+		}
 		var antique = 'Antique';
 		var isAntique = props.indexOf(antique) > -1;
 		var brittle = 'Brittle';
 		var isBrittle =  props.indexOf(brittle) > -1;
-		
 		var fireball = "Hit Fireball";
-		var isFireball = props.indexOf(fireball) > -1;
 		var isCappedFireball = props.indexOf(fireball + " 50") > -1
 		var isOverCapFireball = props.indexOf(fireball + " 60") > -1 || props.indexOf(fireball + " 70") > -1;
+		var isFireball = isCappedFireball || isOverCapFireball;
 		var lightning = "Hit Lightning";
-		var isLightning = props.indexOf(lightning) > -1;
 		var isCappedLightning = props.indexOf(lightning + " 50") > -1
 		var isOverCapLightning = props.indexOf(lightning + " 60") > -1 || props.indexOf(lightning + " 70") > -1;
-		var overCapLightning
+		var isLightning = isCappedLightning || isOverCapLightning;
 		var harm = "Hit Harm";
-		var isHarm = props.indexOf(harm) > -1;
 		var isOverCapHarm = props.indexOf(harm + " 60") > -1 || props.indexOf(harm + " 70") > -1;
+		var isHarm = isOverCapHarm;
 		var magicArrow = "Hit Magic Arrow";
-		var isMagicArrow = props.indexOf(magicArrow) > -1;
 		var isOverCapMagicArrow = props.indexOf(magicArrow + " 60") > -1 || props.indexOf(magicArrow + " 70") > -1;
+		var isMagicArrow = isOverCapMagicArrow;
 		
 		var hitLowerD = 'Hit Lower Defense';
 		var isLowerD = props.indexOf(hitLowerD) > -1;
@@ -122,12 +122,15 @@ var ShouldKeepItem_Splinter = function (props){
 		var bokuto = "Bokuto";
 		var isBokuto = props.indexOf(bokuto) > -1;
 		
-		if(isSplinter){
+		if(isSplinter || isOverCapSplinter){
 				var isHitSpell = isFireball || isLightning || isHarm || isMagicArrow;
 					
-				if(isAntique || isBrittle){
-					return false;
-				}	
+				if(Orion.ShardName() !== 'Siege Perilous'){
+					if(isAntique || isBrittle){
+						return false;
+					}	
+				}
+				
 									
 				if(isHitSpell && isOverCapSplinter){
 					return true;
@@ -146,55 +149,6 @@ var ShouldKeepItem_Splinter = function (props){
 				if (isBokuto && isHitSpell) {
 					return true;
 				}	
-
-				//Lets Figure out how many imbue slots are open;
-				var modCount = 0;
-				var physDamageType = '\nPhysical Damage';
-				var fireDamageType = '\nFire Damage';
-				var coldDamageType = '\nCold Damage';
-				var poisonDamageType = '\nPoison Damage';
-				var energyDamageType = '\nEnergy Damage';
-				var endIndex = 0;
-				if(props.indexOf(physDamageType) > -1 && (endIndex == 0 || props.indexOf(physDamageType) < endIndex)) endIndex = props.indexOf(physDamageType);
-				if(props.indexOf(fireDamageType) > -1 && (endIndex == 0 || props.indexOf(fireDamageType) < endIndex)) endIndex = props.indexOf(fireDamageType);
-				if(props.indexOf(coldDamageType) > -1 && (endIndex == 0 || props.indexOf(coldDamageType) < endIndex)) endIndex = props.indexOf(coldDamageType);
-				if(props.indexOf(poisonDamageType) > -1 && (endIndex == 0 || props.indexOf(poisonDamageType) < endIndex)) endIndex = props.indexOf(poisonDamageType);
-				if(props.indexOf(energyDamageType) > -1 && (endIndex == 0 || props.indexOf(energyDamageType) < endIndex)) endIndex = props.indexOf(energyDamageType);
-				if(endIndex == 0){
-					Orion.Print("END INDEX IS 0, SOMETHING WENT WRONG");
-					Orion.Print(props);
-					return false;
-				}
-				var propsStart = " Stones\n";
-				var startIndex = props.indexOf(propsStart);
-				if(startIndex === -1){
-					var propsStartOneStone = " Stone\n";
-					 startIndex = props.indexOf(propsStartOneStone);
-					 if(startIndex === -1){
-					 	Orion.Print("startIndex IS -1, SOMETHING WENT WRONG");
-						Orion.Print(props);
-						return false;
-					 }
-				}
-				var modsSubstring = props.substring(startIndex + propsStart.length, endIndex);
-				modCount = modCount + modsSubstring.split('\n').length;
-				var prized = "Prized";
-				var fcMinusOne = "Faster Casting -1";
-				if(props.indexOf(prized) > -1)  modCount--;
-				if(props.indexOf(fcMinusOne) > -1) modCount--;
-				
-				var imbueSlotsOpen = 5 - modCount;
-				Orion.Print("IMBUE SLOTS OPEN");
-				Orion.Print(imbueSlotsOpen);
-				Orion.Print(modsSubstring);
-	
-				if(imbueSlotsOpen > 0 && (isBokuto)){
-					return true;
-				} 
-				else {
-					return false;
-				}
-				
 		}
 		return false;
 	}
@@ -228,7 +182,7 @@ function ShouldKeepItem(itemId){
 						var bandageInstance = Orion.FindObject(bandageId);
 						totalCount += bandageInstance.Count();
 					})
-					if(totalCount > 3000) return false
+					if(totalCount > 333) return false
 				}
 			}
 			 return true;
@@ -240,7 +194,7 @@ function ShouldKeepItem(itemId){
 		
 		
 			
-		var isJewlery = props.indexOf('Ring') > -1 || props.indexOf('Bracelet') > -1;
+		var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
 		var is2hWeapon = props.indexOf('Two-handed Weapon') > -1;
 		var is1hWeapon = props.indexOf('One-handed Weapon') > -1;
 		var isArmor = props.indexOf("Physical Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1;
@@ -253,7 +207,50 @@ function ShouldKeepItem(itemId){
 				props.indexOf('Greater Artifact') > -1
 			) return true;
 			
-			if((isJewlery || is1hWeapon || is2hWeapon ) && props.indexOf('Major Magic') > -1) return true;
+			if(isJewlery){
+				if( 
+					props.indexOf("Faster Casting 1")  > -1 && 
+					(
+						props.indexOf("Faster Cast Recovery 4")  > -1 || 
+						props.indexOf("Faster Cast Recovery 3")  > -1 || 
+						props.indexOf("Faster Cast Recovery 2")  > -1
+					)
+				) {
+					return true; //caster jewls
+				}
+				
+				var isDci = props.indexOf("Defense Chance Increase 15%")  > -1 || 
+					props.indexOf("Defense Chance Increase 20%")  > -1;
+					
+				var isHci = props.indexOf("Hit Chance Increase 15%")  > -1 || 
+					props.indexOf("Hit Chance Increase 20%")  > -1;
+					
+				var isDi = props.indexOf("Damage Increase 20%")  > -1 || 
+					props.indexOf("Damage Increase 25%")  > -1 || 
+					props.indexOf("Damage Increase 30%")  > -1;
+				
+				var isSsi = props.indexOf("Swing Speed Increase 10%") > -1;
+				if(
+					(isDci && isHci) || 
+					(isHci && isDi) || 
+					(isHci && isSsi)
+				){
+					return true;
+				}
+			}
+			
+			if(is1hWeapon || is2hWeapon){
+				if(
+					props.indexOf("Undead")  > -1 || 
+					props.indexOf("Repond")  > -1 || 
+					props.indexOf("Reptile")  > -1 || 
+					props.indexOf("Arachnid")  > -1 || 
+					props.indexOf("Demon")  > -1
+				){
+					return true;
+				}
+			}
+			
 		}
 		
 		
@@ -273,7 +270,9 @@ function ShouldKeepItem(itemId){
 				!(lowerCaseProps.indexOf('hatchet') > -1) && 
 				!(lowerCaseProps.indexOf( 'no-dachi') > -1)
 			){
-				return false;
+				if(Orion.ShardName() !== 'Siege Perilous'){
+					return false;
+				}				
 			}
 		}
 		if(is1hWeapon) { //I want to exclude specific 1h weapons
@@ -282,7 +281,9 @@ function ShouldKeepItem(itemId){
 					return props.indexOf(name) > -1
 				}).length > 0
 			){
-				return false;
+				if(Orion.ShardName() !== 'Siege Perilous'){
+					return false;
+				}
 			}
 		}
 		

@@ -1,12 +1,27 @@
 function shear(){
-	var sheeps = Orion.FindType('0x00CF', any, ground, "inlos", 12, 'near');
+	var sheeps = Orion.FindType('0x00CF', any, ground, "inlos", 30, 'near');
 	if(sheeps && sheeps.length > 0){
-		Orion.UseObject(0x4133A7AC);
+		var firstSheep = Orion.FindObject(sheeps[0]);
+		Orion.WalkTo(firstSheep.X(), firstSheep.Y(), firstSheep.Z(), 1, 255, 1, 1)
+		if(firstSheep.Distance() >= 2) {
+			shear();
+			return;
+		}
+		var weaponObject = Orion.ObjAtLayer('RightHand');
+		if(weaponObject && weaponObject.Properties().toLowerCase().indexOf("skill requ") === -1) weaponObject = null;
+		if(!weaponObject) weaponObject = Orion.ObjAtLayer('LeftHand');
+		if(weaponObject && weaponObject.Properties().toLowerCase().indexOf("skill requ") === -1) weaponObject = null;
+		if(weaponObject) {
+			Orion.UseObject(weaponObject.Serial());			
+		} else {
+			return;
+		};
+		
 		Orion.WaitForTarget();
 		Orion.TargetObject(sheeps[0]);
 		Orion.Wait(600);
 		Orion.Attack(sheeps[0]);
-		Orion.Wait(600);
+		Orion.Wait(2000);
 	}
 	Orion.Wait(200);
 	shear();
