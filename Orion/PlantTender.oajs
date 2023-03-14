@@ -255,8 +255,6 @@ function TendPlant(){
 	var plantGumpId = '0x00007492';
 	var pots = [
 		'0x0F0A', // greater poison
-		'0x0F09', // str
-		'0x0F0C', // heal
 		'0x0F07', // cure
 	];
 	var DepositResources = function(){
@@ -303,38 +301,43 @@ function TendPlant(){
 	}
 	
 
+
+	var GetGump = function(gumpSerial, plantGumpId){
+		var gump = Orion.GetGump(gumpSerial, plantGumpId);
+		if(!gump){
+			Orion.Wait(250);
+		}
+		gump = Orion.GetGump(gumpSerial, plantGumpId);
+		if(!gump){
+			Orion.Print(gumpSerial);
+		}
+		return gump;
+	}
+
 	var plantActions = {
 		water: function(gumpSerial){
-			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(6));
+			GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(6));
 			Orion.WaitForGump();
 		},
 		poison: function(gumpSerial){
-			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(7));
+			GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(7));
 			Orion.WaitForGump();
 		},
 		cure: function(gumpSerial){
-			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(8));
-			Orion.WaitForGump();
-		},
-		heal: function(gumpSerial){
-			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(9));
-			Orion.WaitForGump();
-		},
-		str: function(gumpSerial){
-			Orion.GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(10));
+			GetGump(gumpSerial, plantGumpId).Select(Orion.CreateGumpHook(8));
 			Orion.WaitForGump();
 		}
 	};
 	
 	var plantNeeds = {
 		water: function(gumpSerial){
-			while(Orion.GetGump(gumpSerial, plantGumpId).Text(16) < 3){
+			while(GetGump(gumpSerial, plantGumpId).Text(16) < 3){
 				plantActions.water(gumpSerial);
 			}
 		},
 		poison: function(gumpSerial){
-			var number = Orion.GetGump(gumpSerial, plantGumpId).Text(14);
-			var applied = Orion.GetGump(gumpSerial, plantGumpId).Text(0);
+			var number = GetGump(gumpSerial, plantGumpId).Text(14);
+			var applied = GetGump(gumpSerial, plantGumpId).Text(0);
 			number = number - applied;
 			if(number == 4){
 				plantActions.poison(gumpSerial);
@@ -344,8 +347,8 @@ function TendPlant(){
 			}
 		},
 		cure: function(gumpSerial){
-			var number = Orion.GetGump(gumpSerial, plantGumpId).Text(15);
-			var applied = Orion.GetGump(gumpSerial, plantGumpId).Text(1);
+			var number = GetGump(gumpSerial, plantGumpId).Text(15);
+			var applied = GetGump(gumpSerial, plantGumpId).Text(1);
 			number = number - applied;
 			if(number == 4){
 				plantActions.cure(gumpSerial);
@@ -353,34 +356,12 @@ function TendPlant(){
 			if(number == 5){
 				plantActions.cure(gumpSerial);
 			}
-		},
-		heal: function(gumpSerial){
-			var number = Orion.GetGump(gumpSerial, plantGumpId).Text(14);
-			var applied = Orion.GetGump(gumpSerial, plantGumpId).Text(2);
-			number = number - applied;
-			if(number == 4){
-				plantActions.heal(gumpSerial);
-			}
-			if(number == 5){
-				plantActions.heal(gumpSerial);
-			}
-		},
-		str: function(gumpSerial){
-			var number = Orion.GetGump(gumpSerial, plantGumpId).Text(15);
-			var applied = Orion.GetGump(gumpSerial, plantGumpId).Text(3);
-			number = number - applied;
-			if(number == 4){
-				plantActions.str(gumpSerial);
-			}
-			if(number == 5){
-				plantActions.str(gumpSerial);
-			}
-		},
+		}
 	}
 	
 	var hardDirtNeeds = {
 		water: function(gumpSerial){
-			while(Orion.GetGump(gumpSerial, plantGumpId).Text(14) < 3){
+			while(GetGump(gumpSerial, plantGumpId).Text(14) < 3){
 				plantActions.water(gumpSerial);
 			}
 		}
@@ -400,18 +381,21 @@ function TendPlant(){
 		if (
 			props.toLowerCase().indexOf("with a") > -1 || 
 			props.toLowerCase().indexOf("green") > -1 || 
-			props.toLowerCase().indexOf("orange") > -1
+			props.toLowerCase().indexOf("orange") > -1 
+			
 			){
 			
 			plantNeeds.water(plantId);
 			plantNeeds.poison(plantId);
 			plantNeeds.cure(plantId);
-			//plantNeeds.heal(plantId);
-			//plantNeeds.str(plantId);
 		} else {
-			hardDirtNeeds.water(plantId);
+			if(props.toLowerCase().indexOf("dirt") > -1){
+				hardDirtNeeds.water(plantId);
+			}
+			
 		}
-		Orion.GetGump(plantId, plantGumpId).Close();
+		GetGump(plantId, plantGumpId).Close();
+		
 		Orion.Wait(1200 - (new Date().getTime() - startTime));
 	}
 
@@ -433,13 +417,16 @@ function TendPlant(){
 	plants.forEach(function(plantId){
 		index++;
 		if(skip > index) return;
-		var props = Orion.FindObject(plantId).Properties();
+		Orion.Print("Working on plant: " + index + " / " + plants.length);
+		var plantObject =  Orion.FindObject(plantId);
+		if(!plantObject) return;
+		var props = plantObject.Properties();
 		if(props.toLowerCase().indexOf("locked down") === -1){
 			return;
 		}
 		
 		CheckResources();
-		Orion.Print("Working on plant: " + index + " / " + plants.length)
+		
 		applyNeeds(plantId);
 	});
 	DepositResources();

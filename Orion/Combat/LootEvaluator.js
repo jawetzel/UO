@@ -92,10 +92,7 @@ var ShouldKeepItem_Splinter = function (props){
 		//todo handle clean splinter weapons (can be imbued)
 		var splinter = "Splintering Weapon";
 		var isOverCapSplinter = props.indexOf(splinter + " 25") > -1 || props.indexOf(splinter + " 30") > -1;
-		var isSplinter =  props.indexOf(splinter + " 20") > -1 || isOverCapSplinter;
-		if(Orion.ShardName() === 'Siege Perilous' && props.indexOf("Skill Required") > -1){
-			isSplinter = true;
-		}
+		var isSplinter =  props.indexOf(splinter + " 15") > -1 || props.indexOf(splinter + " 20") > -1 || isOverCapSplinter;
 		var antique = 'Antique';
 		var isAntique = props.indexOf(antique) > -1;
 		var brittle = 'Brittle';
@@ -200,24 +197,73 @@ function ShouldKeepItem(itemId){
 		var isArmor = props.indexOf("Physical Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1;
 		
 		if(Orion.ShardName() === 'Siege Perilous'){
+			if(isArmor && (props.indexOf("Fortified") > -1 || props.indexOf("Of Defense") > -1)){
+				return false;
+			}
 			if(props.indexOf("50 Stone") > -1) return false;
+			if(props.indexOf("Strength Requirement 125") > -1) return false;
 			if(
-				props.indexOf('Legendary Artifact') > -1 || 
-				props.indexOf('Major Artifact') > -1 || 
-				props.indexOf('Greater Artifact') > -1
+				(isJewlery || isArmor) && 
+				(			
+					props.indexOf('Legendary Artifact') > -1 || 
+					(props.indexOf('Major Artifact') > -1 &&  props.indexOf(" Of ") > -1) || 
+					(isArmor && props.indexOf('Greater Artifact') > -1 && props.indexOf(" Of ") > -1)
+				)
 			) return true;
 			
-			if(isJewlery){
-				if( 
-					props.indexOf("Faster Casting 1")  > -1 && 
-					(
-						props.indexOf("Faster Cast Recovery 4")  > -1 || 
-						props.indexOf("Faster Cast Recovery 3")  > -1 || 
-						props.indexOf("Faster Cast Recovery 2")  > -1
-					)
-				) {
-					return true; //caster jewls
+			if(!isArmor && !isJewlery && !is2hWeapon && !is1hWeapon){
+			if(
+					props.indexOf("Spell Channeling") > -1 && 
+					props.indexOf("Faster Casting") === -1 && 
+					(props.indexOf("Defense Chance Increase 15%") > -1 || 
+					props.indexOf("Defense Chance Increase 20%") > -1)
+				){
+					return true;
 				}
+			}
+			
+			if(isArmor){
+				var totalResists = 0;
+				
+				var resist = props.match(/Physical Resist (.*)%/);
+				if(resist.length > 1) totalResists += parseInt(resist[1]);
+				resist = props.match(/Fire Resist (.*)%/);
+				if(resist.length > 1) totalResists +=  parseInt(resist[1]);
+				resist = props.match(/Cold Resist (.*)%/);
+				if(resist.length > 1) totalResists += parseInt( resist[1]);
+				resist = props.match(/Poison Resist (.*)%/);
+				if(resist.length > 1) totalResists +=  parseInt(resist[1]);
+				resist = props.match(/Energy Resist (.*)%/);
+				if(resist.length > 1) totalResists +=  parseInt(resist[1]);				
+				
+				var isLmc = props.indexOf("Lower Mana Cost 8%")  > -1 || 
+				 	props.indexOf("Lower Mana Cost 6%")  > -1 || 
+				 	 props.indexOf("Lower Mana Cost 10%")  > -1;
+				 	 
+				 	
+				var luck = props.match(/Luck (.*)\n/);
+				if(luck && luck.length > 1) {
+					 luck = parseInt(luck[1]);
+				} else {
+					luck = 0;
+				}
+				
+				if(totalResists > 60 && luck >= 80 && isLmc) return true;
+
+				
+			}
+			
+			if(isJewlery){
+			
+				var isFcr = props.indexOf("Faster Cast Recovery 4")  > -1 || 
+						props.indexOf("Faster Cast Recovery 3")  > -1 || 
+						props.indexOf("Faster Cast Recovery 2")  > -1;
+										
+				var isFc  = props.indexOf("Faster Casting 1")  > -1;
+				
+				var isLrc = props.indexOf("Lower Reagent Cost 15%") > -1 || 
+					props.indexOf("Lower Reagent Cost 20%") > -1 || 
+					props.indexOf("Lower Reagent Cost 25%") > -1;
 				
 				var isDci = props.indexOf("Defense Chance Increase 15%")  > -1 || 
 					props.indexOf("Defense Chance Increase 20%")  > -1;
@@ -227,30 +273,51 @@ function ShouldKeepItem(itemId){
 					
 				var isDi = props.indexOf("Damage Increase 20%")  > -1 || 
 					props.indexOf("Damage Increase 25%")  > -1 || 
-					props.indexOf("Damage Increase 30%")  > -1;
+					props.indexOf("Damage Increase 30%")  > -1 || 
+					props.indexOf("Damage Increase 35%")  > -1;
+					
+				var isLmc = props.indexOf("Lower Mana Cost 8%")  > -1 || 
+				 	props.indexOf("Lower Mana Cost 6%")  > -1 || 
+				 	 props.indexOf("Lower Mana Cost 10%")  > -1;
+				
+				var isEp = props.indexOf("Enhance Potions 20%") > -1 ||
+					props.indexOf("Enhance Potions 25%") > -1 ||
+					props.indexOf("Enhance Potions 30%") > -1 ||
+					props.indexOf("Enhance Potions 35%") > -1;
 				
 				var isSsi = props.indexOf("Swing Speed Increase 10%") > -1;
 				if(
-					(isDci && isHci) || 
-					(isHci && isDi) || 
-					(isHci && isSsi)
+					(isDci && isHci && isDi) || 
+					(isDci && isHci && isSsi) || 
+					(isDci && isHci && isLmc) || 
+					(isDci && isHci && isEp) || 
+					
+					(isHci && isDi && isSsi) || 
+					(isHci && isDi && isLmc) || 
+					(isHci && isDi && isEp) || 
+					
+					(isHci && isSsi && isDi) || 
+					(isHci && isSsi && isLmc) || 
+					(isHci && isSsi && isEp) || 
+					
+					(isFcr && isDci && isLmc) || 
+					(isFcr && isDci && isEp) || 
+					(isFcr && isDci && isEp) || 
+					(isFcr && isDci && isEp) || 
+					
+					(isFcr && isDci && isEp) || 
+					(isFcr && isDci && isLrc) || 
+					(isFcr && isDci && isLmc) || 
+					
+					(isFc && isFcr && isEp) || 
+					(isFc && isFcr && isLrc) || 
+					(isFc && isFcr && isLmc) || 
+					(isFc && isFcr && isDci)				
+					
 				){
 					return true;
 				}
 			}
-			
-			if(is1hWeapon || is2hWeapon){
-				if(
-					props.indexOf("Undead")  > -1 || 
-					props.indexOf("Repond")  > -1 || 
-					props.indexOf("Reptile")  > -1 || 
-					props.indexOf("Arachnid")  > -1 || 
-					props.indexOf("Demon")  > -1
-				){
-					return true;
-				}
-			}
-			
 		}
 		
 		

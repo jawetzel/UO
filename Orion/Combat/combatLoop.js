@@ -553,11 +553,19 @@ function CombatLoop(){
 	var AttackTarget = function(enemy){
 		if(!enemy) return;
 		 if(enemy){
+		 	var enemyObject = Orion.FindObject(enemy);
 			if(useHonor && (!lastEnemyHonored || lastEnemyHonored.toString() !== enemy.toString())){
-				lastEnemyHonored = enemy;
-				Orion.InvokeVirtue("Honor")
-				Orion.WaitForTarget();
-				Orion.TargetObject(enemy);
+				var enemyObject = Orion.FindObject(enemy);
+				if(enemyObject){
+					Orion.GetStatus(enemy);
+					Orion.Wait(100);
+					if(enemyObject.Hits() === 25){
+						lastEnemyHonored = enemy;
+						Orion.InvokeVirtue("Honor")
+						Orion.WaitForTarget();
+						Orion.TargetObject(enemy);
+					}
+				}
 			}
 	    	Orion.Attack(enemy);
 	    	if(useRunToTarget){
@@ -821,9 +829,10 @@ function CombatLoop(){
 		RecoverCorpse();
 	    Bow();
 	   	if(useAttack) AttackTarget(GetTarget());
+	   	if(useHealFriend) HealFriend(WaitForObjectTimeout, RegisterUseObjectTimeout);
 		if(useBandages) UseBandages(WaitForObjectTimeout, RegisterUseObjectTimeout);
 		if(useChivHeal) ChivHeal();
-		if(useHealFriend) HealFriend(WaitForObjectTimeout, RegisterUseObjectTimeout);
+		
 		if(useHealPets) HealPets(WaitForObjectTimeout, RegisterUseObjectTimeout);
 		if(useHealChivFriend) HealChivFriend();
 		if(useConfidence) UseConfidence();
@@ -832,7 +841,10 @@ function CombatLoop(){
 		RestorePotions();
 		CastSpells();
 		UseSpecials();
-	    if(useLootCorpses)  LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepItem);
+	    if(useLootCorpses) {
+	    	 LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepItem);
+	    	 
+	    }
 	    if(checkUninsuredCounter > 200){
 	    	if(useIgnoreReset && (!lastIgnoreResetTime || lastIgnoreResetTime + 180000 <  new Date().getTime())){
 				Orion.IgnoreReset();
@@ -844,7 +856,7 @@ function CombatLoop(){
 	    } else{
 	    	checkUninsuredCounter = checkUninsuredCounter + 1;
 	    }
-	    
+	    LootGoldGround(WaitForObjectTimeout, RegisterUseObjectTimeout);
 	    Orion.Wait(timeBetweenLoops);
 	}
 }

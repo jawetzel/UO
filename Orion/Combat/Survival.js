@@ -86,7 +86,7 @@ function HealChivFriend(){
 					} else {
 						Orion.Cast('202'); //heal chiv
 					}							
-					if (Orion.WaitForTarget(1500))
+					if (Orion.WaitForTarget(2500))
 						Orion.TargetObject(friendObject.Serial());
 					Orion.Wait(200);
 				}
