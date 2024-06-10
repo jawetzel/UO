@@ -1,0 +1,37 @@
+[
+    {
+        "type": "run",
+        "x": 6291,
+        "y": 879,
+        "z": -2,
+        "index": 0
+    },
+    {
+        "type": "run",
+        "x": 6302,
+        "y": 890,
+        "z": 0,
+        "index": 1
+    },
+    {
+        "type": "run",
+        "x": 6310,
+        "y": 890,
+        "z": -1,
+        "index": 2
+    },
+    {
+        "type": "recall",
+        "recallType": "0x1F14",
+        "recallContainer": "backpack",
+        "recallName": "Jawetzel",
+        "index": 3
+    },
+    {
+        "type": "run",
+        "x": 2094,
+        "y": 205,
+        "z": 7,
+        "index": 4
+    }
+]

@@ -1,0 +1,119 @@
+var mins = {
+	phys: 1,
+	fire: 1,
+	cold: 1,
+	poison: 1,
+	energy: 10
+}
+
+var maxs = {
+	phys: 5,
+	fire: 0,
+	cold: 0,
+	poison: 0,
+	energy: 0
+}
+
+var secure = '0x4598B31A';
+var makingType = '0x13DB';
+
+var lastKit = null;
+
+function MakeLastArmor(){
+	var sewingKit = '0x0F9D';
+	var leather = '0x1081';
+	
+	var shouldKeepItem = function(itemId){
+		var itemObject = Orion.FindObject(itemId);
+		if(!itemObject) return false;
+		var props = itemObject.Properties();
+		if(!props){
+			Orion.Wait(500);
+			 props = itemObject.Properties();
+		}
+		
+		if(props.indexOf("Exceptional") === -1) return false;
+		
+		var phys = parseInt(props.match(/Physical Resist (.*)%/)[1]);
+		var fire = parseInt(props.match(/Fire Resist (.*)%/)[1]);
+		var cold = parseInt(props.match(/Cold Resist (.*)%/)[1]);
+		var poison = parseInt(props.match(/Poison Resist (.*)%/)[1]);
+		var energy = parseInt(props.match(/Energy Resist (.*)%/)[1]);
+		
+		Orion.Print(phys + " " + fire + " " + cold + " " + poison + " " + energy);
+				
+		if( 
+			((phys >= mins.phys) && (maxs.phys < 1 || phys <= maxs.phys)) && 
+			((fire >= mins.fire) && (maxs.fire < 1 || fire <= maxs.fire)) && 
+			((cold >= mins.cold) && (maxs.cold < 1 || cold <= maxs.cold)) && 
+			((poison >= mins.poison) && (maxs.poison < 1 || poison <= maxs.poison)) && 
+			((energy >= mins.energy) && (maxs.energy < 1 || energy <= maxs.energy))
+		){
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	
+	
+	var kits = Orion.FindType(sewingKit, '0x0000', backpack);
+	if(!kits || kits.length < 1){
+		Orion.Print("Outa kits");
+		return;
+	}
+	var material = Orion.FindType(leather);
+	var pullMaterial = false;
+	if(!material || material.length === 0){
+		pullMaterial = true;
+	}
+	var materialObject = Orion.FindObject(material[0]);
+	if(!materialObject || materialObject.Count() < 30){
+		pullMaterial = true;
+	}
+	if(pullMaterial){
+		var secureMaterial = Orion.FindType(leather, 'any', secure);
+		if(!secureMaterial || secureMaterial.length < 1){
+			Orion.Print("out of leather");
+			return;
+		}
+		Orion.MoveItem(secureMaterial[0], 100, backpack);
+		Orion.Wait(1200);
+		MakeLastArmor();
+		return;
+	}
+	if(!lastKit || lastKit !== kits[0]){
+		lastKit = kits[0];
+		Orion.UseObject(kits[0]);
+		Orion.Wait(1200);
+	}
+	
+	var gump0 = Orion.GetGump(kits[0],  '0x000001CC');
+	if (gump0 !== null || Orion.WaitForGump(1000))
+	{
+		if (gump0 === null)
+		{
+			gump0 = Orion.GetGump(kits[0],  '0x000001CC');
+		}
+		if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000001CC'))
+		{
+			gump0.Select(Orion.CreateGumpHook(1999));
+			Orion.Wait(100);
+		}
+	}
+	
+	var foundMaking = Orion.FindType(makingType, 'any');
+	if(foundMaking && foundMaking.length > 0){
+		foundMaking.forEach(function(foundId){
+			if(shouldKeepItem(foundId)){
+				Orion.Ignore(foundId);
+				return;
+			}
+			Orion.UseObject(Orion.FindType('0x0F9E')[0]);
+			Orion.WaitForTarget(1000);
+			Orion.TargetObject(foundId);
+			Orion.Wait(1200);
+		});
+	}
+	MakeLastArmor();
+}

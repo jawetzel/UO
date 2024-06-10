@@ -1,10 +1,9 @@
 
-		
 function Run(){
 	var lasthealed = null;
 	function HealFriend() {
 	
-		var healThreshold = 80;
+		var healThreshold = 75;
 	
 	    var friendNames = [
 	        "ricky",
@@ -62,6 +61,7 @@ function Run(){
 					if (friendId === playerSerial) return;
 					//Orion.ShowStatusbar(friendId, 740, 175);
 					Orion.GetStatus(friendId);
+					Orion.Wait(25);
 					friendHits = friendObject.Hits();
 					var namesFound = friendNames.filter(function (name) {
 	                    return friendProps.toLowerCase().indexOf(name) > -1;
@@ -104,16 +104,18 @@ function Run(){
 	    var target = FindMeATarget();
 	    if (target !== null) {
 	    	var targetObject = Orion.FindObject(target);
+	    	if(!targetObject){
+	    		return;
+	    	}
 	    	if(target !== Player.Serial()){
 		    	Orion.GetStatus(target);	    	
-		    	Orion.ShowStatusbar(target, 740, 175);
+		    	Orion.Wait(25);
 	    	}
 	    	if(targetObject){
 	    		if(lasthealed === target) {
 	    			Orion.Wait(250);
 	    			if(targetObject.Hits() * 4 >= healThreshold && targetObject.Hits() > 0){
 	    				if(target !== Player.Serial()){
-	    					Orion.CloseStatusbar(target);
 	    					return;
 	    				}
 		    			
@@ -125,22 +127,23 @@ function Run(){
 	    	
 	    	if(targetObject && targetObject.Poisoned()){
 	    		Orion.Cast('25');
-	    	} else {
-	    		Orion.Cast('29');
+	    	} else{
+	    		Orion.Cast('Greater Heal');
 	    	}
 	    	
-	    	
+	    	Orion.Print(targetObject.Properties());
 			
 			if (Orion.WaitForTarget(3000))
 				Orion.TargetObject(target);
 			Orion.Wait(500);
-			if(playerSerial !== target)
-				Orion.CloseStatusbar(target);
 		}
 	}
 
 	while(!Player.Dead()){
-		HealFriend();
+		if(Player.Mana() > 50){
+			HealFriend();
+		}
+		
 		Orion.Wait(500);
 	}
 }

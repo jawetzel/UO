@@ -8,7 +8,7 @@ var minMana = 20;
 
 var chivSpells = [
     {
-        name: "Concecrate Weapon",
+        name: "Consecrate Weapon",
         minSkill: 150,
         mana: 15,
         timeout: 750
@@ -63,7 +63,7 @@ var spells = chivSpells;
 
 function  SetSpellAndTimeout(){
     var skill = Orion.SkillValue(InitialSkill);
-    if(skill === 900) {
+    if(skill === 1000) {
         return false;
     }
     var canCast = spells.filter(function(x){

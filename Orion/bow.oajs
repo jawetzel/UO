@@ -1,17 +1,5 @@
-function GeneratedScript_093559()
-{
-	Orion.UseObject('lastobject');
-	for(var i = 0; i < 81; i++){
-		if (Orion.WaitForGump(1000))
-		{
-			var gump0 = Orion.GetGump('last');
-			if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000001CC'))
-			{
-				gump0.Select(Orion.CreateGumpHook(8000));
-				Orion.Wait(100);
-			}
-		}
-		if (Orion.WaitForTarget(1000))
-			Orion.TargetObject('0x433361B7');
-	}
+function bow(){
+	Orion.EmoteAction('bow');
+	Orion.Wait(120000);
+	bow();
 }

@@ -1,3 +1,24 @@
+function LockBagballsDown(){
+	var findItems0 = Orion.FindType('0x2256');
+	findItems0.forEach(function(item){
+		Orion.MoveItem(item, 1, 'ground', Player.X(), Player.Y() + 1, Player.Z());
+		Orion.Wait('1200');
+		Orion.Say('i wish to secure this');
+		if (Orion.WaitForTarget(1000))
+			Orion.TargetObject(item);
+		if (Orion.WaitForGump(1000))
+		{
+			var gump0 = Orion.GetGump(item, '0x00000295');
+			if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x00000295'))
+			{
+				gump0.Select(Orion.CreateGumpHook(3));
+				Orion.Wait(100);
+			}
+		}
+		Orion.Wait('500');
+	});
+	
+}
 var InsureItem = function(itemId)
 {
 	Orion.Wait(200);
@@ -9,71 +30,306 @@ var InsureItem = function(itemId)
 		Orion.TargetObject('0x00000000');
 }
 
-function StockLobjectVendorWithLtargetBag(){	
-	var type = '0x1086|0x1F06';//bracelets
-	//type = '0x1F09|0x108A'; //rings 
 
+function StockLobjectWLtargBagInto(){
 	var soirceBag = Orion.ClientLastTarget();
 	var targetBag = Orion.FindObject(lastobject).Serial();
-
-	Orion.Print('Uninsuring Source');
-	var sourceItems = Orion.FindType(type, 'any', soirceBag, " ", ' ', " ", true);
-	if(sourceItems && sourceItems.length > 0){
-		sourceItems.forEach(function(item){
-			var itemProps = Orion.FindObject(item).Properties();
-			if(itemProps.indexOf('nsured') > -1)  InsureItem(item);
-		})
-	}
 	
-	var currentDate = new Date();
-	var dateString = '-DT' + 
-	currentDate.getFullYear().toString() +
-	((currentDate.getMonth() + 1).toString().length === 1 ? '0' : '') + (currentDate.getMonth() + 1).toString() +
-	 (currentDate.getDate().toString().length === 1 ? '0' : '') + currentDate.getDate().toString() + 
-	  "DT-";
-	
-	Orion.Print('Stocking From Source');
-	if(sourceItems && sourceItems.length > 0){
-		sourceItems.forEach(function(item){
-			var destItems = Orion.FindType(type, 'any', targetBag);
-			if(destItems.length > 123) return;
-			Orion.MoveItem(item, 1, targetBag);
-			Orion.Wait(600);
-			if(Orion.FindObject(item).Container() === soirceBag){
-				Orion.MoveItem(item, 1, targetBag);
-				Orion.Wait(600);
-			}
-			Orion.SendPrompt("20000000 " + dateString)
-			Orion.Wait(600);
-		})
-	}
-	
-	
-	var destItems = Orion.FindType(type, 'any', targetBag);
-	Orion.Print("Orginizing vendor");
-	if(destItems && destItems.length > 0){
-		var startx = 44;
-		var endx = 135;
-		var starty = 65;
-		var endy = 120;
-		
-		var findPosFromIndex = function(posIndex){
-			var y = starty;
-			var x = startx;
-			
-			y += Math.floor((posIndex / 17)) * 12;  
-			x += (posIndex % 17) * 5;  
-			return {x: x, y: y};
+	var destItems = Orion.FindType('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
+	Orion.Print(soirceBag);
+	Orion.Print(targetBag);
+	Orion.Print(destItems);
+	destItems.forEach(function(item){
+		if(Orion.FindObject(item).Properties().indexOf('Insured') > -1){
+			InsureItem(item);
 		}
+		Orion.MoveItem(item, 1000, targetBag);
+			Orion.Wait(600);
+			Orion.SendPrompt("200000")
+			Orion.Wait(600);
+
+	})
+		
 	
-		var index = 0;
-		destItems.forEach(function(item){
-			var position = findPosFromIndex(index);
-			Orion.Print(JSON.stringify(position));
-			index++;
-			Orion.MoveItem(item, 1, targetBag, position.x, position.y);
-			Orion.Wait(1200);
+}
+
+
+function StockLobjectWLtargBagIntoSubBags(){	
+	var soirceBag = Orion.ClientLastTarget();
+	var targetBag = Orion.FindObject(lastobject).Serial();
+	
+	var destContainers = Orion.FindType('0x0E75', 'any', targetBag);
+	var validDestContainers = destContainers.filter(function(bag){
+		var bagObject = Orion.FindObject(bag);
+		if(!bagObject) return false;
+		Orion.UseObject(bag);
+		Orion.Wait(2000);
+		var contents = Orion.FindObject('any', 'any', bag);
+		if(contents && contents.length > 19) return false;
+		return true;
+	});
+	Orion.Print(validDestContainers);
+	if(!validDestContainers || validDestContainers.length === 0) return;
+	
+	validDestContainers.forEach(function(bag){
+			while(
+				Orion.FindType('any', 'any', soirceBag, ' ', 'finddistance', ' ', true) && 
+				(!Orion.FindType('any', 'any', bag) || 
+				Orion.FindType('any', 'any', bag).length < 20)
+				)
+			{
+				var destItems = Orion.FindType('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
+				Orion.Print(destItems);
+				if(!destItems || destItems.length === 0) return;
+				var destItem = Orion.FindObject(destItems[0]);
+				if(destItem.Properties().indexOf('Contents:') > -1) {
+					Orion.Ignore(destItems[0]);
+				} else {
+					if(destItem.Properties().indexOf('Insured') > -1){
+						InsureItem(destItems[0]);
+					}
+					Orion.MoveItem(destItems[0], 1000, bag);
+					Orion.Wait(600);
+					Orion.SendPrompt("35000000 Jawetzel")
+					Orion.Wait(600);
+				}
+			}
+	})
+}
+
+function UninsureContainer(){
+	var targetBag = Orion.FindObject(lastobject).Serial();
+	var destItems = Orion.FindTypeEx('any', 'any', targetBag, ' ', 'finddistance', ' ', true);
+	Orion.Print(destItems);
+	if(!destItems || destItems.length === 0) return;
+	destItems.forEach(function(item){
+		if(item.Properties().indexOf('Contents:') > -1) {
+			Orion.Ignore(item.Serial());
+		} else {
+			if(item.Properties().indexOf('Insured') > -1){
+				InsureItem(item.Serial());
+			}
+		}
+	});
+	
+}
+
+
+function FillLobjectBagWithLtargetSWScrolls(){
+	var scrolls = [
+			'0x2D51', //SW spell
+			'0x2D52', //SW spell
+			'0x2D53', //immolating weapon SW Spell
+			'0x2D54', //SW spell
+			'0x2D55', //SW Spell
+			'0x2D56', //SW Spell
+			'0x2D57', //SW Spell
+			'0x2D58', //SW Spell
+			'0x2D59', //SW Spell
+			'0x2D5A', //SW Spell
+			'0x2D5B', //SW Spell
+			'0x2D5C', //SW Spell
+			'0x2D5D', //SW Spell
+			'0x2D5E', //word of death SW spell
+			'0x2D5F', //Gift Of Life SW spell
+			'0x2D60', //Gift Of Life SW spell
+	];
+	var lastObject = lastobject;
+	var x = 40;
+	scrolls.forEach(function(scrollType){
+		var scrolls = Orion.FindType(scrollType, 'any', 0x46618881);
+		if(scrolls && scrolls.length > 0){
+			Orion.MoveItem(scrolls[0], 1, lastobject, x, 50);
+			x = x + 7;
+			Orion.Wait(1500);
+		}
+	});
+	
+}
+
+function RepriceVendor(){
+
+	// set below to true to use a date to decide which vendors need repriced.
+	// ex: 	I stock the vendor today, 5/25/2024 so I set the shop name to "20240525" (YearMonthDay)
+	// 			The repricer will look at the vendor's shop name to decide if its time to reprice. 
+	//			My vendors are named Armor I, Armor II, Armor III... so the name "Armor " will find those.
+	var useDateOffset = false;
+	// how much time between price changes in millisecconds
+	var dateOffset = 14 * 24 * 60 * 60 * 1000; // 2 weeks
+	// part of the name of the vendors so you can narrow which vendors you want repriced
+	var dateOffsetVendorName = "Armor "
+	
+	// numbers under 1 will mark a percentage
+	// ex: .75 will take an item that was 10,000 gold and mark it to 7,500 Gold
+	// numbers over 1 will set a fixed Value
+	// ex: 10000 will make the price 10,000
+	var newPrice = .5;
+	// this will be the description of the item (if you use a named description your vendors will be searchable
+	var followUpText = "Jawetzel";    
+	var vendordistance = 2;
+
+
+	// you shouldnt need to reprice below this point
+	
+	//finds vendors
+	var groundObjects = Orion.FindType('any', 'any', "ground", "", vendordistance);
+	if(!groundObjects || groundObjects.length === 0) return;
+	var vendors = groundObjects.filter(function(groundId){
+		var groundObject = Orion.FindObject(groundId);
+		var props = groundObject.Properties();
+		var isVendor = props.indexOf('Shop Name:') > -1;
+		var isDateOffsetVendor = props.indexOf(dateOffsetVendorName) > -1;
+		var isValidDateOffsetVendorDate = false;
+		if(isVendor && isDateOffsetVendor && useDateOffset){
+			var vendorSplit = Number(props.split("Shop Name: ")[1]);
+			var dateToUpdate =  new Date(new Date().getTime() - dateOffset);
+			var numberToUpdate = Number(dateToUpdate.getFullYear().toString() + 
+				(dateToUpdate.getMonth() + 1).toString() + 
+				dateToUpdate.getDate().toString());
+			isValidDateOffsetVendorDate = vendorSplit > numberToUpdate;
+			
+		}
+		return isVendor && (!useDateOffset ||  (isDateOffsetVendor && isValidDateOffsetVendorDate));
+	});
+		 
+	
+	var items = [];
+	
+	//finds items on vendors and opens bags in vendor
+	vendors.forEach(function(vendor){
+		
+		var vendorObject =  Orion.FindObject(vendor);
+		if(!vendorObject) return;
+		var vendorDist = Orion.FindObject(vendor).Distance();
+		Orion.Print("Vendor Distance: " + vendorDist);
+		if(vendorDist > 2) return;
+		
+		Orion.Print("Opening Vendor");
+		Orion.UseObject(vendor);
+		if (Orion.WaitForGump(1000))
+		{
+			var gump0 = Orion.GetGump('last');
+			if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000002AB'))
+			{
+				gump0.Select(Orion.CreateGumpHook(1));
+				Orion.Wait(100);
+			}
+		}
+		Orion.Wait(1300);
+		var objectsInVendor = Orion.FindTypeEx('any','any', lastcontainer);
+		objectsInVendor.forEach(function(vendorItemObject){
+			if(vendorItemObject.Graphic() === '0x0E75') {
+				Orion.OpenContainer(vendorItemObject.Serial());
+				Orion.Wait(1500);
+				var itemsInSubBag = Orion.FindType('any','any', vendorItemObject.Serial());
+				if(itemsInSubBag && itemsInSubBag.length > 0){
+					itemsInSubBag.forEach(function(subBagItem){
+						items.push(subBagItem);
+					})
+				}
+			} else {
+				items.push(vendorItemObject.Serial());
+			}
 		})
-	}
+	});
 	
+	// filters down items based on items for sale
+	var validItems = [];
+	var validVendorItems = items.filter(function(itemId){
+ 		var item = Orion.FindObject(itemId);
+ 		if(item.Distance() > 2) return false;
+ 		var props = item.Properties();
+ 		 
+ 		if(props.indexOf("Not For Sale") > -1) return false;
+ 		var priceText = "Price: ";
+ 	 	var priceIndex = props.indexOf(priceText);
+ 	 	if(priceIndex === -1) return false;
+ 	 	return true;
+    });
+    if(validVendorItems && validVendorItems.length > 0){
+    	validVendorItems.forEach(function(validItem){
+    		validItems.push(validItem);
+    	})
+    }
+    
+    Orion.Print(validItems.length);
+    
+    // reprices items
+    var total =validItems.length;
+    var index = 1;
+    validItems.forEach(function(itemId){
+    	 Orion.Print("Working On Item " + index + " / " + total);
+    	 index++;
+    	 
+    	 var item = Orion.FindObject(itemId);
+    	 var props = item.Properties();
+    	 if(props.indexOf("Not For Sale") > -1) return;
+    	 
+    	 var priceText = "Price: ";
+    	 var priceIndex = props.indexOf(priceText);
+    	 if(priceIndex === -1) return;
+    	 
+    	 var itemObject = Orion.FindObject(itemId);
+    	 var containerId = itemObject.Container();
+    	 
+    	 var afterPriceText = props.substring(priceIndex + priceText.length);
+    	 var priceText = afterPriceText.split("\n")[0];
+    	 var cleanPriceText = priceText.split(",").join("");
+    	 var number = parseInt(cleanPriceText);
+    	
+    	 var updatedPrice = newPrice;
+    	 if(newPrice < 1){
+    	 	var updatedPrice = Math.floor(number * newPrice);  
+    	 }
+    	 if(number !== newPrice) {
+    	 	 var oldItemX = item.X();
+	    	 var oldItemY = item.Y();
+	    	 Orion.MoveItem(itemId, 1000, 'backpack');
+	    	 Orion.Wait(1200);
+	    	 if(Orion.FindObject(itemId).Container() !== Orion.ObjAtLayer('backpack').Serial()){
+	    	 	Orion.MoveItem(itemId, 1000, 'backpack');
+	    		 Orion.Wait(1200);
+	    	 }
+	    	 Orion.MoveItem(itemId, 1000, containerId, oldItemX, oldItemY);
+	    	 Orion.Wait(700);
+	    	  if(Orion.FindObject(itemId).Container() !== containerId){
+	    	  	Orion.MoveItem(itemId, 1000, containerId, oldItemX, oldItemY);
+	    	  	 Orion.Wait(700);
+	    	  }
+	    	  Orion.Print(updatedPrice + followUpText)
+	    	 Orion.SendPrompt(updatedPrice + followUpText)
+	    	 Orion.Wait(500);
+    	 }    	
+    })
+}
+
+
+
+function CollectGold(){
+	var groundObjects = Orion.FindType('any', 'any', "ground", "", 15);
+	if(!groundObjects || groundObjects.length === 0) return;
+	var vendors = groundObjects.filter(function(groundId){
+		var groundObject = Orion.FindObject(groundId);
+		var props = groundObject.Properties();
+		return props.indexOf('Shop Name:') > -1;
+	});
+	vendors.forEach(function(vendorId){
+		Orion.UseObject(vendorId);
+		if (Orion.WaitForGump(2000))
+		{
+		 Orion.Wait(200);
+			var gump0 = Orion.GetGump('last');
+			var goldToSend = gump0.TextList()[3];
+			if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000002AB'))
+			{
+				gump0.Select(Orion.CreateGumpHook(7));
+				Orion.Wait(100);
+			}
+			Orion.Wait(200);
+			Orion.Print(goldToSend.split(",").join(''));
+			Orion.SendPrompt(goldToSend.split(",").join(''));
+		}
+		Orion.Wait(1100);
+		
+	});
 }

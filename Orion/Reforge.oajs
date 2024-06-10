@@ -1,0 +1,80 @@
+function Run(){
+	Orion.Print("Target Source");
+	Orion.UseSkill("Arms Lore");
+	Orion.WaitForTarget();
+	Orion.WaitWhileTargeting(10000);
+	Orion.Wait(500);
+	var source = Orion.ClientLastTarget();
+	Orion.UseObject(source);
+	Orion.Wait(1200);
+	
+	Orion.Print("Target Dest");
+	Orion.UseSkill("Arms Lore");
+	Orion.WaitForTarget();
+	Orion.WaitWhileTargeting(10000);
+	Orion.Wait(500);
+	var dest = Orion.ClientLastTarget();
+	Orion.UseObject(dest);
+	Orion.Wait(1200);
+	
+	Orion.Print("Target Tool");
+	Orion.UseSkill("Arms Lore");
+	Orion.WaitForTarget();
+	Orion.WaitWhileTargeting(10000);
+	Orion.Wait(500);
+	var tool = Orion.ClientLastTarget();
+	var toolObject = Orion.FindObject(tool);
+	var color = toolObject.Color();
+	var graphic = toolObject.Graphic();
+	Orion.Wait(1200);
+	
+	var sourceObjects = Orion.FindType('any', 'any', source);
+	if(!sourceObjects || sourceObjects.length === 0) return;
+	sourceObjects.forEach(function(x){
+		var tools = Orion.FindType(graphic, color, backpack);
+		if(!tools) return;
+		var validTools = tools.filter(function(tool){
+			var props = Orion.FindObject(tool).Properties();
+			if(
+				props.indexOf("Uses Remaining: 1\n") > -1 || 
+				props.indexOf("Uses Remaining: 2\n") > -1 ||
+				props.indexOf("Uses Remaining: 3\n") > -1
+			){
+				return false;
+			}
+			
+			return true;
+		});
+		if(!validTools || validTools.length === 0) return;
+		
+		var props = Orion.FindObject(x).Properties();
+		if(props.indexOf("Exceptional") === -1){
+			Orion.MoveItem(x, 1000, dest);
+			Orion.Wait(1200);
+			return;
+		}
+		Orion.MoveItem(x);
+		Orion.Wait(1500);
+		
+		Orion.UseObject(validTools[0]);
+		if (Orion.WaitForTarget(1000))
+			Orion.TargetObject(x);
+		if (Orion.WaitForGump(1000))
+		{
+			var gump0 = Orion.GetGump('last');
+			if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000F3EAC'))
+			{
+				gump0.Select(Orion.CreateGumpHook(2));
+				Orion.Wait(100);
+			}
+		}
+		Orion.Wait(1200);
+		var props = Orion.FindObject(x).Properties();
+		if(props.indexOf("Damage 100%") > -1 && props.indexOf("Physical Damage") === -1){
+			
+		} else {
+			Orion.MoveItem(x, 1000, dest);
+			Orion.Wait(1200);
+		}
+	});
+}

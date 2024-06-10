@@ -1,0 +1,37 @@
+[
+    {
+        "type": "recall",
+        "recallType": "0x1F14",
+        "recallContainer": "backpack",
+        "recallName": "VOIDPOOL",
+        "index": 1
+    },
+    {
+        "type": "run",
+        "x": 2395,
+        "y": 842,
+        "z": 0,
+        "index": 2
+    },
+    {
+        "type": "run",
+        "x": 2384,
+        "y": 837,
+        "z": 0,
+        "index": 3
+    },
+    {
+        "type": "run",
+        "x": 5600,
+        "y": 2007,
+        "z": 0,
+        "index": 4
+    },
+    {
+        "type": "run",
+        "x": 5591,
+        "y": 2013,
+        "z": 0,
+        "index": 5
+    }
+]

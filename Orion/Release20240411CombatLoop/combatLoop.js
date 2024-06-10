@@ -1,195 +1,218 @@
 //Author: Jawetzel
-//Release Date: 11-07-2022
-//Instructions:
-//Choose profile to use using the line "var profile = profiles.JunkoSamp;" by changing out JunkoSamp to another profile name.
-//All features can be turned on or off by commenting out lines using // before the line
-//If you are going to heal friends or pets you need to add names to the SetHealFriendNames list.
 
-//#include Combat/Timeouts.js 
-//#include Combat/LootEvaluator.js
-//#include Combat/Survival.js
-//#include Combat/Loot.js
+//#include Timeouts.js 
+//#include LootEvaluator.js
+//#include Survival.js
+//#include Loot.js
+//#include Utilities.js
+//#include Rails.oajs
 
 
-function CombatLoop(){
+function RandomlyMove(){
+	var randomX = Math.floor(Math.random() * 6) - 3;
+	var randomY = Math.floor(Math.random() * 6) - 3;
+	if(Orion.GetDistance(Player.X() + randomX, Player.Y() + randomY) >= 2){
+		Orion.WalkTo(Player.X() + randomX, Player.Y() + randomY , Player.Z(), 0);
+		Orion.Wait(90000);
+	}
+	RandomlyMove();
+}
 
-	var profiles = {
-		
-		Spawn: {
+function Autostart()
+{
+	Startup();
+}
+Orion.IgnoreReset();
+
+//Instructions: To change what actions will be performed while script is running change
+// 						the vlaue of the default profile
+	
+// default profile - this may be overwritten in autostart
+var profile = {
 			useSpecial: true,
-			useAttack: true,
-			useRunToTarget: true,
-		},
-		JunkoSamp: {
-			//useSpecial: true,
-			useAttack: true,
-			useHealFriend: true,
-			useBandages: true,
-			useLootCorpses: true,
-			//useInsureItem: true,
-			//useEnemyOfOne: true,
-			//useRunToTarget: true,
-			//useHonor: true,
-			//useIgnoreReset: true,
-		},
-		JunkoSampNoLoot: {
-			useSpecial: true,
-			useAttack: true,
-			//useHealFriend: true,
-			//useBandages: true,
-			//useLootCorpses: true,
-			//useInsureItem: true,
-			//useIgnoreReset: true,
-			//useChivHeal: true,
-			//useRunToTarget: true,
-			//useRearm: true,
-			//useEnemyOfOne: true,
-			//useHonor: true,
-			//useConsecrateWeapon: true,
 			//useLightningStrike: true,
-			//useMomentumStrike: true,
-			//useDeathStrike: true,
-		},
-		EventThrower: {
-			useSpecial: true,
 			useAttack: true,
-			useHealFriend: true,
+			useWraithForm: true,
+			useLootCorpses: true,
 			useBandages: true,
-			useChivHeal: true,
-			useHealChivFriend: true,
 			useSkipTypesToIgnore: true,
-			//useConsecrateWeapon: true,
-			//useLootCorpses: true,
-		},
-		
-		PvpDexer: {
-			useBandages: true
-		},
-		loot:{
-			useLootCorpses: true,
-			useIgnoreReset: true,
-			useBandages: true,
-		},
-		soloFarm: {
-			//useMomentumStrike: true,
-			useSpecial: true,
-			useAttack: true,
-			useLootCorpses: true,
-			//useHonor: true,
-			//useInsureItem: true,			
-			//useLootTMaps: true,
-			//useIgnoreReset: true,
-			//useEnemyOfOne: true,
-			//useIgnoreReset: true,
-			//useLightningStrike: true,
-			//useMomentumStrike: true,
-			useConfidence: true,
-			useEvasion: true,
-			//useBandages: true,
-			useEnemyOfOne: true,
-			//useDivineFury: true,
-			//useConsecrateWeapon: true,
-		},
-		sampTamer: {
-			//useHonor: true,
-			useSpecial: true,
-			useAttack: true,
-			//useEnemyOfOne: true,
-			//useDivineFury: true,
-			//useConsecrateWeapon: true,
-			useHealPets: true,
-			useChivHeal: true,
-			useHealChivFriend: true,
-			//useLootCorpses: true,
-			//useInsureItem: true,
-			//useIgnoreReset: true,
-			useRearm: true,
-		},
-		
-		tmp: {
-			//useBandages: true,
-			useAttack: true,
-			//useChivHeal: true,
-			//useIgnoreReset: true,
+			//leadership: ['Militon [T0SS]'],
 			//useRunToTarget: true,
-			//useRearm: true,
-			//useLootCorpses: true,
-		},
-		
-		siege: {
-			//useSpecial: true,
-			useAttack: true,
-			useLootCorpses: true,
-			useHonor: true,
-			useLootTMaps: true,
-			useLightningStrike: true,
-			useMomentumStrike: true,
-			useConfidence: true,
-			useEvasion: true,
-			useBandages: true,
-			useEnemyOfOne: true,
-			//useDivineFury: true,
-			//useConsecrateWeapon: true,
-			//useRunToTarget: true,
-			//useRearm: true,
-			useHealFriend: true,
-		},
-		
+		};
+
+var profiles = {
 		allFeatures: {
 			//chiv
-			useEnemyOfOne: true,
-			useDivineFury: true,
-			useConsecrateWeapon: true,
+			useEnemyOfOne: true,			useDivineFury: true,			useConsecrateWeapon: true,
+			useChivHeal: true,					useHealChivFriend: true,
+			//combat
+			useAttack: true,						useSpecial: true,				useBandages: true,
+			useEnhancementPots: true,		useRestorePotions: true,	
+			useRunToTarget: true,
+			//Bushido
+			useLightningStrike: true,			useHonor: true,
+			useConfidence: true,				useEvasion: true,					
+			//Looting
+			useLootCorpses: true,
+			//Utility
+			useCutCorpses: true,			
+			//auto follow
+			leadership: ['Militon [T0SS]'], 
+		}
+	};
+	
+// Features included that are not optional: 
+//	Insures Looted Items
+//	If Lightning strike is chosen will also momentum strike based on enemy Count
+// If bandages is chosen it will Heal yourself and friends around you (if have healing)
+// 	if bandages is chosen it will heal pets (if have vet)
+//	Will auto recover corpse if found
+//	will auto pick up gold on ground && bag of sending if available
+//	Will auto trash items that are specified if by a house trash can
+// 	will auto repair worn items if within range of a repair bench
+//	will auto dress if the item slot is empty and you have the item in your bag you were wearing when script started (or last started)
+
+
+var lootItemSets = {
+	defaultItemSet: {
+		'0x5747': true, //raptor teeth
+		'0x400B': true, //shame crystals
+		'0x0F87': true, // lucky coin
+		'0x226F': true, //wraith form
+		'0x573E': true, //void Orion
+		'0x5728': true, //void core
+		'0x0E21': true, //bandages
+		//'0x0EED': true, // gold
+		
+		'0x0F3F': true, //arrows
+		'0x1BD1': true, // feathers
+		
+		'0x571C': true, // essence achivement
+		'0x5744': true, //SS skin 
+		'0x5731': true, //Undying Flesh
+		'0x571C': true, //Essence Of Control
+		'0x572C': true, //Goblin Blood
+		'0x571C': true, //Essence Of Passion
+		'0x572D': true, //Lava Serpent Crust
+		
+		'0x1844': true, //compassion sage
+	}
+}
+
+function Startup(){
+	
+	Orion.Wait(5000);
+	Orion.Print("Starting");
+	var playerSerial = Player.Serial();
+	var friendObject = Orion.FindObject(playerSerial);
+	Orion.GetProfile(playerSerial, 3000);
+	var profileRead = friendObject.ProfileReceived();
+	Orion.GetProfile(playerSerial);
+	var friendProfile = friendObject.Profile();
+	Orion.Print(friendProfile);
+	Orion.Print(Player.Properties());
+	SetLootItems(lootItemSets.defaultItemSet);
+	
+	var railDestOptions = {
+		voidpool: 'voidpool',
+		lurg: 'lurg'
+	}
+	
+	// autostart setup rails
+
+		Orion.Print("We are running lurg rail");
+		Orion.Exec('ManageRails', false, [railDestOptions.lurg, false] );
+
+	//Orion.Print("We are running voidpool rail");
+	//Orion.Exec('ManageRails', false, [railDestOptions.voidpool, true] );
+
+	
+	// autostart setup profiles
+	if(Player.Properties().indexOf('T0SS') > -1 || friendProfile.indexOf('junk') > -1){
+		Orion.Print('Were on a Junko Samp')
+		profile = {
+			useSpecial: true,
+			//useLightningStrike: true,
+			useAttack: true,
+			useWraithForm: true,
+			useLootCorpses: true,
+			useBandages: true,
+			useSkipTypesToIgnore: true,
+			//leadership: ['Militon [T0SS]', 'DuDaust [T0SS]'],
+			//useRunToTarget: true,
+		};
+		CombatLoop();
+	} else if(Player.Properties().indexOf(' Tamer') > -1 || friendProfile.indexOf('Archertamer') > -1){
+		Orion.Print('Were on a Archer Tamer')
+		profile = {
+			useAttack: true,
+			useSpecial: true,
 			useChivHeal: true,
 			useHealChivFriend: true,
-
-			//combat
-			useAttack: true,
-			useLootCorpses: true,
-			useSpecial: true,
 			useBandages: true,
-			useEnhancementPots: true,
-			useRestorePotions: true,
-			useHealFriend: true,
-			useHealPets: true,
-
-
-			//Bushido
-			useMomentumStrike: true,
-			useLightningStrike: true,
-			useHonor: true,
-
-		}
-	}
-	
-	
-	var profile = profiles.siege;
-	
-	if(Player.Name() === 'Swiggity'){
-		Orion.Print("using swiggity profile");
-		profile = {
-			//useSpecial: true,
-			useAttack: true,
-			useLootCorpses: true,
-			useHonor: true,
-			useLootTMaps: true,
-			useLightningStrike: true,
-			useConfidence: true,
-			useBandages: true,
+			//useLootCorpses: true,
 			//useEnemyOfOne: true,
 			//useDivineFury: true,
-			//useConsecrateWeapon: true,
-			//useRunToTarget: true,
-			useRearm: true,
-			useHealFriend: true,
-		}
+			useSkipTypesToIgnore: true,
+			usePetCommands: true,
+			leadership: ['Militon [T0SS]'],
+		};
+		CombatLoop();
 	}
 	
 	
-	UseLootEvalPassword("12345");
+}
+
+// Editing below is for advanced configuration only
+
+function CombatLoop(){
+	var healFriendNames = [
+		'Muffin',			'Zazi',		'Hooch',			'Bill', 	// a list of my pets names
+		'save me tom cruise', //a message can be put in player journal to identify a friend
+		'T0SS', // a guild tag to identify friends
+		'a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U' // this will mark everyone as a friend
+	];
+	
+	var humanoidNamesToAttack = [
+		"Protector",
+		"Exodus",
+		"Champion",
+		'Controller',
+		'Squire',
+		'Knight',
+		'Master Of',
+		'Black Order',
+		'elite ninja',
+		'Corsair', //Pirate event
+		'Seawitch', //Pirate event
+		'Marauder', //Pirate event
+		'Scallywag', //Pirate event
+		'Pillager' //Pirate event
+	];
+	// will insurte items dropped in bag as artifacts
+	SetItemsCheckBackpackUninsuredItems([
+		"Of Fey Wrath",
+		"Of The Archlich",
+		'Exodus Summoning Rite',
+		'Exodus Sacrificial Dagger',
+		'Exodus Summoning Altar',
+		'Robe Of Rite',
+		'Plunderin' //Pirate event
+	]);
+	
+	UseHealPotionThreshold(25);
+	SetHealFriendThreshold(75);
+	var maxEnemyDistance =  15;
+	SetDropOffItems({'0x171B': 'Plunderin'});
+	
+	// There isnt anything below this point you should need to change
 
 	//if you want to cut corpses get a butchers war cleaver
-	//SetUseCutCorpses(true);
+	SetUseCutCorpses( profile != null ? profile.useCutCorpses :  false);
+	
+	//necro settings
+	var useWraithForm = profile != null ? profile.useWraithForm :  false;
+	var useVampForm = profile != null ? profile.useVampForm :  false;
 	
 	//chiv settings
 	var useEnemyOfOne = profile != null ? profile.useEnemyOfOne :  false;
@@ -201,18 +224,17 @@ function CombatLoop(){
 	var useSpecial = profile != null ? profile.useSpecial : false;
 	var primaryArmorIgnoreWeapons = [
 		'Bladed Staff',
-		'Hatchet',
 		'Soul Glaive',
 		'Composite Bow',
 		'Boomerang',
 		'Longsword',
-		'Katana',
+		
 	];
 	var secondaryArmorIgnoreWeapons = [
 		
-		'Leafblade',
+		'Leafblade', 
 		'Bokuto',
-		'Yumi',
+		'Katana',
 		'Broadsword'
 	];
 	var primaryWhirlwindWeapon = [
@@ -227,7 +249,6 @@ function CombatLoop(){
 	//ninja
 	var useDeathStrike = profile != null ? profile.useDeathStrike :  false;
 	//bushido settings
-	var useMomentumStrike = profile != null ? profile.useMomentumStrike :  false;
 	var useLightningStrike =profile != null ? profile.useLightningStrike :   false;
 	var useHonor = profile != null ? profile.useHonor :  false;
 	
@@ -235,225 +256,93 @@ function CombatLoop(){
 	var useSkipTypesToIgnore =  profile != null ? profile.useSkipTypesToIgnore :  false;
 	
 	var useBandages =  profile != null ? profile.useBandages :  false;
-	var useEnhancementPots =  profile != null ? profile.useEnhancementPots :  false;
-	var useRestorePotions =  profile != null ? profile.useRestorePotions :  false;
-	var healPotionThreshold = 25;
-	var useHealFriend = profile != null ? profile.useHealFriend :  false;
-	var useHealPets = profile != null ? profile.useHealPets :  false;
+	SetUseEnhancementPots(profile != null ? profile.useEnhancementPots :  false);
+	SetUseRestorePotions(profile != null ? profile.useRestorePotions :  false);
+	
+	var usePetCommands = profile != null ? profile.usePetCommands :  false;
 	var useConfidence =  profile != null ? profile.useConfidence :  false;
 	var useEvasion = profile != null ? profile.useEvasion :  false;
-	SetHealFriendThreshold(75);
-	SetHealFriendNames([
-		'BabbyShark',
-		'MommyShark',
-		'DaddyShark',
-		'DootDoot',
-		'PupperSnoot',
-		'Ron',
-		'Mozeltof',
-		'Ricky',
-		'[UWF]',
-		'United We Fight',
-		'eviathin',
-		'Rotodolo',
-		'Scan',
-		"Brain",
-		"Pumpkin",
-		"Zazi",
-		"Computer",
-		//"(bonded)",
-		"Marsha",
-		"Tosser",
-		'PowPow',
-		//'o',
-		//'e',
-		//'a',
-		//'i',
-		//'u',
-		"wetze",
-		'Knuckle',
-		"Floof",
-		'T0SS',
-		"my pet",
-		"killer",
-		"house holder",
-		"skills",
-		'[-G-]',
-		'TABOO'
-	]);
+	
+	SetHealFriendNames(healFriendNames);
 		
 	// probably dont configure below here
 	var timeBetweenLoops = 100; //time in ms between loop cycle
-	var enemyTypes = 'gray|criminal|enemy|red'			; // 'gray | criminal | enemy | red'
-	var maxEnemyDistance =  8;
+	var enemyTypes = 'gray|criminal|enemy|red|orange'			; // 'gray | criminal | enemy | red'
+	
 	var useAttack = profile != null ? profile.useAttack : false;
 	var useRearm =  profile != null ? profile.useRearm : false;
 	var useRunToTarget = profile != null ? profile.useRunToTarget : false;
-	var MinDistToTarget = 1;
+	var MinDistToTarget = 5;
 	var moveToBoundry = {
 			//miny: 591,
 			//maxy: 623
 		}
-	var humanoidNamesToAttack = [
-		"Protector"
-	];
+	
 	var minimumManaForSpells = 20;
 	var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
-	var useIgnoreReset= profile != null ? profile.useIgnoreReset :   false;
-	SetUseInsureItem(profile != null ? profile.useInsureItem :   false);
+	var useIgnoreReset= true; // profile != null ? profile.useIgnoreReset :   false;
+	SetUseInsureItem(true);
 	SetUseLootTMaps(profile != null ? profile.useLootTMaps :   false);
+	SetUseLootForFrags(profile != null ? profile.useLootForFrags :   false)
 	
 	
+	// will trash items in house trash barrel
+	SetAutoTrashItems({
+		//Myrmidon Armor
+		'0x13D4': 'Armor Set',					'0x13DB': 'Armor Set',
+		'0x13D6': 'Armor Set',					'0x13DA': 'Armor Set',
+		
+		//Elven Leafweave
+		'0x2B75': 'Armor Set',					'0x2B78': 'Armor Set',
+		
+		//Greymist Armor
+		'0x13CB': 'Armor Set',					'0x13CC': 'Armor Set',	
+		//'0x13C6': 'Armor Set'
+		
+		//Assassin Armor
+		'0x13C6': 'Armor Set',					'0x13CC': 'Armor Set',
+		'0x13CB': 'Armor Set',					'0x13C5': 'Armor Set',
+		
+		//Plate Of Honor
+		'0x1411': 'Armor Set',					'0x1415': 'Armor Set',	
+		
+		//Death's Essence
+		'0x13C6': "Armor Set",				'0x13CB': "Armor Set",
+		
+		//Hunter's Garb
+		'0x2FC9': "Armor Set",				'0x2FC8': "Armor Set",
+		
+		'0x2D32': 'Blade Dance',				'0x2D33': 'Soul Seeker',
+		'0x268A': 'Helm Of Swiftness',		'0x2FB7': 'Quiver Of Rage',
+		'0x2D34': 'Talon Bite',					'0x2D23': 'Raed',
+		'0x2D21': 'Flesh Ripper',				'0x2D2B': 'Windsong',
+		'0x2D35': 'Righteous Anger',		'0x13BE': 'Fey Leggings',	
+		'0x2FB8': 'Brightsight Lenses',		'0x1F04': 'Robe Of The Equinox',	
+		'0x2D2A': 'Wildfire Bow',				'0x2D30': 'Bonesmasher',
+		'0x2B6E': 'Aegis Of Grace',			'0x1F03': 'Robe Of The Eclipse',	
+		'0x2D31': 'Boomstick',					'0x2F5A': 'Bloodwood Spirit',	
+		'0x2307': 'Pads Of The Cu Sidhe','0x2F5B': 'Totem Of The Void',
+		
+		//voidpool drops
+		'0x2B08': 'Breastplate Of Justice', 			'0x2B0A': 'Arms Of Compassion',
+		'0x2B12': 'Sollerets Of Sacrifice', 				'0x13F5': 'Katrina',
+		'0x3BB3': '10th Anniversary Sculpture', 	'0x1BC4': 'Sentinel',
+		'0x2B0C': 'Gauntlets Of Valor', 					'0x13F8': 'Jaana',
+		'0x2B10': 'Helm Of Spirituality',				'0x3BB5': 'Ankh Pendant',
+		'0x0F61': "Dragon's End", 						'0x2B06': 'Legs Of Honor',
+		'0x1BC3': "Lord Blackthorn's Exemplar", 	'0x3BB6': 'Map Of The Known World',
+		'0x2B0E': 'Gorget Of Honesty',
+	});
+	// will drop off items into secure bagball 
 	
-	if(Orion.ShardName() === 'Siege Perilous'){
-		Orion.Print('Using Siege Loot Table');
-		SetLootItems({
-			'0x400B': true, //shame crystals
-			//'0x226F': true, //wraith form
-			'0x573E': true, //void Orion
-			'0x5728': true, //void core
-			'0x0E21': true, //bandages
-			'0x0EED': true, // gold
-			'0x0F3F': true, //arrows
-			'0x1BD1': true, // feathers
-			'0x26B7': true, //zoogi
-			//lesser pots
-			'0x0F08': true, // agility pot
-			'0x0F09': true, //str pot
-			'0x0F0C': true, //heal pot
-			'0x0F07': true, //cure
-			'0x0F7D': true, //deamon Bloodd
-			'0x0F8A': true, //pig iron
-			'0x0F8E': true, //nox crystal 
-			'0x0F78': true, //batwing
-			'0x0F8F': true, // grave dist 
-			
-		});
-	} else {
-		SetLootItems({
-			'0x5747': true, //raptor teeth
-			'0x400B': true, //shame crystals
-			'0x0F87': true, // lucky coin
-			//'0x226F': true, //wraith form
-			//'0x2D51': true, //SW spell
-			//'0x2D52': true, //SW spell
-			//'0x2D53': true, //immolating weapon SW Spell
-			//'0x2D54': true, //SW spell
-			//'0x2D55': true, //SW Spell
-			//'0x2D56': true, //SW Spell
-			//'0x2D57': true, //SW Spell
-			//'0x2D58': true, //SW Spell
-			//'0x2D59': true, //SW Spell
-			//'0x2D5A': true, //SW Spell
-			//'0x2D5B': true, //SW Spell
-			//'0x2D5C': true, //SW Spell
-			//'0x2D5D': true, //SW Spell
-			//'0x2D5E': true, //word of death SW spell
-			//'0x2D5F': true, //Gift Of Life SW spell
-			//'0x2D60': true, //Gift Of Life SW spell
-			'0x573E': true, //void Orion
-			'0x5728': true, //void core
-			'0x0E21': true, //bandages
-			'0x0F80': true, // demon bone
-			'0x0EED': true, // gold
-			
-			'0x0F3F': true, //arrows
-			'0x1BD1': true, // feathers
-			
-			'0x571C': true, // essence achivement
-			'0x5744': true, //SS skin 
-			'0x5731': true, //Undying Flesh
-			'0x571C': true, //Essence Of Control
-			'0x572C': true, //Goblin Blood
-			'0x571C': true, //Essence Of Passion
-			'0x572D': true, //Lava Serpent Crust
-			'0x26B7': true, //zoogi
-		});
-	
-	}
-	
-	
+	SetRepairDurabilityMin(90);
+	var leadership = profile != null ? profile.leadership :   null;
 	//constants
 	
 	var timeBetweenBows = 300000; // time in ms between bows (ensure keep logged in)
-	var agilityPotionBuffIcon = '0x753c';
-	var strPotionBuffIcon = '0x7567';
-	var disarmBuffIcon = '0x754a';
-	var agilityPotionType = '0x0F08';
-	var strPotionType = '0x0F09';
-	var poisonBuffIcon = '0x7560';
-	var curePotionType = '0x0F07';
-	var healPotionType = '0x0F0C';
 	SetLootBagType('0x0E79');
 	
 	
-	var EnhancementPots = function(){
-		if(useEnhancementPots){
-			if(Orion.FindType(agilityPotionType).length > 0 && !Orion.BuffExists(agilityPotionBuffIcon)){
-				WaitForObjectTimeout();
-				if(Orion.FindType(agilityPotionType).length > 0 && !Orion.BuffExists(agilityPotionBuffIcon)){
-					Orion.UseType(agilityPotionType);
-				}
-				RegisterUseObjectTimeout()
-			}
-			if(Orion.FindType(strPotionType).length > 0 && !Orion.BuffExists(strPotionBuffIcon)){
-				WaitForObjectTimeout();
-				if(Orion.FindType(strPotionType).length > 0 && !Orion.BuffExists(strPotionBuffIcon)){
-					Orion.UseType(strPotionType);
-					RegisterUseObjectTimeout()
-				}
-			}
-		}
-	}
-	
-	var RestorePotions = function(){
-		if(useRestorePotions){
-			if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
-				WaitForObjectTimeout();
-				if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
-					Orion.UseType(curePotionType);
-					RegisterUseObjectTimeout()
-				}
-			}
-			if(Orion.FindType(healPotionType).length > 0 && Player.Hits() < healPotionThreshold && !Orion.BuffExists(poisonBuffIcon)){
-				WaitForObjectTimeout();
-				if(Orion.FindType(healPotionType).length > 0 && Player.Hits() < healPotionThreshold && !Orion.BuffExists(poisonBuffIcon)){
-					Orion.UseType(healPotionType);
-					RegisterUseObjectTimeout()
-				}
-			}
-			if(Orion.FindType(curePotionType).length > 0 && Orion.BuffExists(poisonBuffIcon)){
-				 RestorePotions();
-			}
-		}
-	}
-	
-	var recoveredCorpse = false;
-
-	var RecoverCorpse = function(){
-		if(!recoveredCorpse){
-			recoveredCorpse = true;
-			var playerName = Player.Name();
-			var corpses = Orion.FindType(any, any, ground, "inlos", 2);
-				 if (!corpses.length)
-			    {
-			        return;
-			    }
-			
-			corpses.forEach(function(corpseId){
-				var corpseObject =  Orion.FindObject(corpseId);
-				if(!corpseObject) return;
-				var props = corpseObject.Properties();
-				if(props.indexOf(playerName) > -1 && corpseId !== Player.Serial()){
-					Orion.Print("CORPSE FOUND");
-					Orion.UseObject(corpseId);
-				
-				}
-			})
-		}
-		
-		  
-	}
 	var monsterNamesToIgnore = [
 		"(summoned)",
 		"(tame)",
@@ -462,19 +351,15 @@ function CombatLoop(){
 		"Spectral Armor",
 	];
 	var redNamesToIgnore = [
-		'banshee',
-		'bone knight',
-		'lich',
+		
 		'skeletal dragon',
-		'flesh ripper',
-		'a mummy',
+	
 		'a revenant'
-	];
-	
-	
+	];	
 	
 	var ValidEnemysWithinTiles = function(dist, firstOnly){
 		var typesToIgnore = {
+			
 			'0x0190': true, //human male
 			'0x0191': true, //human female
 			'0x025D': true, //elf male
@@ -486,8 +371,18 @@ function CombatLoop(){
 			'0x02EB': true, //writh female
 			'0x02EC': true, //wraith male	
 			
-			'0x00D9': true, //animal form dog
 			'0x09C4': true, //tiger form
+			'0x00CD': true, //bunny
+			'0x00EE': true, //rat
+			'0x00C9': true, //cat
+			//'0x0015': true, //snake
+			'0x00DB': true, //ostard
+			'0x0019': true, //wolf
+			'0x007A': true, //unicorn
+			'0x00D9': true, //dog
+			'0x00DC': true, //llama
+			//'0x00F6': true, //bake kitsune
+			'0x0084': true, //ki-rin
 		}
 		var playerSerial = Player.Serial();
 		var enemyIds = [];
@@ -535,6 +430,7 @@ function CombatLoop(){
 	var GetTarget = function(){
 		var dist = 0;
 		var enemies = [];
+		var lastDist = 0;
 		while(dist < maxEnemyDistance){
 			if(enemies.length > 0){
 				dist = dist + 1;
@@ -543,6 +439,7 @@ function CombatLoop(){
 			dist = dist + 1;
 			if(dist > 1 && dist !== maxEnemyDistance && dist % 2 === 1) continue;
 			enemies = ValidEnemysWithinTiles(dist, true);		
+			lastDist = dist;
 		}
 		return enemies.length > 0 ? enemies[0] : null;
 	}
@@ -620,7 +517,7 @@ function CombatLoop(){
 		    	Orion.Cast('Death Strike');
 		    	Orion.Wait(2250);  //there is a delay between using the skill and seeing the buff
 	    	}
-	    	if(useMomentumStrike && useLightningStrike){
+	    	if(useLightningStrike){
 	    		var enemies = [];
 					var shouldCheckMonsters = true;
 					if((Orion.BuffExists('0x75fb') || Orion.BuffExists('0x75fb'))){
@@ -646,7 +543,7 @@ function CombatLoop(){
 					}
 					
 					if(shouldCheckMonsters){
-						enemies = ValidEnemysWithinTiles(2);
+						enemies = ValidEnemysWithinTiles(1);
 						lastMonsterCheck = new Date().getTime();
 						lastMonsterCheckMultiple = enemies.length === 0 ? null : enemies.length === 1 ? false : true;
 					}
@@ -664,15 +561,6 @@ function CombatLoop(){
 						}
 						return;
 					}
-	    	} else {
-		    	if(useMomentumStrike && !Orion.BuffExists('0x75fb')){
-			    	Orion.Cast('Momentum Strike');
-			    	Orion.Wait(250);  //there is a delay between using the skill and seeing the buff
-		    	}
-		    	if(useLightningStrike && !Orion.BuffExists('0x75fa')){
-			    	Orion.Cast('Lightning Strike');
-			    	Orion.Wait(250); //there is a delay between using the skill and seeing the buff
-		    	}
 	    	}
 	    	
 	    	if(useSpecial){
@@ -777,76 +665,106 @@ function CombatLoop(){
 	var bowCounter = 0;
 	
 	var Bow = function(){
-		if(bowCounter > timeBetweenBows / timeBetweenLoops){
-	        bowCounter = 0;
+		bowCounter++;
+		if(bowCounter > (timeBetweenBows / timeBetweenLoops)){
+	        bowCounter = 0;	     
 	        Orion.EmoteAction('bow');
 	    }
 	}
 	
-	var insurableText = [
-		"Of Fey Wrath",
-		"Of The Archlich"
-	];
-	function CheckBackpackUninsuredItems(){
-			var itemsInBag = Orion.FindType('any', 'any', 'backpack');
-			itemsInBag.forEach(function(itemId){
-				var itemObject = Orion.FindObject(itemId);
-				if(!itemObject) return;
-				var props = itemObject.Properties();
-				if(props.indexOf("Insured") > -1) {
-					return;
-				}
-				if(props.indexOf("Blessed") > -1) {
-					return;
-				}
-				if(insurableText.filter(function(text){
-					return props.indexOf(text) > -1;
-				}).length > 0){
-					InsureItem(itemId);
-				}
-			})
+	var lastPetCommand = 0;
+	var PetCommands = function(){
+		lastPetCommand++;
+		if(lastPetCommand > (timeBetweenBows / timeBetweenLoops)){
+	        Orion.Say('All follow me');
+			Orion.Say('All guard me');
+			lastPetCommand = 0;	     
+	    }	
 	}	
 	
-	var Rearm = function(){
-	
-		var weaponObject = Orion.ObjAtLayer('RightHand');
-		if(weaponObject && weaponObject.Properties().toLowerCase().indexOf("skill requ") === -1) weaponObject = null;
-		if(!weaponObject) weaponObject = Orion.ObjAtLayer('LeftHand');
-		if(weaponObject && weaponObject.Properties().toLowerCase().indexOf("skill requ") === -1) weaponObject = null;
-		if(!weaponObject) {
-			if( !Orion.BuffExists(disarmBuffIcon)){
-				Orion.CreateClientMacro('EquipLastWeapon').Play(false, 1000);
+	var NecroForm = function() {
+		if(useWraithForm || useVampForm) {
+			var skill = Orion.SkillValue('necromancy');
+			if(skill < 400) return;
+			if(Player.LRC() < 10) return;
+			if(Player.Mana() < 30) return;
+			if(useWraithForm){
+				while(!Orion.BuffExists('wraith form')) {
+					Orion.Cast('wraith form');
+					Orion.Wait(500);
+				}
 			}
-			
-		};
+			if(skill < 990) return;
+			if(useVampForm){
+				while(!Orion.BuffExists('vampiric embrace')) {
+					Orion.Cast('vampiric embrace');
+					Orion.Wait(500);
+				}
+			}
+		}
+	}
+	
+	
+	var timeBetweenFollowChecks = 30000;
+	var lastFollowCheck = 0;
+	var FollowTheLeader = function (){
+		if(!leadership || leadership.length === 0) return;
+		var nowTime = new Date().getTime();
+		var deltaTime = nowTime - lastFollowCheck;
+		if(deltaTime < timeBetweenFollowChecks){
+			return;
+		}
+		lastFollowCheck = nowTime;
+		
+		var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", 10, 'green|blue');
+		if(!friendlys || friendlys.length === 0) return;
+		friendlys = friendlys.filter(function(friend){
+			if(!friend) return false;
+			if(leadership.filter(function(name){
+				var friendProps = friend.Properties();
+				if(friendProps.indexOf(name) > -1) return true;
+			}).length > 0) return true;
+		});
+		if(!friendlys || friendlys.length === 0) return;
+		if(Player.Serial() === friendlys[0].Serial()) return;
+		Orion.Follow(friendlys[0].Serial());
 	}
 
 	var checkUninsuredCounter = 0;
 	var lastIgnoreResetTime = null;
-	while(!Player.Dead()){
-		
-		if(useRearm) Rearm();
+	var firstRunSaveDress = false;
+	while(true){
+		if(Player.Dead()){
+			Orion.Wait(200);
+			continue;
+		}
+		if(firstRunSaveDress === false){
+			firstRunSaveDress = true;
+			SaveDressSet();		
+		}
+		Rearm();
 		RecoverCorpse();
 	    Bow();
 	   	if(useAttack) AttackTarget(GetTarget());
-	   	if(useHealFriend) HealFriend(WaitForObjectTimeout, RegisterUseObjectTimeout);
+	   	if(useBandages) HealFriend(WaitForObjectTimeout, RegisterUseObjectTimeout);
 		if(useBandages) UseBandages(WaitForObjectTimeout, RegisterUseObjectTimeout);
 		if(useChivHeal) ChivHeal();
 		
-		if(useHealPets) HealPets(WaitForObjectTimeout, RegisterUseObjectTimeout);
+		if(useBandages) HealPets(WaitForObjectTimeout, RegisterUseObjectTimeout);
+		if(usePetCommands) PetCommands();
 		if(useHealChivFriend) HealChivFriend();
 		if(useConfidence) UseConfidence();
 		if(useEvasion) UseEvasion();
-		EnhancementPots();
-		RestorePotions();
+		EnhancementPots(RegisterUseObjectTimeout, WaitForObjectTimeout);
+		RestorePotions(RegisterUseObjectTimeout, WaitForObjectTimeout);
 		CastSpells();
 		UseSpecials();
 	    if(useLootCorpses) {
 	    	 LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepItem);
 	    	 
 	    }
-	    if(checkUninsuredCounter > 200){
-	    	if(useIgnoreReset && (!lastIgnoreResetTime || lastIgnoreResetTime + 180000 <  new Date().getTime())){
+	    if(checkUninsuredCounter > (2 * 60 * 1000) / timeBetweenLoops){
+	    	if(useIgnoreReset && (!lastIgnoreResetTime || lastIgnoreResetTime + 150000 <  new Date().getTime())){
 				Orion.IgnoreReset();
 				Orion.Print("Resetting Ignore");
 				lastIgnoreResetTime = new Date().getTime();	
@@ -856,8 +774,16 @@ function CombatLoop(){
 	    } else{
 	    	checkUninsuredCounter = checkUninsuredCounter + 1;
 	    }
-	    LootGoldGround(WaitForObjectTimeout, RegisterUseObjectTimeout);
+	    LootGoldGround(WaitForObjectTimeout, RegisterUseObjectTimeout);	    
+	    AutoTrashItems();
+	    ItemDropOff();
+	    AutoRepair();
+	    WhyAreWeNaked();
+	    NecroForm();
+ 	    if(useBandages) ResockBandages();
+	    FollowTheLeader();
 	    Orion.Wait(timeBetweenLoops);
 	}
 }
+
 

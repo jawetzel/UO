@@ -4,8 +4,12 @@ var secureId = '0x46D9BEAE';
 if(Player.X() === 2101 && Player.Y() === 196){
 	secureId = '0x460ACA94';
 }
-
-
+if(Player.X() === 1910 && Player.Y() === 1430){
+	secureId = '0x413FE221';
+}
+if(Player.X() === 1926 && Player.Y() === 1477){
+	secureId = '0x413FE257';
+}
 
 var boxGrpahic = '0x0E7E|0x09A9';
 var dirtGraphic = '0x1602';
@@ -192,6 +196,11 @@ function PickPlants(){
 	
 	var pickPlant = function (plantId){
 		depositResources();
+		var plantObject = Orion.FindObject(plantId);
+		var props = plantObject.Properties();
+		if(props.indexOf("Locked") === -1){
+			return;
+		}
 		Orion.UseObject(plantId);
 		var startTime = new Date().getTime();
 		if(!Orion.WaitForGump(3000)){
@@ -200,8 +209,7 @@ function PickPlants(){
 			Orion.WaitForGump(3000);
 			Orion.Wait(1200);
 		}
-		var plantObject = Orion.FindObject(plantId);
-		var props = plantObject.Properties();
+		
 		if (
 			props.toLowerCase().indexOf("green") > -1 || 
 			props.toLowerCase().indexOf("orange") > -1
@@ -243,7 +251,7 @@ function PickPlants(){
 	});
 	
 	depositResources(true);
-	
+	TendPlant();
 }
 
 

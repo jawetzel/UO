@@ -29,7 +29,7 @@ var FindItems = function(){
 		if(item && item.length > 0){
 			var itemObject = Orion.FindObject(item[0]);
 			var count = itemObject.Count();
-			if(count > 4000){
+			if(count > 1500){
 				BagOfSendingItem(item[0]);
 				
 			}
@@ -93,10 +93,28 @@ function Run (){
 	}
 }
 
+function StayLoggedIn(){
+	while(true){
+		if(!Orion.Connected()){
+			Orion.Wait(2000);
+			Orion.Relogin();
+		}
+		Orion.Wait(10000);
+	}
+}
+	
 
+function BuyDirtStartup(){
+	Orion.Wait(10000);
+	if(Player.Y() === 3488 && Player.X() === 774) {
+		Orion.Print("Starting");
+		Orion.UseObject(backpack);
+		Orion.Wait(2000);
+		Run();
+	}
+}
 
-
-function Autostart()
+function Autostart2        ()
 {
 	Orion.Wait(10000);
 	if(Player.Y() === 3488 && Player.X() === 774) {

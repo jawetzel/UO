@@ -1,0 +1,71 @@
+var container = '0x461D8E31'
+var robesContainer = '0x462A6D65'
+var daggersContainer = '0x462A6D4F'
+var riteContainer = '0x462A6D60'
+var altarContainer = '0x46675DB2'
+
+var openContainers = function(){
+	Orion.OpenContainer(container);
+	Orion.Wait(1500);
+	Orion.OpenContainer(robesContainer);
+	Orion.Wait(1500);
+	Orion.OpenContainer(daggersContainer);
+	Orion.Wait(1500);
+	Orion.OpenContainer(riteContainer);
+	Orion.Wait(1500);
+	Orion.OpenContainer(altarContainer);
+	Orion.Wait(1500);
+}
+
+function PullSet(){
+	//openContainers();
+	var robes = Orion.FindType('0x1F03', '0x0A8E', robesContainer);
+	if(robes && robes.length > 0){
+		Orion.MoveItem(robes[0], 1, backpack);
+		Orion.Wait(1500);
+	}
+	robes = Orion.FindType('0x2258', '0x0776', riteContainer);
+	if(robes && robes.length > 0){
+		Orion.MoveItem(robes[0], 1, backpack);
+			Orion.Wait(1500);
+	}
+	robes = Orion.FindType('0x406A', '0x09C4', daggersContainer);
+	if(robes && robes.length > 0){
+		Orion.MoveItem(robes[0], 1, backpack);
+			Orion.Wait(1500);
+	}
+}
+
+
+function DepositKeys(){
+	openContainers();
+	var robes = Orion.FindType('0x1F03', '0x0A8E', backpack);
+	if(robes && robes.length > 0){
+		robes.forEach(function(item){
+			Orion.MoveItem(item, 1, robesContainer);
+			Orion.Wait(1500);
+		})
+	}
+	var robes = Orion.FindType('0x2D2D', '0x09C4', backpack);
+	if(robes && robes.length > 0){
+		robes.forEach(function(item){
+			Orion.MoveItem(item, 1, daggersContainer);
+			Orion.Wait(1500);
+		})
+	}
+	var robes = Orion.FindType('0x2258', '0x0776', backpack);
+	if(robes && robes.length > 0){
+		robes.forEach(function(item){
+			Orion.MoveItem(item, 1, riteContainer);
+			Orion.Wait(1500);
+		})
+	}
+	var robes = Orion.FindType('0x14F0', '0x0000', backpack);
+	if(robes && robes.length > 0){
+		robes.forEach(function(item){
+			Orion.MoveItem(item, 1, altarContainer);
+			Orion.Wait(1500);
+		})
+	}
+	
+}

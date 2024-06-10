@@ -1,0 +1,1 @@
+[{"type":"recall","recallType":"0x1F14","recallContainer":"backpack","recallName":"A Recall Rune For PaintedCaves (Felucca)","index":0},{"type":"run","x":1714,"y":2997,"z":0,"index":1},{"type":"run","x":6293,"y":881,"z":-2,"index":2},{"type":"run","x":6270,"y":879,"z":0,"index":3},{"type":"run","x":6261,"y":879,"z":0,"index":4}]

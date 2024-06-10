@@ -1,9 +1,54 @@
 // Put your code here...
-function IDOCBarrels()
-     {
-    while (!Player.Dead()) 
-        {
-        var barrels = Orion.FindType('0x0FAE|0x0E77|0x1EB5', '-1', ground, 'near', '24', ' ');
+
+function Autostart()
+{
+	Orion.Wait(10000);
+	Orion.OpenContainer(backpack);
+	Orion.Wait(3000);
+	placeHouse();
+}
+
+function  hidePeople(){
+	var things = Orion.FindType(any, any, ground, 'mobile|live', 24, 'blue|red');
+	if(things && things.length > 0){
+		things.forEach(function(thing){
+			var thingObject = Orion.FindObject(thing);
+			if(thingObject){
+				var props = thingObject.Properties();
+				if(props){
+					var lowerProps = props.toLowerCase();
+					if(
+					lowerProps.indexOf("tame") > -1 || 
+					lowerProps.indexOf("bonded") > -1 || 
+					lowerProps.indexOf("summoned") > -1 || 
+					thingObject.IsHuman() || 
+					thingObject.Graphic() === "0x02C1"  ||
+					thingObject.Graphic() === "0x02EC"  ||
+					thingObject.Graphic() === "0x02EB" 
+					) {
+						Orion.Hide(thing);
+					}
+					
+				}
+			}
+		})
+	}
+}
+
+
+function IDOCBarrels(){
+    var  hidePeople = function(){
+		var things = Orion.FindType(any, any, ground, 'mobile|live', 24, 'blue');
+		if(things && things.length > 0){
+			things.forEach(function(thing){
+				Orion.Hide(thing);
+			})
+		}
+	}
+	
+    while (!Player.Dead()) {
+        // hidePeople();
+        var barrels = Orion.FindType('0x0FAE|0x0E77|0x1EB5', '-1', ground, 'near', '8', ' ');
         var barrel;
         if(barrels){
         	var validBarrels = barrels.filter(function(barrelId){
@@ -13,8 +58,7 @@ function IDOCBarrels()
         	});
         	if(validBarrels && validBarrels.length > 0){
 		        	barrel = Orion.FindObject(validBarrels[0]);
-		            if (barrel.Serial) 
-		                {
+		            if (barrel.Serial) {
 		                  var h = barrel.X();
 		                   var j = barrel.Y();
 		                    if(barrel.Distance() > 1)
@@ -22,10 +66,125 @@ function IDOCBarrels()
 		                    else
 		                        Orion.Attack(barrel.Serial());
 		                   Orion.Wait(250);
-		                   }
-		               }
+		         	}
 		        Orion.Wait(250);
         	}
         	
         }
     }
+}
+    
+
+
+
+function placeHouse(){
+	var placePos = {
+		x: Player.X(),
+		y: Player.Y() - 1
+	}
+	var sizeDict = {
+		'18x18': {
+			menuOption: 5243
+		},
+		
+		'18x17': {
+			menuOption: 5242
+		},
+		'18x16': {
+			menuOption: 5241
+		},
+		'17x18': {
+			menuOption: 5231
+		},
+		'16x18': {
+			menuOption: 5219
+		},
+		'14x18': {
+			menuOption: 5195
+		},
+		'18x14': {
+			menuOption: 5239
+		},
+		'13x17': {
+			menuOption: 5182
+		},
+		
+		
+	}
+	var sizeToUse = sizeDict['18x18'];
+	
+	var pos = {
+		x: placePos.x,
+		y: placePos.y,
+		z: Player.Z()
+	}
+	
+	
+	var tool = Orion.FindTypeEx('0x14F6')[0];
+	var attemptPlace = function(){
+		Orion.Wait(1500);
+		var gump1 = Orion.GetGump(tool.Serial(), 0x000001D0);
+		Orion.Print(gump1);
+		Orion.Print(sizeToUse.menuOption);
+		gump1.Select(Orion.CreateGumpHook(sizeToUse.menuOption));
+		
+		if (Orion.WaitForTarget(1000)) {
+			Orion.TargetTile('any', pos.x, pos.y, pos.z );
+			
+			if (Orion.WaitForGump(1000)) { //clicks yes on popup asking are you sure;
+				Orion.Wait(1000);
+				var gump0 = Orion.GetGump(tool.Serial(), 0x000001EC);
+				if(gump0){
+					gump0.Select(Orion.CreateGumpHook(1));
+					Orion.Wait(100);
+				}
+				
+			}
+		}
+		
+		
+	}	
+	var openHouseMenu = function(){
+		Orion.UseObject(tool.Serial());
+		Orion.Wait(1500);
+		Orion.WaitForGump(1000)
+		var houseTypeGump = Orion.GetGump('last');
+		if (houseTypeGump !== null && houseTypeGump.ButtonList().length === 4)
+		{
+			houseTypeGump.Select(Orion.CreateGumpHook(3));
+			Orion.Wait(500);
+		}
+		
+		Orion.WaitForGump(1000)
+		var houseSizeGump = Orion.GetGump('last');
+		Orion.Print(houseSizeGump.ButtonList().length); //62
+		if (houseSizeGump !== null)
+		{
+			houseSizeGump.Select(Orion.CreateGumpHook(sizeToUse.menuOption));
+			Orion.Wait(500);
+		}
+		
+		if (Orion.WaitForTarget(1000))
+			Orion.TargetTile('any', placePos.x, placePos.y, Player.Z());
+		
+		if (Orion.WaitForGump(1000)) { //clicks yes on popup asking are you sure;
+			Orion.Wait(1000);
+			var gump0 = Orion.GetGump(tool.Serial(), 0x000001EC);
+			if(gump0){
+				gump0.Select(Orion.CreateGumpHook(1));
+				Orion.Wait(100);
+			}
+		}
+	}
+
+	while(true){
+		if(!Player.Hidden()){
+			Orion.UseSkill("Hiding");
+		}
+		Orion.Wait(1200);
+		Orion.EmoteAction('bow');		
+		openHouseMenu();
+		Orion.Wait(30000);
+	}
+}	
+	

@@ -77,29 +77,9 @@ function BagOfSendingItem(item, WaitForObjectTimeout, RegisterUseObjectTimeout){
 	RegisterUseObjectTimeout()
 }
 
-function BagOfSendingGold(WaitForObjectTimeout, RegisterUseObjectTimeout){
-	if(Player.Weight() < maxBagOfSendingWeight) return;
-	var goldStacks = Orion.FindType('0x0EED', 'any', 'backpack');
-	
-	if(!goldStacks || goldStacks.length === 0) return;
-	var bestGoldStack = goldStacks[0];
-	if(goldStacks.length> 1){
-		var highestStackValue = 0;
-		for(var i = 0; i < goldStacks.length; i++){
-				var stack = Orion.FindObject(goldStacks[i]);
-				var count = stack.Count();
-				if(count > highestStackValue){
-					highestStackValue = count;
-					bestGoldStack = goldStacks[i];
-				}
-		}
-	}
-	BagOfSendingItem(bestGoldStack, WaitForObjectTimeout, RegisterUseObjectTimeout);
-	BagOfSendingDemonBone(WaitForObjectTimeout, RegisterUseObjectTimeout);
-}
 
-function BagOfSendingDemonBone(WaitForObjectTimeout, RegisterUseObjectTimeout){
-	var goldStacks = Orion.FindType('0x0F80', 'any', 'backpack');
+function CheckGraphicBagOfSendingItem(WaitForObjectTimeout, RegisterUseObjectTimeout, graphic, count){
+	var goldStacks = Orion.FindType(graphic, 'any', 'backpack');
 	
 	if(!goldStacks || goldStacks.length === 0) return;
 	var bestGoldStack = goldStacks[0];
@@ -117,9 +97,34 @@ function BagOfSendingDemonBone(WaitForObjectTimeout, RegisterUseObjectTimeout){
 		var stack = Orion.FindObject(goldStacks[0]);	
 		highestStackValue = stack.Count();
 	}
-	if(highestStackValue > 1500){
+	Orion.Print(count);
+	Orion.Print(highestStackValue);
+	if(highestStackValue > count){
 		BagOfSendingItem(bestGoldStack, WaitForObjectTimeout, RegisterUseObjectTimeout);
 	}
+}
+
+function BagOfSendingGold(WaitForObjectTimeout, RegisterUseObjectTimeout){
+	if(Player.Weight() < maxBagOfSendingWeight) return;
+	CheckGraphicBagOfSendingItem(WaitForObjectTimeout, RegisterUseObjectTimeout, '0x0F80', 1500);
+	CheckGraphicBagOfSendingItem(WaitForObjectTimeout, RegisterUseObjectTimeout, '0x0F8F', 3000);
+	CheckGraphicBagOfSendingItem(WaitForObjectTimeout, RegisterUseObjectTimeout, '0x1BD1', 3500);
+	var goldStacks = Orion.FindType('0x0EED', 'any', 'backpack');
+	
+	if(!goldStacks || goldStacks.length === 0) return;
+	var bestGoldStack = goldStacks[0];
+	if(goldStacks.length> 1){
+		var highestStackValue = 0;
+		for(var i = 0; i < goldStacks.length; i++){
+				var stack = Orion.FindObject(goldStacks[i]);
+				var count = stack.Count();
+				if(count > highestStackValue){
+					highestStackValue = count;
+					bestGoldStack = goldStacks[i];
+				}
+		}
+	}
+	BagOfSendingItem(bestGoldStack, WaitForObjectTimeout, RegisterUseObjectTimeout);
 	
 }
 
@@ -178,7 +183,7 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 	WaitForObjectTimeout();
 	
 	if(useCutCorpses){
-		var backpackCutter = Orion.FindType('0x0902', 'any', 'backpack');
+		var backpackCutter = Orion.FindType('0x0F51', 'any', 'backpack');
 		if(backpackCutter && backpackCutter.length > 0) {
 			WaitForObjectTimeout()
 			Orion.UseObject(backpackCutter[0]);
@@ -200,19 +205,50 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 		if(itemInstance && itemInstance.Container() !== Player.Container() &&  itemInstance.Container() !== lootbag[0]){
 			Orion.Print("Evaluate Item");
 			var itemGraphic = itemInstance.Graphic();
-			if(ShouldKeepItem(item)){
-				WaitForObjectTimeout()
+			if(ShouldKeepItem(item) || lootItems[itemGraphic]){
+			
+				if( lootItems[itemGraphic]){
+					// we need to limit the bandage count here
+					var bandageGraphic = '0x0E21';
+					if(itemGraphic === bandageGraphic){
+						var backpackBandages = Orion.FindTypeEx(bandageGraphic, "any", "backpack");
+						var bandageCount = 0;
+						
+						if(backpackBandages && backpackBandages.length > 0){
+							backpackBandages.forEach(function(bandaid){
+								bandageCount = bandageCount + bandaid.Count();
+							})
+						}
+						if(bandageCount > 1000) return;
+					}					
+				}
+				
 				var movedItem = Orion.FindObject(item);
 				if(!movedItem) return;
 				if(lootbag && lootbag.length > 0 && 
 					itemGraphic !== '0x0EED' && //not gold
 					itemGraphic !== '0x0E21' && //not bandages
-					itemGraphic !== '0x0F80' //not demon bone
+					itemGraphic !== '0x0F80' && //not grave dust
+					itemGraphic !== '0x0F8F' && //not demon bone
+					itemGraphic !== '0x9F13' && //not eggs
+					itemGraphic !== '0x9F14' && //not eggs
+					itemGraphic !== '0x9F15' && //not eggs
+					itemGraphic !== '0x9F16' && //not eggs
+					itemGraphic !== '0x9F17' && //not eggs
+					itemGraphic !== '0x9F18' //not eggs
 					){ 
+					WaitForObjectTimeout()
+					if(!Orion.GumpExists('container', lootbag[0])) {
+						Orion.OpenContainer(lootbag[0]);
+						RegisterUseObjectTimeout()
+						
+					}
+					WaitForObjectTimeout()
 					Orion.MoveItem(item, 5000, lootbag[0]);
 					RegisterUseObjectTimeout()
 				}
 				else {
+					WaitForObjectTimeout()
 					Orion.MoveItem(item, 5000, 'backpack');
 					RegisterUseObjectTimeout()
 				}
@@ -220,7 +256,8 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 				if(movedItem.Count() > 1){
 					Orion.Wait(100);
 				} else {
-					while((!Orion.FindObject(item) || Orion.FindObject(item).Container() !== lootbag[0]) && waitForLootbagIndex < 15){
+					var object = Orion.FindObject(item)
+					while((!object || object.Container() !== lootbag[0]) && waitForLootbagIndex < 15){
 						waitForLootbagIndex ++;
 						Orion.Wait(100);
 					}
