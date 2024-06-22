@@ -287,7 +287,7 @@ function ShouldKeepItem(itemId){
 					return props.indexOf(mod) > -1
 				});
 				
-				if(usefullSkills.length === 0) worthlessCountBonus++;
+				if(usefullSkills.length === 0) return false;
 					
 				if((containsWorthlessMods.length + worthlessCountBonus) > 2) return false;
 				//exclude 7 mod 2 junk mod jewls

@@ -30,7 +30,32 @@ var InsureItem = function(itemId)
 		Orion.TargetObject('0x00000000');
 }
 
-
+var getSkillTotalSuffix = function(props){
+		var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
+		if(!isJewlery) return "";
+		
+		var skills = [	"Anatomy",		"Animal Lore",		"Animal Taming",
+								"Archery",			"Bushido",				"Chivalry",
+								"Evaluating Inteligence",					"Fencing",
+								"Focus",				"Healing",				"Macing",
+								"Magery",			"Resisting Spells",	"Meditation",
+								"Mysticism",		"Necromancy",		"Ninjitsu",		
+								"Parrying",			"Spirit Speak",		"Stealth",		
+								"Swordsmanship",							"Tactics",	
+								"Throwing",		"Wrestling"];
+								
+		var skillTotal = 0;
+		skills.forEach(function(skill){
+			if(props.indexOf(skill) === -1) return;
+			var skillValue = Number(props.split(skill)[1].split('\n')[0]);
+			skillTotal += skillValue;
+		})
+		if(skillTotal < 30) return '';
+		if(skillTotal  >= 30 && skillTotal < 45) return " 30Skill";
+		if(skillTotal  >= 45 && skillTotal < 60) return " 45Skill";
+		if(skillTotal  >= 60) return " 60Skill";
+}
+	
 function StockLobjectWLtargBagInto(){
 	var soirceBag = Orion.ClientLastTarget();
 	var targetBag = Orion.FindObject(lastobject).Serial();
@@ -45,7 +70,7 @@ function StockLobjectWLtargBagInto(){
 		}
 		Orion.MoveItem(item, 1000, targetBag);
 			Orion.Wait(600);
-			Orion.SendPrompt("200000")
+			Orion.SendPrompt("35000000 Jawetzel" + getSkillTotalSuffix(Orion.FindObject(item).Properties()))
 			Orion.Wait(600);
 
 	})
@@ -53,49 +78,243 @@ function StockLobjectWLtargBagInto(){
 	
 }
 
-
-function StockLobjectWLtargBagIntoSubBags(){	
-	var soirceBag = Orion.ClientLastTarget();
-	var targetBag = Orion.FindObject(lastobject).Serial();
-	
-	var destContainers = Orion.FindType('0x0E75', 'any', targetBag);
-	var validDestContainers = destContainers.filter(function(bag){
-		var bagObject = Orion.FindObject(bag);
-		if(!bagObject) return false;
-		Orion.UseObject(bag);
-		Orion.Wait(2000);
-		var contents = Orion.FindObject('any', 'any', bag);
-		if(contents && contents.length > 19) return false;
-		return true;
-	});
-	Orion.Print(validDestContainers);
-	if(!validDestContainers || validDestContainers.length === 0) return;
-	
-	validDestContainers.forEach(function(bag){
-			while(
-				Orion.FindType('any', 'any', soirceBag, ' ', 'finddistance', ' ', true) && 
-				(!Orion.FindType('any', 'any', bag) || 
-				Orion.FindType('any', 'any', bag).length < 20)
-				)
-			{
-				var destItems = Orion.FindType('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
-				Orion.Print(destItems);
-				if(!destItems || destItems.length === 0) return;
-				var destItem = Orion.FindObject(destItems[0]);
-				if(destItem.Properties().indexOf('Contents:') > -1) {
-					Orion.Ignore(destItems[0]);
-				} else {
-					if(destItem.Properties().indexOf('Insured') > -1){
-						InsureItem(destItems[0]);
-					}
-					Orion.MoveItem(destItems[0], 1000, bag);
-					Orion.Wait(600);
-					Orion.SendPrompt("35000000 Jawetzel")
-					Orion.Wait(600);
-				}
-			}
-	})
+var isOverSkill = function(skillMin, props){
+		var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
+		if(!isJewlery) return false;
+		
+		var skills = [	"Anatomy",		"Animal Lore",		"Animal Taming",
+								"Archery",			"Bushido",				"Chivalry",
+								"Evaluating Inteligence",					"Fencing",
+								"Focus",				"Healing",				"Macing",
+								"Magery",			"Resisting Spells",	"Meditation",
+								"Mysticism",		"Necromancy",		"Ninjitsu",		
+								"Parrying",			"Spirit Speak",		"Stealth",		
+								"Swordsmanship",							"Tactics",	
+								"Throwing",		"Wrestling"];
+								
+		var skillTotal = 0;
+		skills.forEach(function(skill){
+			if(props.indexOf(skill) === -1) return;
+			Orion.Print(props.split(skill)[1]);
+			var skillValue = Number(props.split(skill)[1].split('\n')[0]);
+			skillTotal += skillValue;
+		})
+		Orion.Print(skillTotal);
+		return skillTotal >= skillMin;
 }
+
+var isStamGear = function(props){
+	var GetPropValue = function(regex, props){
+			var matches = regex.exec(props);
+			if(!matches || matches.length < 2) return 0;
+			return matches[1];
+		}
+		
+	var stam = GetPropValue(/Stamina Increase (\d+)/, props);
+	return stam >= 6;
+}
+
+var isLrcGear = function(props){
+	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
+	if(isJewlery) return false;
+	var GetPropValue = function(regex, props){
+			var matches = regex.exec(props);
+			if(!matches || matches.length < 2) return 0;
+			return matches[1];
+		}
+		
+	var lrc = GetPropValue(/Lower Reagent Cost (\d+)/, props);
+	return lrc >= 10;
+}
+var isHpGear = function(props){
+	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
+	if(isJewlery) return false;
+	var GetPropValue = function(regex, props){
+			var matches = regex.exec(props);
+			if(!matches || matches.length < 2) return 0;
+			return matches[1];
+		}
+		
+	var hp = GetPropValue(/Hit Point Increase (\d+)/, props);
+	return hp >= 5;
+}
+var isCastingJewl = function(props){
+	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
+	if(!isJewlery) return false;
+	
+	return props.indexOf('Faster Cast Recovery 3') > -1 || 
+		props.indexOf('Faster Cast Recovery 4') > -1 || 
+	 	props.indexOf('Faster Casting 1') > -1;
+}
+
+var isHciSsiJewl = function(props){
+	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
+	if(!isJewlery) return false;
+	
+	return props.indexOf('Swing Speed Increase') > -1 && 
+		props.indexOf('Hit Chance Increase') > -1;
+}
+	
+	
+	
+function StockLobjectWLtargBagIntoSubBags(){	
+	var temPrice = 50000000;
+	var itemDescription = "Jawetzel";
+	
+	var vendorDist = 2; //2 if on top, higher if outside house stocking
+	var vendorName = 'Shop Name: Armor';
+	var vendorSubContainers = {
+		'Splinter': [],
+		'Shield': [],
+		'Jewl 60+': [],
+		'Jewl FC+FCR': [],
+		'Jewl HCI SSI': [],
+		'Jewl Cast': [],
+		'Stam': [],
+		'HP': [],
+		'LRC': [],
+		'Misc': [],
+	};
+	var vendorTypes = [];
+	for(var option in vendorSubContainers){
+		vendorTypes.push(option);
+	}
+
+	var groundObjects = Orion.FindType('any', 'any', "ground", "", vendorDist);
+	if(!groundObjects || groundObjects.length === 0) return;
+	var vendors = groundObjects.filter(function(groundId){
+		var groundObject = Orion.FindObject(groundId);
+		var props = groundObject.Properties();
+		var isVendor = props.indexOf(vendorName) > -1;		
+		return isVendor;
+	});
+	vendors.forEach(function(vendor){
+		var vendorObject = Orion.FindObject(vendor);
+		var props = vendorObject.Properties();
+		vendorTypes.forEach(function(type){
+			if(props.indexOf(type) > -1){
+				Orion.UseObject(vendor);
+				if (Orion.WaitForGump(1000)) {
+					var gump0 = Orion.GetGump('last');
+					if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000002AB'))
+					{
+						gump0.Select(Orion.CreateGumpHook(1));
+						Orion.Wait(100);
+					}
+				}
+				Orion.Wait(1300);
+				var objectsInVendor = Orion.FindTypeEx('any','any', lastcontainer);
+				objectsInVendor.forEach(function(vendorItemObject){
+					if(vendorItemObject.Graphic() === '0x0E75') {
+						vendorOptions[type].push(vendorItemObject.Serial());
+					}
+				});
+			}
+		});
+	});
+	
+	var soirceBag = Orion.ClientLastTarget();
+	Orion,OpenContainer(soirceBag);
+	Orion.Wait(2000);
+	var sourceItems = Orion.FindTypeEx('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
+	
+	sourceItems.forEach(function(sourceItem){
+			var destBag = null;
+			var props = sourceItem.Properties();
+
+			var getValidBagFromBags = function(bags){
+				return bags.filter(function(bagId){
+					var bagObject = Orion.FindObject(bagId);
+					var bagProps = bagObject.Properties();
+					var itemCount = Number(bagProps.split('Contents: ')[1].Split('/')[0]);
+					return (itemCount < 20);
+				});			
+			}
+			
+			var isJewlery = (props.indexOf('Ring') > -1 && 
+				props.indexOf("Ringmail") === -1) || 
+				props.indexOf('Bracelet') > -1;
+			
+			if(props.indexOf('Splintering Weapon ') > -1) {
+	    		if(vendorSubContainers['Splinter'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['Splinter']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+	    	}
+			else if(props.indexOf('Reactive Paralyze') > -1) {
+	    		if(vendorSubContainers['Shield'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['Shield']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+	    	}			
+			else if(isOverSkill(60, props)){
+	    		if(vendorSubContainers['Jewl 60+'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['Jewl 60+']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+	    	}
+			else if(	isJewlery &&  (props.indexOf('Faster Cast Recovery 3') > -1 || 
+				props.indexOf('Faster Cast Recovery 4') > -1 ) && 
+			 	props.indexOf('Faster Casting 1') > -1){
+			 	if(vendorSubContainers['Jewl FC+FCR'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['Jewl FC+FCR']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+			 }
+			 else if(isHciSsiJewl(props)){
+	    		if(vendorSubContainers['Jewl HCI SSI'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['Jewl HCI SSI']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+	    	}
+	    	else if(isCastingJewl(props)){
+	    		if(vendorSubContainers['Jewl Cast'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['Jewl Cast']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+	    	}
+	    	else if(isStamGear(props)){
+	    		if(vendorSubContainers['Stam'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['Stam']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+	    	}
+	    	else if(isLrcGear(props)){
+	    		if(vendorSubContainers['HP'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['HP']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+	    	}
+	    	else if(isHpGear(props)){
+	    		if(vendorSubContainers['LRC'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['LRC']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+	    	}
+			else {
+				if(vendorSubContainers['Misc'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['Misc']);
+	    			if(validContainers.length > 0) destBag = validContainers[0];
+	    		}
+			}
+	    	
+	    
+	    	if(destBag){
+	    		if(destItem.Properties().indexOf('Insured') > -1){
+					InsureItem(sourceItem);
+				}
+				Orion.MoveItem(sourceItem, 1000, destBag);
+				Orion.Wait(600);
+				Orion.SendPrompt(itemPrice + itemDescription + getSkillTotalSuffix(destItem.Properties()))
+				Orion.Wait(800);
+	    	}
+	});
+}
+
+
+
+
+
 
 function UninsureContainer(){
 	var targetBag = Orion.FindObject(lastobject).Serial();
@@ -148,22 +367,11 @@ function FillLobjectBagWithLtargetSWScrolls(){
 }
 
 function RepriceVendor(){
-
-	// set below to true to use a date to decide which vendors need repriced.
-	// ex: 	I stock the vendor today, 5/25/2024 so I set the shop name to "20240525" (YearMonthDay)
-	// 			The repricer will look at the vendor's shop name to decide if its time to reprice. 
-	//			My vendors are named Armor I, Armor II, Armor III... so the name "Armor " will find those.
-	var useDateOffset = false;
-	// how much time between price changes in millisecconds
-	var dateOffset = 14 * 24 * 60 * 60 * 1000; // 2 weeks
-	// part of the name of the vendors so you can narrow which vendors you want repriced
-	var dateOffsetVendorName = "Armor "
-	
 	// numbers under 1 will mark a percentage
 	// ex: .75 will take an item that was 10,000 gold and mark it to 7,500 Gold
 	// numbers over 1 will set a fixed Value
 	// ex: 10000 will make the price 10,000
-	var newPrice = .5;
+	var newPrice = 25000000;
 	// this will be the description of the item (if you use a named description your vendors will be searchable
 	var followUpText = "Jawetzel";    
 	var vendordistance = 2;
@@ -177,19 +385,8 @@ function RepriceVendor(){
 	var vendors = groundObjects.filter(function(groundId){
 		var groundObject = Orion.FindObject(groundId);
 		var props = groundObject.Properties();
-		var isVendor = props.indexOf('Shop Name:') > -1;
-		var isDateOffsetVendor = props.indexOf(dateOffsetVendorName) > -1;
-		var isValidDateOffsetVendorDate = false;
-		if(isVendor && isDateOffsetVendor && useDateOffset){
-			var vendorSplit = Number(props.split("Shop Name: ")[1]);
-			var dateToUpdate =  new Date(new Date().getTime() - dateOffset);
-			var numberToUpdate = Number(dateToUpdate.getFullYear().toString() + 
-				(dateToUpdate.getMonth() + 1).toString() + 
-				dateToUpdate.getDate().toString());
-			isValidDateOffsetVendorDate = vendorSplit > numberToUpdate;
-			
-		}
-		return isVendor && (!useDateOffset ||  (isDateOffsetVendor && isValidDateOffsetVendorDate));
+		var isVendor = props.indexOf('Shop Name:') > -1;		
+		return isVendor;
 	});
 		 
 	
@@ -277,11 +474,13 @@ function RepriceVendor(){
     	 var cleanPriceText = priceText.split(",").join("");
     	 var number = parseInt(cleanPriceText);
     	
+    	var description = followUpText + getSkillTotalSuffix(Orion.FindObject(itemId).Properties());
+    	
     	 var updatedPrice = newPrice;
     	 if(newPrice < 1){
     	 	var updatedPrice = Math.floor(number * newPrice);  
     	 }
-    	 if(number !== newPrice) {
+    	 if(number !== newPrice || Orion.FindObject(itemId).Properties().indexOf(description) === -1) {
     	 	 var oldItemX = item.X();
 	    	 var oldItemY = item.Y();
 	    	 Orion.MoveItem(itemId, 1000, 'backpack');
@@ -296,8 +495,8 @@ function RepriceVendor(){
 	    	  	Orion.MoveItem(itemId, 1000, containerId, oldItemX, oldItemY);
 	    	  	 Orion.Wait(700);
 	    	  }
-	    	  Orion.Print(updatedPrice + followUpText)
-	    	 Orion.SendPrompt(updatedPrice + followUpText)
+	    	  Orion.Print(updatedPrice + description)
+	    	 Orion.SendPrompt(updatedPrice + description)
 	    	 Orion.Wait(500);
     	 }    	
     })
@@ -332,4 +531,133 @@ function CollectGold(){
 		Orion.Wait(1100);
 		
 	});
+}
+
+function OrgLoot(){
+	
+
+	var groundObjects = Orion.FindType('any', 'any', "ground", "", 2);
+	if(!groundObjects || groundObjects.length === 0) return;
+	var vendors = groundObjects.filter(function(groundId){
+		var groundObject = Orion.FindObject(groundId);
+		var props = groundObject.Properties();
+		var isVendor = props.indexOf('Shop Name:') > -1;
+		return isVendor;
+	});
+		 
+	
+	var items = [];
+	
+	//finds items on vendors and opens bags in vendor
+	vendors.forEach(function(vendor){
+		
+		var vendorObject =  Orion.FindObject(vendor);
+		if(!vendorObject) return;
+		var vendorDist = Orion.FindObject(vendor).Distance();
+		Orion.Print("Vendor Distance: " + vendorDist);
+		if(vendorDist > 2) return;
+		
+		Orion.Print("Opening Vendor");
+		Orion.UseObject(vendor);
+		if (Orion.WaitForGump(1000))
+		{
+			var gump0 = Orion.GetGump('last');
+			if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000002AB'))
+			{
+				gump0.Select(Orion.CreateGumpHook(1));
+				Orion.Wait(100);
+			}
+		}
+		Orion.Wait(1300);
+		var objectsInVendor = Orion.FindTypeEx('any','any', lastcontainer);
+		objectsInVendor.forEach(function(vendorItemObject){
+			if(vendorItemObject.Graphic() === '0x0E75') {
+				Orion.OpenContainer(vendorItemObject.Serial());
+				Orion.Wait(1500);
+				var itemsInSubBag = Orion.FindType('any','any', vendorItemObject.Serial());
+				if(itemsInSubBag && itemsInSubBag.length > 0){
+					itemsInSubBag.forEach(function(subBagItem){
+						items.push(subBagItem);
+					})
+				}
+			} else {
+				items.push(vendorItemObject.Serial());
+			}
+		})
+	});
+	
+	// filters down items based on items for sale
+	var validItems = [];
+	var validVendorItems = items.filter(function(itemId){
+ 		var item = Orion.FindObject(itemId);
+ 		if(item.Distance() > 2) return false;
+ 		var props = item.Properties();
+ 		 
+ 		if(props.indexOf("Not For Sale") > -1) return false;
+ 		var priceText = "Price: ";
+ 	 	var priceIndex = props.indexOf(priceText);
+ 	 	if(priceIndex === -1) return false;
+ 	 	return true;
+    });
+    if(validVendorItems && validVendorItems.length > 0){
+    	validVendorItems.forEach(function(validItem){
+    		validItems.push(validItem);
+    	})
+    }
+    
+    validVendorItems.forEach(function(itemId){
+	    var item = Orion.FindObject(itemId);
+    	//if(isOverSkill(60, item.Properties())){
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+    	//if(isStamGear(item.Properties())){
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+    	//
+    	//if(isLrcGear(item.Properties())){
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+    	
+    	//if(isHpGear(item.Properties())){
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+    	//if(isCastingJewl(item.Properties())){
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+    	//if(isHciSsiJewl(item.Properties())){
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+    	//if(item.Properties().indexOf('Splintering Weapon ') > -1) {
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+    	
+    	//if(item.Properties().indexOf('Reactive Paralyze') > -1) {
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+    	
+		var isJewlery = (item.Properties().indexOf('Ring') > -1 && 
+			item.Properties().indexOf("Ringmail") === -1) || 
+			item.Properties().indexOf('Bracelet') > -1;
+			
+		if(	isJewlery &&  (item.Properties().indexOf('Faster Cast Recovery 3') > -1 || 
+			item.Properties().indexOf('Faster Cast Recovery 4') > -1 ) && 
+		 	item.Properties().indexOf('Faster Casting 1') > -1){
+		 	Orion.MoveItem(itemId, 1, '0x41C5BB6C');
+		 	Orion.Wait(1500);
+		 	}
+			
+		//if(!isJewlery) {
+    	//	Orion.MoveItem(itemId, 1, '0x42511729');
+    	//	Orion.Wait(1500);
+    	//}
+
+    })
 }
