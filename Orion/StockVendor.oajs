@@ -1,5 +1,8 @@
+
+
+
 function LockBagballsDown(){
-	var findItems0 = Orion.FindType('0x2256');
+	var findItems0 = Orion.FindType('0x0E76');
 	findItems0.forEach(function(item){
 		Orion.MoveItem(item, 1, 'ground', Player.X(), Player.Y() + 1, Player.Z());
 		Orion.Wait('1200');
@@ -29,7 +32,11 @@ var InsureItem = function(itemId)
 	if (Orion.WaitForTarget(1000))
 		Orion.TargetObject('0x00000000');
 }
-
+var GetPropValue = function(regex, props){
+			var matches = regex.exec(props);
+			if(!matches || matches.length < 2) return 0;
+			return matches[1];
+		}
 var getSkillTotalSuffix = function(props){
 		var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
 		if(!isJewlery) return "";
@@ -70,7 +77,7 @@ function StockLobjectWLtargBagInto(){
 		}
 		Orion.MoveItem(item, 1000, targetBag);
 			Orion.Wait(600);
-			Orion.SendPrompt("35000000 Jawetzel" + getSkillTotalSuffix(Orion.FindObject(item).Properties()))
+			Orion.SendPrompt("4000000 Jawetzel" + getSkillTotalSuffix(Orion.FindObject(item).Properties()))
 			Orion.Wait(600);
 
 	})
@@ -104,11 +111,7 @@ var isOverSkill = function(skillMin, props){
 }
 
 var isStamGear = function(props){
-	var GetPropValue = function(regex, props){
-			var matches = regex.exec(props);
-			if(!matches || matches.length < 2) return 0;
-			return matches[1];
-		}
+	
 		
 	var stam = GetPropValue(/Stamina Increase (\d+)/, props);
 	return stam >= 6;
@@ -117,24 +120,13 @@ var isStamGear = function(props){
 var isLrcGear = function(props){
 	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
 	if(isJewlery) return false;
-	var GetPropValue = function(regex, props){
-			var matches = regex.exec(props);
-			if(!matches || matches.length < 2) return 0;
-			return matches[1];
-		}
 		
 	var lrc = GetPropValue(/Lower Reagent Cost (\d+)/, props);
 	return lrc >= 10;
 }
 var isHpGear = function(props){
 	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
-	if(isJewlery) return false;
-	var GetPropValue = function(regex, props){
-			var matches = regex.exec(props);
-			if(!matches || matches.length < 2) return 0;
-			return matches[1];
-		}
-		
+	if(isJewlery) return false;		
 	var hp = GetPropValue(/Hit Point Increase (\d+)/, props);
 	return hp >= 5;
 }
@@ -157,9 +149,14 @@ var isHciSsiJewl = function(props){
 	
 	
 	
-function StockLobjectWLtargBagIntoSubBags(){	
-	var temPrice = 50000000;
+function StockLastTargetToVendors(){	
+	var itemPrice = 100000000;
 	var itemDescription = "Jawetzel";
+	
+	var soirceBag = Orion.ClientLastTarget();
+	Orion.OpenContainer(soirceBag);
+	Orion.Wait(2000);
+	var sourceItems = Orion.FindTypeEx('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
 	
 	var vendorDist = 2; //2 if on top, higher if outside house stocking
 	var vendorName = 'Shop Name: Armor';
@@ -206,17 +203,12 @@ function StockLobjectWLtargBagIntoSubBags(){
 				var objectsInVendor = Orion.FindTypeEx('any','any', lastcontainer);
 				objectsInVendor.forEach(function(vendorItemObject){
 					if(vendorItemObject.Graphic() === '0x0E75') {
-						vendorOptions[type].push(vendorItemObject.Serial());
+						vendorSubContainers[type].push(vendorItemObject.Serial());
 					}
 				});
 			}
 		});
 	});
-	
-	var soirceBag = Orion.ClientLastTarget();
-	Orion,OpenContainer(soirceBag);
-	Orion.Wait(2000);
-	var sourceItems = Orion.FindTypeEx('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
 	
 	sourceItems.forEach(function(sourceItem){
 			var destBag = null;
@@ -225,8 +217,9 @@ function StockLobjectWLtargBagIntoSubBags(){
 			var getValidBagFromBags = function(bags){
 				return bags.filter(function(bagId){
 					var bagObject = Orion.FindObject(bagId);
+					if(!bagObject) return;
 					var bagProps = bagObject.Properties();
-					var itemCount = Number(bagProps.split('Contents: ')[1].Split('/')[0]);
+					var itemCount = GetPropValue(/Contents: (\d+)/, bagProps);
 					return (itemCount < 20);
 				});			
 			}
@@ -300,12 +293,13 @@ function StockLobjectWLtargBagIntoSubBags(){
 	    	
 	    
 	    	if(destBag){
-	    		if(destItem.Properties().indexOf('Insured') > -1){
-					InsureItem(sourceItem);
+	    		if(sourceItem.Properties().indexOf('Insured') > -1){
+					InsureItem(sourceItem.Serial());
 				}
-				Orion.MoveItem(sourceItem, 1000, destBag);
+				Orion.MoveItem(sourceItem.Serial(), 1000, destBag);
 				Orion.Wait(600);
-				Orion.SendPrompt(itemPrice + itemDescription + getSkillTotalSuffix(destItem.Properties()))
+				Orion.Print(itemPrice + itemDescription + getSkillTotalSuffix(sourceItem.Properties()));
+				Orion.SendPrompt(itemPrice + itemDescription + getSkillTotalSuffix(sourceItem.Properties()))
 				Orion.Wait(800);
 	    	}
 	});
@@ -328,9 +322,8 @@ function UninsureContainer(){
 			if(item.Properties().indexOf('Insured') > -1){
 				InsureItem(item.Serial());
 			}
-		}
+		}		
 	});
-	
 }
 
 
@@ -371,7 +364,7 @@ function RepriceVendor(){
 	// ex: .75 will take an item that was 10,000 gold and mark it to 7,500 Gold
 	// numbers over 1 will set a fixed Value
 	// ex: 10000 will make the price 10,000
-	var newPrice = 25000000;
+	var newPrice = .9;
 	// this will be the description of the item (if you use a named description your vendors will be searchable
 	var followUpText = "Jawetzel";    
 	var vendordistance = 2;
@@ -505,7 +498,7 @@ function RepriceVendor(){
 
 
 function CollectGold(){
-	var groundObjects = Orion.FindType('any', 'any', "ground", "", 15);
+	var groundObjects = Orion.FindType('any', 'any', "ground", "", 10);
 	if(!groundObjects || groundObjects.length === 0) return;
 	var vendors = groundObjects.filter(function(groundId){
 		var groundObject = Orion.FindObject(groundId);

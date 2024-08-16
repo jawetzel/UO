@@ -137,9 +137,11 @@ function Startup(){
 
 	
 	// autostart setup rails
-
-	//Orion.Print("We are running lurg rail");
-	//Orion.Exec('ManageRails', false, [railDestOptions.lurg, false] );
+	if(friendProfile.indexOf('lurg') > -1){
+		Orion.Print("We are running lurg rail");
+		Orion.Exec('ManageRails', false, [railDestOptions.lurg, false] );
+	}
+	
 
 	//Orion.Print("We are running voidpool rail");
 	//Orion.Exec('ManageRails', false, [railDestOptions.voidpool, true] );
@@ -172,7 +174,9 @@ function Startup(){
 			useSkipTypesToIgnore: true,
 			leadership: ['Militon [T0SS]'],//, 'DuDaust [T0SS]
 			//useRunToTarget: true,
-			isEj: isEj
+			isEj: isEj,
+			ejGear: isEj,
+			useIgnoreReset: true
 		};
 		CombatLoop();
 	} else if(Player.Properties().indexOf('T0SS') > -1 || friendProfile.indexOf('toss') > -1){
@@ -337,11 +341,11 @@ function CombatLoop(){
 	
 	var minimumManaForSpells = 20;
 	var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
-	var useIgnoreReset= true; // profile != null ? profile.useIgnoreReset :   false;
+	var useIgnoreReset= profile != null ? profile.useIgnoreReset :   false;
 	SetUseInsureItem(true);
 	SetUseLootTMaps(profile != null ? profile.useLootTMaps :   false);
 	SetUseLootForFrags(profile != null ? profile.useLootForFrags :   false)
-	
+	SetuseLootEjGear(profile != null ? profile.ejGear :   false)
 	
 	// will trash items in house trash barrel
 	SetAutoTrashItems({
