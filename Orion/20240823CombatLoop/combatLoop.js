@@ -8,14 +8,28 @@
 //#include Rails.oajs
 
 
+var maxX = 0;
+var maxY = 0;
+var minX = 0;
+var minY = 0;
 function RandomlyMove(){
-	var randomX = Math.floor(Math.random() * 6) - 3;
-	var randomY = Math.floor(Math.random() * 6) - 3;
-	if(Orion.GetDistance(Player.X() + randomX, Player.Y() + randomY) >= 2){
-		Orion.WalkTo(Player.X() + randomX, Player.Y() + randomY , Player.Z(), 0);
-		Orion.Wait(90000);
+	if(maxX === 0){
+		maxX = Player.X() + 5;
+		maxY = Player.Y() + 5;
+		minX = Player.X() - 5;
+		minY = Player.Y() - 5;
 	}
-	RandomlyMove();
+	while(true){
+		var randomX = Player.X() + Math.floor(Math.random() * 6) - 3;
+		var randomY = Player.Y() + Math.floor(Math.random() * 6) - 3;
+		if(
+			randomX >= minX && randomX <= maxX && 
+			randomY >= minY && randomY <= maxY && 
+			Orion.GetDistance(randomX, randomY) >= 2){
+			Orion.WalkTo(randomX, randomY , Player.Z(), 0);
+			Orion.Wait(90000);
+		}
+	}
 }
 
 function Autostart()
@@ -29,11 +43,11 @@ Orion.IgnoreReset();
 	
 // default profile - this may be overwritten in autostart
 var profile = {
-			useSpecial: true,
+			//useSpecial: true,
 			//useLightningStrike: true,
 			useAttack: true,
-			useWraithForm: true,
-			useLootCorpses: true,
+			//useWraithForm: true,
+			//useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
 			//leadership: ['Militon [T0SS]'],
@@ -57,7 +71,7 @@ var profiles = {
 			//Utility
 			useCutCorpses: true,			
 			//auto follow
-			leadership: ['Militon [T0SS]'], 
+			leadership: ['Militon [T0SS]', 'Faery Rules'], 
 		}
 	};
 	
@@ -118,18 +132,57 @@ function Startup(){
 		lurg: 'lurg'
 	}
 	
-	// autostart setup rails
+	//auto start anti-gm
+	Orion.Exec('AntiGM', true);
 
+	
+	// autostart setup rails
+	if(friendProfile.indexOf('lurg') > -1){
 		Orion.Print("We are running lurg rail");
 		Orion.Exec('ManageRails', false, [railDestOptions.lurg, false] );
+	}
+	
 
 	//Orion.Print("We are running voidpool rail");
 	//Orion.Exec('ManageRails', false, [railDestOptions.voidpool, true] );
 
-	
+	Orion.Print(friendProfile);
 	// autostart setup profiles
-	if(Player.Properties().indexOf('T0SS') > -1 || friendProfile.indexOf('junk') > -1){
+	if(friendProfile.indexOf('samp') > -1){
+		Orion.Print('Were on a Samp')
+		profile = {
+			//useLightningStrike: true,
+			useSpecial: true,
+			useAttack: true,
+			useVampForm: true,
+			useLootCorpses: true,
+			useHonor: true,
+		};
+		CombatLoop();
+	} else if(Player.Properties().indexOf('T0SS') > -1 || friendProfile.indexOf('junk') > -1){
 		Orion.Print('Were on a Junko Samp')
+		var isEj = friendProfile.indexOf('ej') > -1
+		profile = {
+			useSpecial: true,
+			//useEnemyOfOne: true,
+			//useDivineFury: true,
+			//useConsecrateWeapon: true,
+			//useLightningStrike: true,
+			useAttack: true,
+			useVampForm: true,
+			useLootCorpses: true,
+			useBandages: true,
+			useSkipTypesToIgnore: true,
+			leadership: ['Jiggily Josh', 'Faery Rules', 'LongShot Recoil'],//, 'DuDaust [T0SS]
+			//useRunToTarget: true,
+			isEj: isEj,
+			ejGear: isEj,
+			//useIgnoreReset: true
+			useCutCorpses: true,		
+		};
+		CombatLoop();
+	} else if(Player.Properties().indexOf('T0SS') > -1 || friendProfile.indexOf('toss') > -1){
+		Orion.Print('Were on a Thrower')
 		profile = {
 			useSpecial: true,
 			//useLightningStrike: true,
@@ -138,7 +191,7 @@ function Startup(){
 			useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
-			//leadership: ['Militon [T0SS]', 'DuDaust [T0SS]'],
+			leadership: ['Jiggily Josh', 'Faery Rules', 'LongShot Recoil'],//, 'DuDaust [T0SS]'],
 			//useRunToTarget: true,
 		};
 		CombatLoop();
@@ -150,12 +203,24 @@ function Startup(){
 			useChivHeal: true,
 			useHealChivFriend: true,
 			useBandages: true,
-			//useLootCorpses: true,
+			useLootCorpses: true,
 			//useEnemyOfOne: true,
 			//useDivineFury: true,
+			//useConsecrateWeapon: true,
 			useSkipTypesToIgnore: true,
 			usePetCommands: true,
-			leadership: ['Militon [T0SS]'],
+			useVampForm: true,
+			useHonor: true,
+			leadership: ['Jiggily Josh', 'Faery Rules'],
+			useIgnoreReset: true
+		};
+		CombatLoop();
+	} else if(friendProfile.indexOf('ArcherP') > -1){
+		Orion.Print('Were on a Archer Tamer')
+		profile = {
+			useAttack: true,
+			useBandages: true,
+			useSpecial: true,
 		};
 		CombatLoop();
 	}
@@ -197,13 +262,14 @@ function CombatLoop(){
 		'Exodus Sacrificial Dagger',
 		'Exodus Summoning Altar',
 		'Robe Of Rite',
-		'Plunderin' //Pirate event
+		'Plunderin', //Pirate event
+		'Of The Shattered Sanctum'
 	]);
 	
 	UseHealPotionThreshold(25);
 	SetHealFriendThreshold(75);
 	var maxEnemyDistance =  15;
-	SetDropOffItems({'0x171B': 'Plunderin'});
+	SetDropOffItems(['Plunderin', 'Of The Shattered Sanctum']);
 	
 	// There isnt anything below this point you should need to change
 
@@ -225,6 +291,7 @@ function CombatLoop(){
 	var primaryArmorIgnoreWeapons = [
 		'Bladed Staff',
 		'Soul Glaive',
+		"Shadow's Fury", //soul glaive
 		'Composite Bow',
 		'Boomerang',
 		'Longsword',
@@ -280,11 +347,11 @@ function CombatLoop(){
 	
 	var minimumManaForSpells = 20;
 	var useLootCorpses = profile != null ? profile.useLootCorpses :   false;
-	var useIgnoreReset= true; // profile != null ? profile.useIgnoreReset :   false;
+	var useIgnoreReset= profile != null ? profile.useIgnoreReset :   false;
 	SetUseInsureItem(true);
 	SetUseLootTMaps(profile != null ? profile.useLootTMaps :   false);
 	SetUseLootForFrags(profile != null ? profile.useLootForFrags :   false)
-	
+	SetuseLootEjGear(profile != null ? profile.ejGear :   false)
 	
 	// will trash items in house trash barrel
 	SetAutoTrashItems({
@@ -339,6 +406,8 @@ function CombatLoop(){
 	var leadership = profile != null ? profile.leadership :   null;
 	//constants
 	
+	var isEj = profile != null ? profile.isEj :   null;
+	
 	var timeBetweenBows = 300000; // time in ms between bows (ensure keep logged in)
 	SetLootBagType('0x0E79');
 	
@@ -353,8 +422,22 @@ function CombatLoop(){
 	var redNamesToIgnore = [
 		
 		'skeletal dragon',
-	
-		'a revenant'
+		'a lich lord',
+		'a flesh golem',
+		'a revenant',
+		'TWT',
+		'-OSG',
+		'H+G',
+		'*DPS',
+		'CMC',
+		'GRL.',
+		'GLOW',
+		'NOVA',
+		'R^M',		
+		'Shadow Reaver',
+		"(summoned)",
+		"(tame)",
+		"(bonded)",
 	];	
 	
 	var ValidEnemysWithinTiles = function(dist, firstOnly){
@@ -400,12 +483,15 @@ function CombatLoop(){
 								return props.indexOf(name.toLowerCase()) > -1;
 							}).length > 0 
 						){
+							Orion.Print("skip 1");
 							 return;
 						}
+					
 					if(	monsterNamesToIgnore.filter(function(name){
 								return props.indexOf(name.toLowerCase()) > -1;
 							}).length > 0 
 						) {
+							Orion.Print("skip 3");
 							 return;
 						}
 					if(!useSkipTypesToIgnore && 
@@ -414,8 +500,10 @@ function CombatLoop(){
 								return props.indexOf(name.toLowerCase()) > -1;
 							}).length === 0
 					)  {
+							Orion.Print("skip 4");
 							 return;
 						}
+					//Orion.Print(props);
 					enemyIds.push(enemyId);
 				}
 				else {
@@ -491,7 +579,7 @@ function CombatLoop(){
 		return now > nextSpellTime;
 	}
 	var CastSpells = function(){
-		if(CanUseAnotherSpell() && Player.Mana() > minimumManaForSpells) {
+		if(Orion.FindObject(Orion.ClientLastAttack()) !== null && CanUseAnotherSpell() && Player.Mana() > minimumManaForSpells) {
 	    	if(useEnemyOfOne && !Orion.BuffExists('0x754e')){
 	    		Orion.Cast('Enemy of One');
 	    		SetNextSpellTime(2000)
@@ -716,6 +804,10 @@ function CombatLoop(){
 		}
 		lastFollowCheck = nowTime;
 		
+		if( leadership.filter(function(name){
+			if(Player.Properties().indexOf(name) > -1) return true;
+			}).length > 0) return;
+		
 		var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", 10, 'green|blue');
 		if(!friendlys || friendlys.length === 0) return;
 		friendlys = friendlys.filter(function(friend){
@@ -729,6 +821,10 @@ function CombatLoop(){
 		if(Player.Serial() === friendlys[0].Serial()) return;
 		Orion.Follow(friendlys[0].Serial());
 	}
+	
+	
+	
+	
 
 	var checkUninsuredCounter = 0;
 	var lastIgnoreResetTime = null;
@@ -742,7 +838,7 @@ function CombatLoop(){
 			firstRunSaveDress = true;
 			SaveDressSet();		
 		}
-		Rearm();
+		//Rearm();
 		RecoverCorpse();
 	    Bow();
 	   	if(useAttack) AttackTarget(GetTarget());
@@ -776,11 +872,12 @@ function CombatLoop(){
 	    }
 	    LootGoldGround(WaitForObjectTimeout, RegisterUseObjectTimeout);	    
 	    AutoTrashItems();
-	    ItemDropOff();
+	    if(!isEj) ItemDropOff();
+	     if(!isEj) RestockArrows();
 	    AutoRepair();
 	    WhyAreWeNaked();
 	    NecroForm();
- 	    if(useBandages) ResockBandages();
+ 	    if(useBandages && !isEj) ResockBandages();
 	    FollowTheLeader();
 	    Orion.Wait(timeBetweenLoops);
 	}

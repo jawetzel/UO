@@ -13,9 +13,6 @@ function SetRepairDurabilityMin(value){
 	durabilityMin = value;
 }
 function AutoRepair(){
-	
-	
-
 	var getDura = function(props){
 		if(!props || props.length === 0) return 255;
 		var matches = /Durability (\d+)\s\/\s(\d+)/.exec(props);
@@ -36,7 +33,7 @@ function AutoRepair(){
 			return durabilityMin > durability;
 	}
 	
-	var repairBenches = Orion.FindType("0xA278", "any", "ground", "", 1);	
+	var repairBenches = Orion.FindType("0xA27F", "any", "ground", "", 1);	
 	if(!repairBenches || repairBenches.length === 0) return null;
 	
 	var paperdollItems = [];
@@ -60,7 +57,6 @@ function AutoRepair(){
 		return false;
 	});
 	if(!paperdollItemsNeedRepair || paperdollItemsNeedRepair.length === 0) return null;
-	Orion.Print('Starting AutoRepair');
 	paperdollItemsNeedRepair.forEach(function(itemId){			
 		var abandonShip = false;
 		while(!abandonShip && isRepairableAndNeedsRepairs(Orion.FindObject(itemId).Properties())){
@@ -136,10 +132,7 @@ function AutoRepair(){
 	Orion.Print('AutoRepair Complete');	
 }
 
-var dropItems = {
-		'0x171B': 'Plunderin'
-		
-	};
+var dropItems = ['Plunderin', 'Of The Shattered Sanctum']
 function SetDropOffItems(items){
 	dropItems = items;
 }
@@ -173,7 +166,13 @@ function ItemDropOff(){
 			var countLine = destProps.split('Contents: ')[1];
 			var countString = countLine.split('/125')[0];
 			var count = Number(countString);
-			return count < 100;
+			
+			
+			var weightLine =  destProps.split('Items, ')[1];
+			var weightString =  weightLine.split(' Stones')[0];
+			var weight =  Number(weightString);
+			
+			return count < 100 && weight < 475;
 		});
 		if(!dropDestinations || dropDestinations.length === 0) return null;
 		return dropDestinations[0];
@@ -186,15 +185,18 @@ function ItemDropOff(){
 			if(!itemsInBackpack || itemsInBackpack.length === 0) return;
 			itemsInBackpack.forEach(function(itemId){
 				var itemObject = Orion.FindObject(itemId);
-				if(itemObject && dropItems.hasOwnProperty(itemObject.Graphic())){
-					if(itemObject.Properties().indexOf(dropItems[itemObject.Graphic()]) > -1){
+				if(
+					dropItems.filter(function(x){
+						if(!itemObject) return false;
+						return itemObject.Properties().indexOf(x) > -1
+					}).length > 0
+					){
 						var dest = findContainer("0x2256");
 						if(dest){
 							Orion.MoveItem(itemId, 1, dest);
 							Orion.Wait(1600);
 						}						
 					}			
-				}
 			});
 		}
 	}
@@ -394,6 +396,24 @@ var SaveDressSet = function(){
      WriteConfig(savedConfig);
 }
 	
+	
+function LastSuccessfullProfileRead(playerSerial){
+	var savedConfig = ReadConfig(); // ReadConfiog();
+	if(savedConfig[Player.Serial()] && savedConfig[Player.Serial()].profileContents){
+		return savedConfig[Player.Serial()].profileContents;
+	}
+	return "";
+}
+
+function SaveSuccessfullProfileRead(friendProfile){
+	var savedConfig = ReadConfig(); // ReadConfiog();
+	if(!savedConfig[Player.Serial()]) {
+		savedConfig[Player.Serial()] = {dress: {}};
+	}
+	savedConfig[Player.Serial()].profileContents = friendProfile;
+	WriteConfig(savedConfig);
+}
+	
 var timeBetweenNakedChecks = 30000;
 var lastNakedCheck = 0;
 function WhyAreWeNaked(){
@@ -437,17 +457,39 @@ function ResockBandages(){
 		if(!resourceBoxes || resourceBoxes.length === 0) return;
 		
 		openBackpack();
-		
 		var bandageGraphic = '0x0E21';
-		var backpackBandages = Orion.FindTypeEx(bandageGraphic, "any", "backpack");
 		var bandageCount = 0;
 		
-		if(backpackBandages && backpackBandages.length > 0){
-			backpackBandages.forEach(function(bandaid){
-				bandageCount = bandageCount + bandaid.Count();
-			})
+		var bandageBelt = Orion.FindTypeEx("0xA1F6", 'any', 'backpack');
+		var validBandageBelts = bandageBelt ? bandageBelt.filter(function(belt){
+			return belt.Properties().indexOf('First Aid Belt') > -1;
+		}) : bandageBelt;		
+		if(validBandageBelts && validBandageBelts.length > 0) {
+			if(!Orion.GumpExists('container', validBandageBelts[0].Serial())) {
+				Orion.UseObject(validBandageBelts[0].Serial());
+				Orion.Wait(1500);
+			}
+			
+			var bandageBeltBandages = Orion.FindTypeEx(bandageGraphic, "any", validBandageBelts[0].Serial());
+			if(bandageBeltBandages && bandageBeltBandages.length > 0){
+				bandageBeltBandages.forEach(function(bandaid){
+					bandageCount = bandageCount + bandaid.Count();
+				})
+			}
+			if(bandageCount > 900) return;
+		} else {
+			var backpackBandages = Orion.FindTypeEx(bandageGraphic, "any", "backpack");
+			
+			if(backpackBandages && backpackBandages.length > 0){
+				backpackBandages.forEach(function(bandaid){
+					bandageCount = bandageCount + bandaid.Count();
+				})
+			}
+			if(bandageCount > 1000) return;
 		}
-		if(bandageCount > 1000) return;
+		
+		
+		
 		
 		
 		Orion.OpenContainer(resourceBoxes[0].Serial());
@@ -456,7 +498,13 @@ function ResockBandages(){
 		var resourceBandages = Orion.FindTypeEx(bandageGraphic, "any", resourceBoxes[0].Serial());
 		if(!resourceBandages || resourceBandages.length === 0) return;
 				
-		Orion.MoveItem(resourceBandages[0].Serial(), (1500 - bandageCount));
+		if(validBandageBelts && validBandageBelts.length > 0) {
+			Orion.MoveItem(resourceBandages[0].Serial(), (1000 - bandageCount), validBandageBelts[0].Serial());
+		} else {
+			Orion.MoveItem(resourceBandages[0].Serial(), (1000 - bandageCount));
+		}
+				
+		
 		Orion.Wait(1200);
 	}
 	

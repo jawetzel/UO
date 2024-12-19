@@ -2,7 +2,7 @@
 
 
 function LockBagballsDown(){
-	var findItems0 = Orion.FindType('0x0E76');
+	var findItems0 = Orion.FindType('0x2256');
 	findItems0.forEach(function(item){
 		Orion.MoveItem(item, 1, 'ground', Player.X(), Player.Y() + 1, Player.Z());
 		Orion.Wait('1200');
@@ -77,7 +77,7 @@ function StockLobjectWLtargBagInto(){
 		}
 		Orion.MoveItem(item, 1000, targetBag);
 			Orion.Wait(600);
-			Orion.SendPrompt("4000000 Jawetzel" + getSkillTotalSuffix(Orion.FindObject(item).Properties()))
+			Orion.SendPrompt("1000000 Jawetzel" + getSkillTotalSuffix(Orion.FindObject(item).Properties()))
 			Orion.Wait(600);
 
 	})
@@ -367,7 +367,7 @@ function RepriceVendor(){
 	var newPrice = .9;
 	// this will be the description of the item (if you use a named description your vendors will be searchable
 	var followUpText = "Jawetzel";    
-	var vendordistance = 2;
+	var vendordistance = 0;
 
 
 	// you shouldnt need to reprice below this point

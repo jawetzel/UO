@@ -1,5 +1,189 @@
-function bow(){
-	Orion.EmoteAction('bow');
-	Orion.Wait(120000);
-	bow();
+
+function Casting(){
+	while(true){
+		Orion.Cast("Holy Light");
+		Orion.Wait(3000);
+	}	
+}
+
+var firstloop = true;
+var noTownFound = false;
+function RecallToTowns() {
+    while (true) {
+    	if(Player.Dead()){
+    		Orion.Wait(20000);
+			continue;
+    	}
+		var obelisks = Orion.FindType('0xB00D', 'any', 'ground', '', 15);
+		if(obelisks.length > 0){
+			firstloop = false;
+			Orion.Wait(20000);
+			continue;
+		} 	
+		var randomSec1 = Math.floor(Math.random() * 60000);
+	    Orion.Print("Obelisks Gone, Waiting Random Time to Not All Go At once between 0s-1m: " + randomSec1 + 's');
+		Orion.Wait(randomSec1);
+		
+		  // Step 4: Return to the House
+        var houseRune = findRune("Jawetzel");
+        if (houseRune) {
+            sacredJourney(houseRune);
+            Orion.Print("Recalled to house.");
+            moveToRepairBench();
+        } else {
+            Orion.Print("House rune not found. Stopping.");
+            return;
+        }
+        
+        if(firstloop){
+        	firstloop = false;        	 
+	        Orion.Print("Initial Loop - Waiting 30s before restarting...");
+	        Orion.Wait(30000);
+        } else {
+        	if(noTownFound){
+        		Orion.Print("Waiting 15 minutes before restarting...");
+	       		Orion.UseSkill("Hiding");
+	        	Orion.Wait(60000 * 15);	        
+        	} else {
+        		Orion.Print("Waiting 5 minutes before restarting...");
+	        	Orion.UseSkill("Hiding");
+	        	Orion.Wait(60000 * 5);	        
+        	}
+	         // Step 5: Wait 5-7 Minutes
+	        Orion.Print("Waiting 5 minutes before restarting...");
+	        Orion.UseSkill("Hiding");
+	        Orion.Wait(300000);	        
+	        var randomSec = Math.floor(Math.random() * 120000);
+	        Orion.Print("Waiting Random Time to Not All Go At once between 0s-2m: " + randomSec + 's');
+	        Orion.Wait(randomSec)
+        }
+        
+        
+    
+
+		var townName = getInvasionTown();
+        // Step 2: Recall to the Invasion Town
+        if(townName){
+           var townRune = findRune(townName);
+	        if (townRune) {
+		        noTownFound = false;
+	            sacredJourney(townRune);
+	            Orion.Print("Recalled to " + townName + " under invasion.");
+	        } else {
+	        	noTownFound = true;
+	            Orion.Print("Rune for " + townName + " not found. Skipping.");
+	            continue;
+	        }
+        }
+       
+    }
+}
+
+function getInvasionTown() {
+    var crierRune = findRune("Crier");
+    if (!crierRune) {
+        Orion.Print("Crier rune not found.");
+        return null;
+    }
+
+	var portals = Orion.FindType('0x468B', 'any', ground, '', 2);
+	if(portals){
+		Orion.Say("cove mint");
+		Orion.Wait(10000);
+	} else {
+		sacredJourney(crierRune);
+	}
+
+    var timeout = Date.now() + 60000; // Wait for up to 30 seconds
+    while (Date.now() < timeout) {
+        var journalEntry = Orion.InJournal("is being invaded");
+        if (journalEntry) {
+        	Orion.Print(journalEntry.Text())
+            var match = journalEntry.Text().match(/(.*?) is being invaded/);
+            if (match) {
+                return match[1]; // Return the town name
+            }
+        }
+        walkAround(); // Simulate walking near the crier
+    }
+    return null;
+}
+
+function findRune(name) {
+    var runes = Orion.FindType('0x1F14', 'any', 'backpack', '', 'finddistance', '', true);
+    for (var i = 0; i < runes.length; i++) {
+        var rune = runes[i];
+        
+        if (Orion.Contains(Orion.FindObject(rune).Properties(), name)) {
+            return rune;
+        }
+    }
+    return null;
+}
+
+function sacredJourney(rune) {
+    if (!rune) {
+        Orion.Print("No rune provided for Sacred Journey.");
+        return false;
+    }
+
+ 	var initialX = Player.X();
+    var initialY = Player.Y();
+    // Step 1: Cast Sacred Journey spell
+    Orion.Cast('Sacred Journey');
+    Orion.WaitForTarget(3000);
+
+    // Step 2: Target the rune
+    Orion.TargetObject(rune);
+    Orion.Wait(3000); // Wait for the recall process to complete
+
+    // Step 3: Verify the character has teleported
+   
+    Orion.Wait(5000); // Allow time for the teleportation to finish
+
+    if (Player.X() !== initialX || Player.Y() !== initialY) {
+        Orion.Print("Sacred Journey successful!");
+        return true;
+    } else {
+        Orion.Print("Teleportation failed. Retrying...");
+        Orion.Cast('Sacred Journey');
+	    Orion.WaitForTarget(3000);
+	
+	    // Step 2: Target the rune
+	    Orion.TargetObject(rune);
+	    Orion.Wait(3000); // Wait for the recall process to complete
+        if (Player.X() !== initialX || Player.Y() !== initialY) {
+	        Orion.Print("Sacred Journey successful!");
+	        return true;
+	    } else {
+	        Orion.Print("Teleportation failed. Retrying...");
+	        Orion.Cast('Sacred Journey');
+		    Orion.WaitForTarget(3000);
+		
+		    // Step 2: Target the rune
+		    Orion.TargetObject(rune);
+		    Orion.Wait(3000); // Wait for the recall process to complete
+	        if (Player.X() === initialX || Player.Y() === initialY) {
+		        Orion.Print("Failed Sacred Journey");
+		        return false;
+		    }
+	    }
+    }
+}
+
+function moveToRepairBench() {	
+     Orion.WalkTo(822, 209, -83, 0, 0, 1, 1, 5000);
+     if(Player.X() !== 822 && Player.Y() !== 209){
+     	Orion.WalkTo(822, 209, -83, 0, 0, 1, 1, 5000);
+     }
+     Orion.Print("Moved to the repair bench.");
+}
+
+function walkAround() {
+    Orion.WalkTo(Player.X(), Player.Y() - 10, Player.Z());
+    Orion.Wait(1500); // Wait for movement
+	Orion.WalkTo(Player.X(), Player.Y() + 10, Player.Z());
+    Orion.Wait(1500); // Wait for movement
+
+    Orion.Print("Completed walking north and south to trigger the town crier.");
 }

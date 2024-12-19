@@ -22,6 +22,50 @@ function SetUseLootForFrags(value){
 	useLootForFrags = value;
 }
 
+var useLootEjGear = false;
+function SetuseLootEjGear(value){
+	useLootEjGear = value;
+}
+
+var GetPropValue = function(regex, props){
+	var matches = regex.exec(props);
+	if(!matches || matches.length < 2) return 0;
+	return matches[1];
+}
+
+
+var shouldKeepItemEjGear = function(props){
+	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
+	var isArmor = props.indexOf("Physical Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1;
+
+	var lmc = GetPropValue(/Lower Mana Cost (\d+)/, props);
+	var hci = GetPropValue(/Hit Chance Increase (\d+)/, props);
+	var di = GetPropValue(/Damage Increase (\d+)/, props);
+	var luck = GetPropValue(/Luck (\d+)/, props);
+	var phys = GetPropValue(/Physical Resist (\d+)/, props);
+	var fire = GetPropValue(/Fire Resist (\d+)/, props);
+	var poison = GetPropValue(/Poison Resist (\d+)/, props);
+	var brittle = props.indexOf('Brittle') > -1;
+	var antique =  props.indexOf('Antique') > -1;
+	var isWeapon = props.indexOf('Skill Required: ') > -1;
+	var isSsi = props.indexOf("Swing Speed Increase 10") > -1;
+	var isArtifact = props.indexOf("Artifact") > -1;
+	var isHpi  = props.indexOf("Hit Point Increase 5") > -1 || props.indexOf("Hit Point Increase 7") > -1;
+	if(isJewlery) {
+		return !antique && hci > 14 && di > 15 && luck > 80 && isSsi;
+	}
+	else if (isArmor){
+		return luck > 80 && phys > 10 && lmc > 4 && brittle && isArtifact;
+	} 
+	else if (isWeapon) {
+		return false;
+	} 
+	else {
+		return brittle && luck > 80 && isSsi && (isHpi || hci > 14 || luck > 140);
+	}
+}
+
+
 var ShouldKeepItem_CheckCleanSsi = function (props, itemId){
 		//handle clean SSI Jewls
 		//we are done picking these up for now
@@ -134,7 +178,7 @@ var ShouldKeepItem_Splinter = function (props){
 					return true;
 				}
 			
-				if(isOverCapLightning || isOverCapFireball || isOverCapHarm || isCappedFireball || isCappedLightning){
+				if(isOverCapLightning || isOverCapFireball || isOverCapHarm){
 					return true;
 				}
 			
@@ -157,6 +201,25 @@ var ShouldKeepItem_Splinter = function (props){
 function CheckItem(){
 	Orion.Print(ShouldKeepItem(0x459BE29F));
 }
+
+function FilterLastObjectJunkIntoLastTarget(){
+	var soirceBag = Orion.FindObject(lastobject).Serial();
+	var targetBag = Orion.ClientLastTarget();
+	
+	Orion.UseObject(soirceBag);
+	Orion.Wait(1200);
+	var destItems = Orion.FindType('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
+	var counter = 0;
+	destItems.forEach(function(item){
+		counter++;
+		Orion.Print("Working item " + counter + "/" + destItems.length);
+		if(shouldKeepItemEjGear(Orion.FindObject(item).Properties()) === true){
+			Orion.MoveItem(item, 1000, targetBag);
+			Orion.Wait(1500);
+		}
+	})
+}
+
 	
 function ShouldKeepItem(itemId){
 		var item = Orion.FindObject(itemId);
@@ -175,7 +238,6 @@ function ShouldKeepItem(itemId){
 				return true;
 			}
 		}
-
 		
 		//handle cursed items
 		var cursed = 'Cursed';
@@ -190,7 +252,9 @@ function ShouldKeepItem(itemId){
 			if( 
 				!(lowerCaseProps.indexOf('hatchet') > -1) && 
 				!(lowerCaseProps.indexOf( 'no-dachi') > -1) && 
-				!(lowerCaseProps.indexOf( 'no-dachi') > -1)
+				!(lowerCaseProps.indexOf( 'Double Axe') > -1) && 
+				!(lowerCaseProps.indexOf( 'Gnarled Staff') > -1) && 
+				!(lowerCaseProps.indexOf( 'Lajatang') > -1)
 			){
 				return false;		
 			}
@@ -212,6 +276,9 @@ function ShouldKeepItem(itemId){
 			if(props.indexOf("Tattered Treasure Map") > -1) return true;
 		}
 		
+		if(shouldKeepItemEjGear){
+			if(shouldKeepItemEjGear(props)) return true;
+		}
 		
 		//Handle Named Jewlery
 		if(isJewlery){
@@ -268,7 +335,7 @@ function ShouldKeepItem(itemId){
 					return props.indexOf(mod) > -1
 				});
 				
-				if(usefullSkills.length === 0) worthlessCountBonus++;
+				if(usefullSkills.length === 0) return false;
 					
 				if((containsWorthlessMods.length + worthlessCountBonus) > 2) return false;
 				//exclude 7 mod 2 junk mod jewls
@@ -308,7 +375,7 @@ function ShouldKeepItem(itemId){
 				props.indexOf("Defense") > -1 && 
 				props.indexOf("Antique") === -1
 			){
-				return true;
+				//return true;
 			}
 			return false;
 		}
@@ -327,11 +394,7 @@ function ShouldKeepItem(itemId){
 			}
 			
 			
-			var GetPropValue = function(regex, props){
-				var matches = regex.exec(props);
-				if(!matches || matches.length < 2) return 0;
-				return matches[1];
-			}
+			
 	
 			
 			var lrc = GetPropValue(/Lower Reagent Cost (\d+)/, props);

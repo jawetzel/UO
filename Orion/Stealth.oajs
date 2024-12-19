@@ -6,23 +6,15 @@ function DoThing(){
 		var moveToX = playerStartingX;
 	while(true){
 	
-		if(Player.X() === playerStartingX){
-			moveToX = playerStartingX - 5
+		if(Player.Y() === playerStartingY){
+			moveToY = playerStartingY + 10
 		}
-		if(Player.X() === playerStartingX - 5){
-			moveToX = playerStartingX
+		if(Player.Y() === playerStartingY + 10){
+			moveToY = playerStartingY
 		}
 	
-		Orion.WalkTo(moveToX, playerStartingY, playerStartingZ, 0, 0, 0, 0, 250)
-	
-		if(!Orion.BuffExists('0x7565')){
-			Orion.UseSkill("hiding");
-			Orion.Wait(125);
-		} else{
-			Orion.Cast('507');
-			if (Orion.WaitForTarget(1000))
-				Orion.TargetTile('any', playerStartingX - 6, playerStartingY, playerStartingZ);
-		}
+		Orion.WalkTo(playerStartingX, moveToY, playerStartingZ, 0, 0, 1, 0, 250)
+
 	}
 
 }

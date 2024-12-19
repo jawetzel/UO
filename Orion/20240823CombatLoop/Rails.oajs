@@ -205,10 +205,11 @@ var RunRail = function(filepath){
 		}
 		if(location.type === "recall"){
 			Orion.Wait(6000);
-			Orion.KeyPress(27);
-			Orion.Wait(250);
+			
 			var startingLocation = {x: Player.X(), y: Player.Y()}
 			while(Player.X() === startingLocation.x && Player.Y() === startingLocation.y){
+				Orion.KeyPress(27);
+				Orion.Wait(250);
 				if(Orion.SkillValue('Chivalry') > 500){
 					Orion.Cast('Sacred Journey');
 				} else {

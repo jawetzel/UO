@@ -13,9 +13,6 @@ function SetRepairDurabilityMin(value){
 	durabilityMin = value;
 }
 function AutoRepair(){
-	
-	
-
 	var getDura = function(props){
 		if(!props || props.length === 0) return 255;
 		var matches = /Durability (\d+)\s\/\s(\d+)/.exec(props);
@@ -36,7 +33,7 @@ function AutoRepair(){
 			return durabilityMin > durability;
 	}
 	
-	var repairBenches = Orion.FindType("0xA278", "any", "ground", "", 1);	
+	var repairBenches = Orion.FindType("0xA27F", "any", "ground", "", 1);	
 	if(!repairBenches || repairBenches.length === 0) return null;
 	
 	var paperdollItems = [];
@@ -60,7 +57,6 @@ function AutoRepair(){
 		return false;
 	});
 	if(!paperdollItemsNeedRepair || paperdollItemsNeedRepair.length === 0) return null;
-	Orion.Print('Starting AutoRepair');
 	paperdollItemsNeedRepair.forEach(function(itemId){			
 		var abandonShip = false;
 		while(!abandonShip && isRepairableAndNeedsRepairs(Orion.FindObject(itemId).Properties())){
@@ -136,10 +132,7 @@ function AutoRepair(){
 	Orion.Print('AutoRepair Complete');	
 }
 
-var dropItems = {
-		'0x171B': 'Plunderin'
-		
-	};
+var dropItems = ['Plunderin', 'Of The Shattered Sanctum']
 function SetDropOffItems(items){
 	dropItems = items;
 }
@@ -173,7 +166,13 @@ function ItemDropOff(){
 			var countLine = destProps.split('Contents: ')[1];
 			var countString = countLine.split('/125')[0];
 			var count = Number(countString);
-			return count < 100;
+			
+			
+			var weightLine =  destProps.split('Items, ')[1];
+			var weightString =  weightLine.split(' Stones')[0];
+			var weight =  Number(weightString);
+			
+			return count < 100 && weight < 475;
 		});
 		if(!dropDestinations || dropDestinations.length === 0) return null;
 		return dropDestinations[0];
@@ -186,15 +185,17 @@ function ItemDropOff(){
 			if(!itemsInBackpack || itemsInBackpack.length === 0) return;
 			itemsInBackpack.forEach(function(itemId){
 				var itemObject = Orion.FindObject(itemId);
-				if(itemObject && dropItems.hasOwnProperty(itemObject.Graphic())){
-					if(itemObject.Properties().indexOf(dropItems[itemObject.Graphic()]) > -1){
+				if(
+					dropItems.filter(function(x){
+						return itemObject.Properties().indexOf(x) > -1
+					}).length > 0
+					){
 						var dest = findContainer("0x2256");
 						if(dest){
 							Orion.MoveItem(itemId, 1, dest);
 							Orion.Wait(1600);
 						}						
 					}			
-				}
 			});
 		}
 	}
@@ -459,3 +460,55 @@ function ResockBandages(){
 		Orion.MoveItem(resourceBandages[0].Serial(), (1500 - bandageCount));
 		Orion.Wait(1200);
 	}
+	
+	function RestockArrows(){
+		var resourceBoxGraphic = '0x09A8';
+		var resourceBoxes = Orion.FindTypeEx(resourceBoxGraphic, "any", "ground", "", 1);	
+		if(!resourceBoxes || resourceBoxes.length === 0) return;
+		var quiversToRestock = [];
+		
+		var paperdollItems = [];
+		 for (var i=1; i<25; i++) {
+	     	var item = Orion.ObjAtLayer(i);
+	     	if (item) {
+	     		paperdollItems.push(item.Serial());
+	     	}
+	     }
+	     
+	     var isQuiverNeedsReloaded = function(serial){
+	     	if(!serial) return false;
+	     	var quiverObject = Orion.FindObject(serial);
+	     	if(!quiverObject) return false;
+	     	var itemProps = quiverObject.Properties();
+	     	if(!itemProps || itemProps.length === 0) return false;
+	     	return itemProps.indexOf('Ammo: ') > -1 && itemProps.indexOf('Ammo: 500') === -1;
+	     }
+	     
+	     if(paperdollItems && paperdollItems.length > 0){
+	     	paperdollItems.forEach(function(id){
+	     		if(isQuiverNeedsReloaded(id)) quiversToRestock.push(id);
+	     	});
+	     }
+	     
+	    var inventoryItems = Orion.FindType('any');
+	     if(inventoryItems && inventoryItems.length > 0){
+	     	inventoryItems.forEach(function(id){
+	     		if(isQuiverNeedsReloaded(id)) quiversToRestock.push(id);
+	     	});
+	     }
+	     
+	    if(quiversToRestock && quiversToRestock.length > 0){
+	    	quiversToRestock.forEach(function(id){
+	    		Orion.RequestContextMenu(id);
+				Orion.WaitContextMenuID(id, 720);
+				Orion.Wait(2000);
+	    	})
+	    }
+	    
+		
+	}
+
+function AntiGM()
+{
+    
+}

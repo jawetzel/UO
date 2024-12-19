@@ -75,7 +75,12 @@ var healFriendThreshold = 75;
 function SetHealFriendThreshold(value){
 	healFriendThreshold = value;
 }
-var healFriendNames = [];
+var healFriendNames = [
+		'Muffin',			'Zazi',		'Hooch',			'Bill', 	// a list of my pets names
+		'save me tom cruise', //a message can be put in player journal to identify a friend
+		'T0SS', // a guild tag to identify friends
+		'a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U' // this will mark everyone as a friend
+	];
 function SetHealFriendNames(value){
 	healFriendNames = value;
 }
@@ -89,37 +94,52 @@ var knownPetTypes = {
 }
 var isFriend = {};
 var ignoreAfkDead = {}
-function FriendToHeal(dist){
+function FriendToHeal(dist, isChiv){
 	var friendsAroundUs = [];
 	var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", dist, 'green|blue');
+
 	if(friendlys && friendlys.length > -1){
 		friendlys.forEach(function(friendObject){
 			var friendId = friendObject.Serial();
 			
-			if(isFriend[friendId] === false) return;
+			if(isFriend[friendId] === false){
+				//Orion.Print("1");
+				 return;
+			}
 			
 			var friendProps = friendObject.Properties();
 			if(!friendProps || friendProps.length === 0){
+				//Orion.Print("2");
 				return;
 			}
 			var friendlyIsPet = knownPetTypes[friendObject.Graphic()] || friendProps.indexOf("(bonded)") > -1 || friendProps.indexOf("(tame)") > -1;
-			if(friendProps.indexOf("(summoned)") > -1) return; 
+			if(friendProps.indexOf("(summoned)") > -1){
+				//Orion.Print("3");
+				 return;
+			}
 			
-			if(!HasVet()){
+			if(!HasVet() && !isChiv){
 				if(friendlyIsPet){ 
+					//Orion.Print("4");
 					isFriend[friendId] = false;
 					return;
 				}
 			}
-			if(!HasHealing()){
+			if(!HasHealing() && !isChiv){
 				if(!friendlyIsPet) {
+					//Orion.Print("5");
 					isFriend[friendId] = false;
 					return;
 				}
 			}
-			
+			Orion.GetStatus(friendId);
+			if(isChiv && friendObject.Dead()) {
+				//Orion.Print("6");
+				return;
+			}
 			
 			if(isFriend[friendId] === false){
+				//Orion.Print("7");
 				return;
 			} else if(isFriend[friendId] === true){
 				friendsAroundUs.push(friendId);
@@ -128,8 +148,10 @@ function FriendToHeal(dist){
 					return friendProps.indexOf(name) > -1;
 				});
 				if(namesFound.length > 0) {
+					//Orion.Print("8");
 					isFriend[friendId] = true;
 					friendsAroundUs.push(friendId);
+					return;
 				} else {
 					Orion.GetProfile(friendId, 3000);
 					var profileRead = friendObject.ProfileReceived();
@@ -144,13 +166,17 @@ function FriendToHeal(dist){
 						}
 					}
 					if(profileNamesFound.length > 0){
+						//Orion.Print("9");	
 						isFriend[friendId] = true;
 						friendsAroundUs.push(friendId);
+						return;
 					} else {
 						if(profileRead){
+							//Orion.Print("10");
 							isFriend[friendId] = false;
 						} else {
 							if(friendlyIsPet){
+								//Orion.Print("11");
 								isFriend[friendId] = false;
 							}
 						}					
@@ -158,17 +184,16 @@ function FriendToHeal(dist){
 				} 
 			}
 		});
-		
 		var friendsToHealAroundUs = [];
-		
 		if(friendsAroundUs && friendsAroundUs.length > -1){
 			friendsAroundUs.forEach(function(friendId){
 				var friendObject = Orion.FindObject(friendId);
 				if(!friendObject) {
+					//Orion.Print("12");
 					return;
 				}
 				
-				Orion.GetStatus(friendId);
+				
 				if(ignoreAfkDead[friendId] && ignoreAfkDead[friendId].deadBandages > 5) {
 					if(!friendObject.Dead()){
 						delete ignoreAfkDead[friendId];
@@ -177,10 +202,9 @@ function FriendToHeal(dist){
 					}
 				}
 				if(friendObject.Distance() <= dist && ((friendObject.Hits() * 4) < healFriendThreshold)){
-					if(friendObject.Hits() === 0 && !friendObject.Dead()){
-						return;
-					}
+					//Orion.Print("13");
 					friendsToHealAroundUs.push(friendId);
+					return;
 				}
 			});
 		}
@@ -189,11 +213,14 @@ function FriendToHeal(dist){
 			if(friendsToHealAroundUs.length > 1){
 				randomFriendIndex = Math.floor(Math.random() * (friendsToHealAroundUs.length - 1))
 			}
+			//Orion.Print("15");
 			return friendsToHealAroundUs[randomFriendIndex];
 		} else {
+			//Orion.Print("16");
 			return null;
 		}
 	} else {
+		//Orion.Print("17");
 		return null;
 	}
 	
@@ -201,11 +228,11 @@ function FriendToHeal(dist){
 
 
 function HealChivFriend(){
-	var friendId = 	FriendToHeal(2);
+	var friendId = 	FriendToHeal(2, true);
 	var friendObject = Orion.FindObject(friendId);
 	if(!friendObject) return;
 	Orion.GetStatus(friendId);
-	if(((friendObject.Hits() * 4) < healFriendThreshold)){
+	if( !friendObject.Dead() && ((friendObject.Hits() * 4) < healFriendThreshold)){
 		if(friendObject.Poisoned()){
 			Orion.Cast('201'); //cure chiv
 		} else {
@@ -221,7 +248,7 @@ function HealChivFriend(){
 function HealPets(WaitForObjectTimeout, RegisterUseObjectTimeout){
 	if(!HasVet()) return;
 	if(IsApplyingBandages()) return;
-	var friendId = 	FriendToHeal(2);
+	var friendId = 	FriendToHeal(2, false);
 	if(!friendId) return;
 	var friendObject = Orion.FindObject(friendId);
 	if(!friendObject) return;
@@ -238,11 +265,10 @@ function HealPets(WaitForObjectTimeout, RegisterUseObjectTimeout){
 function HealFriend(WaitForObjectTimeout, RegisterUseObjectTimeout){
 	if(!HasHealing()) return;
 	if(IsApplyingBandages()) return;
-	var friendId = 	FriendToHeal(2);
+	var friendId = 	FriendToHeal(2, false);
 	if(!friendId) return;
 	var friendObject = Orion.FindObject(friendId);
 	if(!friendObject) return;
-	Orion.Print("Friend Found");
 	Orion.GetStatus(friendId);
 	if(friendObject.Dead()) {
 		if( !ignoreAfkDead[friendId] ) {

@@ -202,7 +202,7 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 	var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
 	itemsInCorpse.forEach(function(item){
 		var itemInstance = Orion.FindObject(item);
-		if(itemInstance && itemInstance.Container() !== Player.Container() &&  itemInstance.Container() !== lootbag[0]){
+		if(itemInstance && itemInstance.Container() !== Orion.GetSerial(backpack) &&  itemInstance.Container() !== lootbag[0]){
 			Orion.Print("Evaluate Item");
 			var itemGraphic = itemInstance.Graphic();
 			if(ShouldKeepItem(item) || lootItems[itemGraphic]){

@@ -2,9 +2,18 @@ var bandageGraphic = '0x0E21';
 var bandageBuffIcon = '0x7596';
 var poisonBuffIcon = '0x7560';
 
+var lastApplyingBandages = 0;
 var IsApplyingBandages = function(){
-	return	(Orion.BuffExists('healing skill') && Orion.BuffTimeRemaining('healing skill') > 0) || 
+	var applying = (Orion.BuffExists('healing skill') && Orion.BuffTimeRemaining('healing skill') > 0) || 
 		(Orion.BuffExists('veterinary') && Orion.BuffTimeRemaining('veterinary') > 0);
+		
+	if(applying){
+		lastApplyingBandages = new Date().getTime();
+	}
+	if((lastApplyingBandages + 1000) > new Date().getTime()){
+		return true;
+	}
+	return	applying
 }
 
 var HasVet = function(){
@@ -17,7 +26,24 @@ var HasHealing = function(){
 
 function UseBandages(WaitForObjectTimeout, RegisterUseObjectTimeout){
 	if(!HasHealing()) return;
-	if(IsApplyingBandages()) return;
+	if(IsApplyingBandages()){
+		 return;
+	}
+	
+	
+	var bandageBelt = Orion.FindTypeEx("0xA1F6", 'any', 'backpack');
+	var validBandageBelts = bandageBelt ? bandageBelt.filter(function(belt){
+		return belt.Properties().indexOf('First Aid Belt') > -1;
+	}) : bandageBelt;		
+	if(validBandageBelts && validBandageBelts.length > 0) {
+		if(!Orion.GumpExists('container', validBandageBelts[0].Serial())) {
+			WaitForObjectTimeout();
+			Orion.UseObject(validBandageBelts[0].Serial());
+			Orion.Wait(1500);
+		}
+	}
+	
+	
 	var bandages = Orion.FindType('0x0E21', 'any', backpack, ' ', 'finddistance', ' ', ' ', true);
 	if(bandages && bandages.length > 0){
 		if(Player.Hits() < Player.MaxHits() || Orion.BuffExists(poisonBuffIcon)){
@@ -244,6 +270,7 @@ function HealChivFriend(){
 	}
 }
 
+var lastHealedPersonDead = false;
 
 function HealPets(WaitForObjectTimeout, RegisterUseObjectTimeout){
 	if(!HasVet()) return;
@@ -253,8 +280,27 @@ function HealPets(WaitForObjectTimeout, RegisterUseObjectTimeout){
 	var friendObject = Orion.FindObject(friendId);
 	if(!friendObject) return;
 	Orion.GetStatus(friendId);
-	WaitForObjectTimeout();
+	
 	if(((friendObject.Hits() * 4) < healFriendThreshold)){
+		if(lastHealedPersonDead){
+			Orion.Wait(2000);
+		}
+		if(friendObject.Dead()) {
+			lastHealedPersonDead = true;
+		} else {
+			lastHealedPersonDead = false;
+		}
+		WaitForObjectTimeout();
+		var bandageBelt = Orion.FindTypeEx("0xA1F6", 'any', 'backpack');
+		var validBandageBelts = bandageBelt ? bandageBelt.filter(function(belt){
+			return belt.Properties().indexOf('First Aid Belt') > -1;
+		}) : bandageBelt;		
+		if(validBandageBelts && validBandageBelts.length > 0) {
+			if(!Orion.GumpExists('container', validBandageBelts[0].Serial())) {
+				Orion.UseObject(validBandageBelts[0].Serial());
+				Orion.Wait(1500);
+			}
+		}
 		Orion.BandageTarget(friendObject.Serial());
 		RegisterUseObjectTimeout()
 		Orion.Wait(100);
@@ -278,8 +324,27 @@ function HealFriend(WaitForObjectTimeout, RegisterUseObjectTimeout){
 		}
 	}
 	var friendProps = friendObject.Properties();
-	WaitForObjectTimeout();
 	if(((friendObject.Hits() * 4) < healFriendThreshold)){
+		if(lastHealedPersonDead){
+			Orion.Wait(2000);
+		}
+		if(friendObject.Dead()) {
+			lastHealedPersonDead = true;
+		} else {
+			lastHealedPersonDead = false;
+		}
+		WaitForObjectTimeout();
+		var bandageBelt = Orion.FindTypeEx("0xA1F6", 'any', 'backpack');
+		var validBandageBelts = bandageBelt ? bandageBelt.filter(function(belt){
+			return belt.Properties().indexOf('First Aid Belt') > -1;
+		}) : bandageBelt;		
+		if(validBandageBelts && validBandageBelts.length > 0) {
+			if(!Orion.GumpExists('container', validBandageBelts[0].Serial())) {
+				Orion.UseObject(validBandageBelts[0].Serial());
+				Orion.Wait(1500);
+			}
+		}
+		
 		Orion.BandageTarget(friendObject.Serial());
 		RegisterUseObjectTimeout()
 		Orion.Wait(100);
