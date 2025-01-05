@@ -34,31 +34,34 @@ function RecallToTowns() {
             Orion.Print("House rune not found. Stopping.");
             return;
         }
+        var endTime = 0;
         
         if(firstloop){
         	firstloop = false;        	 
 	        Orion.Print("Initial Loop - Waiting 30s before restarting...");
-	        Orion.Wait(30000);
+	        endTime += 30000;
         } else {
         	if(noTownFound){
         		Orion.Print("Waiting 15 minutes before restarting...");
-	       		Orion.UseSkill("Hiding");
-	        	Orion.Wait(60000 * 15);	        
+	        	endTime += (60000 * 15);
         	} else {
         		Orion.Print("Waiting 5 minutes before restarting...");
-	        	Orion.UseSkill("Hiding");
-	        	Orion.Wait(60000 * 5);	        
+	        	endTime += (60000 * 5);        
         	}
-	         // Step 5: Wait 5-7 Minutes
-	        Orion.Print("Waiting 5 minutes before restarting...");
-	        Orion.UseSkill("Hiding");
-	        Orion.Wait(300000);	        
+	        
+	        
+	        
 	        var randomSec = Math.floor(Math.random() * 120000);
+	        endTime += randomSec
 	        Orion.Print("Waiting Random Time to Not All Go At once between 0s-2m: " + randomSec + 's');
-	        Orion.Wait(randomSec)
         }
-        
-        
+        endTime = Date.now() + endTime;
+        while (Date.now() < endTime) {
+        	if(!Player.Hidden()){
+        		Orion.UseSkill("Hiding");
+        	}
+        	Orion.Wait(12000);
+        }
     
 
 		var townName = getInvasionTown();

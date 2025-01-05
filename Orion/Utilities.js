@@ -142,6 +142,16 @@ var openBackpack = function(){
 	if(new Date().getTime() > lastBackpackOpen || !Orion.GumpExists('container', backpack)) {
 		Orion.OpenContainer(backpack);
 		Orion.Wait(1200);
+		var bandageBelt = Orion.FindTypeEx("0xA1F6", 'any', 'backpack');
+		var validBandageBelts = bandageBelt ? bandageBelt.filter(function(belt){
+			return belt.Properties().indexOf('First Aid Belt') > -1;
+		}) : bandageBelt;		
+		if(validBandageBelts && validBandageBelts.length > 0) {
+			if(!Orion.GumpExists('container', validBandageBelts[0].Serial())) {
+				Orion.UseObject(validBandageBelts[0].Serial());
+				Orion.Wait(1500);
+			}
+		}
 		lastBackpackOpen = new Date().getTime() + 300000;
 	}
 }
@@ -149,7 +159,17 @@ var openBackpack = function(){
 var checkBackpackOpen = function(){
 	if(!Orion.GumpExists('container', backpack)) {
 		Orion.OpenContainer(backpack);
-		Orion.Wait(1200);
+		Orion.Wait(1500);
+		var bandageBelt = Orion.FindTypeEx("0xA1F6", 'any', 'backpack');
+		var validBandageBelts = bandageBelt ? bandageBelt.filter(function(belt){
+			return belt.Properties().indexOf('First Aid Belt') > -1;
+		}) : bandageBelt;		
+		if(validBandageBelts && validBandageBelts.length > 0) {
+			if(!Orion.GumpExists('container', validBandageBelts[0].Serial())) {
+				Orion.UseObject(validBandageBelts[0].Serial());
+				Orion.Wait(1500);
+			}
+		}
 	}
 }
 function ItemDropOff(){
@@ -456,7 +476,7 @@ function ResockBandages(){
 		var resourceBoxes = Orion.FindTypeEx(resourceBoxGraphic, "any", "ground", "", 1);	
 		if(!resourceBoxes || resourceBoxes.length === 0) return;
 		
-		openBackpack();
+		checkBackpackOpen();
 		var bandageGraphic = '0x0E21';
 		var bandageCount = 0;
 		

@@ -198,6 +198,13 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 	RegisterUseObjectTimeout()
 	Orion.Wait(900);
 	Orion.Print("Start Evaluate Item")
+	var bandageBelt = Orion.FindTypeEx("0xA1F6", 'any', 'backpack');
+	var validBandageBelts = bandageBelt ? bandageBelt.filter(function(belt){
+		return belt.Properties().indexOf('First Aid Belt') > -1;
+	}) : bandageBelt;		
+	if(validBandageBelts && validBandageBelts.length > 0 && Orion.FindObject(lastcontainer) && validBandageBelts[0].Serial() === Orion.FindObject(lastcontainer).Serial()) {
+		return;
+	}
 	var itemsInCorpse = Orion.FindType('any', 'any', lastcontainer);
 	var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
 	itemsInCorpse.forEach(function(item){
