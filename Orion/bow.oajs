@@ -10,6 +10,7 @@ var firstloop = true;
 var noTownFound = false;
 function RecallToTowns() {
     while (true) {
+    	Orion.Print("Player dead", Player.Dead());
     	if(Player.Dead()){
     		Orion.Wait(20000);
 			continue;
@@ -20,7 +21,7 @@ function RecallToTowns() {
 			Orion.Wait(20000);
 			continue;
 		} 	
-		var randomSec1 = Math.floor(Math.random() * 60000);
+		var randomSec1 = Math.floor(Math.random() * 90000);
 	    Orion.Print("Obelisks Gone, Waiting Random Time to Not All Go At once between 0s-1m: " + randomSec1 + 's');
 		Orion.Wait(randomSec1);
 		
@@ -130,48 +131,33 @@ function sacredJourney(rune) {
         return false;
     }
 
- 	var initialX = Player.X();
-    var initialY = Player.Y();
-    // Step 1: Cast Sacred Journey spell
-    Orion.Cast('Sacred Journey');
-    Orion.WaitForTarget(3000);
+ 	
 
-    // Step 2: Target the rune
-    Orion.TargetObject(rune);
-    Orion.Wait(3000); // Wait for the recall process to complete
+    
 
-    // Step 3: Verify the character has teleported
-   
-    Orion.Wait(5000); // Allow time for the teleportation to finish
-
-    if (Player.X() !== initialX || Player.Y() !== initialY) {
-        Orion.Print("Sacred Journey successful!");
-        return true;
-    } else {
-        Orion.Print("Teleportation failed. Retrying...");
-        Orion.Cast('Sacred Journey');
-	    Orion.WaitForTarget(3000);
+	var recalled = false;
+	var recallAttemptCounter = 0;
 	
-	    // Step 2: Target the rune
+	while(!recalled && recallAttemptCounter < 10){
+		var initialX = Player.X();
+	    var initialY = Player.Y();
+	    // Step 1: Cast Sacred Journey spell
+	    Orion.Cast('Sacred Journey');
+	    Orion.WaitForTarget(3000);
+		// Step 2: Target the rune
 	    Orion.TargetObject(rune);
-	    Orion.Wait(3000); // Wait for the recall process to complete
-        if (Player.X() !== initialX || Player.Y() !== initialY) {
+	    Orion.Wait(5000); // Wait for the recall process to complete
+	    if (Player.X() !== initialX || Player.Y() !== initialY) {
 	        Orion.Print("Sacred Journey successful!");
-	        return true;
-	    } else {
-	        Orion.Print("Teleportation failed. Retrying...");
-	        Orion.Cast('Sacred Journey');
-		    Orion.WaitForTarget(3000);
-		
-		    // Step 2: Target the rune
-		    Orion.TargetObject(rune);
-		    Orion.Wait(3000); // Wait for the recall process to complete
-	        if (Player.X() === initialX || Player.Y() === initialY) {
-		        Orion.Print("Failed Sacred Journey");
-		        return false;
-		    }
-	    }
-    }
+	        recalled = true;
+  	  	}
+  	  	recallAttemptCounter++;
+	}
+	if(!recalled){
+		Orion.Print("Failed Sacred Journey");
+		return false;
+	}
+	return true;
 }
 
 function moveToRepairBench() {	

@@ -4,7 +4,7 @@
 function LockBagballsDown(){
 	var findItems0 = Orion.FindType('0x2256');
 	findItems0.forEach(function(item){
-		Orion.MoveItem(item, 1, 'ground', Player.X(), Player.Y() + 1, Player.Z());
+		Orion.MoveItem(item, 1, 'ground', Player.X() - 1, Player.Y(), Player.Z());
 		Orion.Wait('1200');
 		Orion.Say('i wish to secure this');
 		if (Orion.WaitForTarget(1000))
@@ -364,7 +364,7 @@ function RepriceVendor(){
 	// ex: .75 will take an item that was 10,000 gold and mark it to 7,500 Gold
 	// numbers over 1 will set a fixed Value
 	// ex: 10000 will make the price 10,000
-	var newPrice = 8 / 9;
+	var newPrice = 6 / 7;
 	// this will be the description of the item (if you use a named description your vendors will be searchable
 	var followUpText = "Jawetzel";    
 	var vendordistance = 0;

@@ -166,7 +166,7 @@ function Startup(){
 		};
 		Orion.Exec('RecallToTowns', true);
 		CombatLoop();
-	} else if(Player.Properties().indexOf('T0SS') > -1 || friendProfile.indexOf('junk') > -1){
+	} else if(friendProfile.indexOf('junk') > -1){
 		Orion.Print('Were on a Junko Samp')
 		var isEj = friendProfile.indexOf('ej') > -1
 		profile = {
@@ -180,7 +180,7 @@ function Startup(){
 			useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
-			leadership: [],
+			//leadership: ['Faery Rules'],
 			//useRunToTarget: true,
 			isEj: isEj,
 			ejGear: isEj,
@@ -190,7 +190,7 @@ function Startup(){
 		Orion.Exec('RecallToTowns', true);
 		CombatLoop();
 		
-	} else if(Player.Properties().indexOf('T0SS') > -1 || friendProfile.indexOf('toss') > -1){
+	} else if(friendProfile.indexOf('toss') > -1){
 		Orion.Print('Were on a Thrower')
 		profile = {
 			useSpecial: true,
@@ -200,10 +200,10 @@ function Startup(){
 			useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
-			leadership: [],
+			leadership: ['Faery Rules'],
 			//useRunToTarget: true,
 		};
-		Orion.Exec('RecallToTowns', true);
+		//Orion.Exec('RecallToTowns', true);
 		CombatLoop();
 	} else if(Player.Properties().indexOf(' Tamer') > -1 || friendProfile.indexOf('Archertamer') > -1){
 		Orion.Print('Were on a Archer Tamer')
@@ -801,7 +801,7 @@ function CombatLoop(){
 	}
 	
 	
-	var timeBetweenFollowChecks = 30000;
+	var timeBetweenFollowChecks = 5000;
 	var lastFollowCheck = 0;
 	var FollowTheLeader = function (){
 		if(!leadership || leadership.length === 0) return;
@@ -815,9 +815,26 @@ function CombatLoop(){
 		if( leadership.filter(function(name){
 			if(Player.Properties().indexOf(name) > -1) return true;
 			}).length > 0) return;
-		
+			
+		var noFriends = false;
 		var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", 10, 'green|blue');
-		if(!friendlys || friendlys.length === 0) return;
+		if(!friendlys || friendlys.length === 0)  noFriends = true;
+		if(noFriends){
+			var holes = Orion.FindTypeEx("0x1775", "any", "ground", "mobile|ignoreself|inlos", 2, 'green|blue');
+			if(holes && holes.length > 0){
+				var validHoles = holes.filter(function(hole){
+					if(hole.Properties().indexof('A Hole') > -1){
+						return true;					
+					}
+				})
+				if(validHoles && validHoles.length > 0){
+					Orion.UseObject(validHoles[0].Serial);
+					Orion.Wait(3000);
+					return;
+				}
+			}
+		}
+		
 		friendlys = friendlys.filter(function(friend){
 			if(!friend) return false;
 			if(leadership.filter(function(name){
@@ -825,8 +842,27 @@ function CombatLoop(){
 				if(friendProps.indexOf(name) > -1) return true;
 			}).length > 0) return true;
 		});
-		if(!friendlys || friendlys.length === 0) return;
-		if(Player.Serial() === friendlys[0].Serial()) return;
+		
+		if(!friendlys || friendlys.length === 0) noFriends = true;
+		if(!noFriends && Player.Serial() === friendlys[0].Serial())  noFriends = true;
+		if(noFriends){
+			Orion.Print("i aint got no friends");
+			var holes = Orion.FindTypeEx("0x1775", "any", "ground", "inlos", 2);
+			if(holes && holes.length > 0){
+				var validHoles = holes.filter(function(hole){
+					if(hole.Properties().indexOf('A Hole') > -1){
+						return true;					
+					}
+				})
+				if(validHoles && validHoles.length > 0){
+					Orion.UseObject(validHoles[0].Serial());
+					Orion.Wait(3000);
+					
+				}
+			}
+			return;
+		}
+		
 		Orion.Follow(friendlys[0].Serial());
 	}
 	
