@@ -542,7 +542,7 @@ function CombatLoop(){
 	
 	
 	var lastEnemyHonored = null;
-	
+	var lastAttackTimestamp = 0;
 	var AttackTarget = function(enemy){
 		if(!enemy) return;
 		 if(enemy){
@@ -560,6 +560,7 @@ function CombatLoop(){
 					}
 				}
 			}
+			lastAttackTimestamp = new Date().getTime();
 	    	Orion.Attack(enemy);
 	    	if(useRunToTarget){
 	    		var enemyObject = Orion.FindObject(enemy);
@@ -877,6 +878,22 @@ function CombatLoop(){
            return; // Exit after successful interaction
        }
 	}
+	
+	
+	
+
+	var HideWhenIdle = function(){
+		var deltaTime = new Date().getTime() - lastAttackTimestamp;
+		if(deltaTime > 45000){
+			if(!Player.Hidden()){
+				var skill = Orion.SkillValue('hiding');
+				if(skill < 400) return;
+				Orion.UseSkill('hiding');
+				Orion.Wait(2000);
+			}
+		}
+	}
+	
 
 	var checkUninsuredCounter = 0;
 	var lastIgnoreResetTime = null;
@@ -932,7 +949,7 @@ function CombatLoop(){
 	    NecroForm();
  	    if(useBandages && !isEj) ResockBandages();
 	    FollowTheLeader();
-	    
+	    HideWhenIdle();
 	    Orion.Wait(timeBetweenLoops);
 	}
 }

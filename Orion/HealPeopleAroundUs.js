@@ -66,7 +66,7 @@ function Run(){
 					var namesFound = friendNames.filter(function (name) {
 	                    return friendProps.toLowerCase().indexOf(name) > -1;
 	                });                
-	                if (friendHits * 4 < healThreshold && friendHits > 0) {
+	                if (friendHits * 4 < healThreshold && friendHits > 0 && !friendObject.Dead()) {
 		                if(namesFound.length > 0){
 		                	priorities.push(friendId);
 		                } else {
