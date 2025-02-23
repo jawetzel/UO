@@ -7,30 +7,6 @@
 //#include Utilities.js
 //#include Rails.oajs
 
-var maxX = 0;
-var maxY = 0;
-var minX = 0;
-var minY = 0;
-function RandomlyMove(){
-	if(maxX === 0){
-		maxX = Player.X() + 5;
-		maxY = Player.Y() + 5;
-		minX = Player.X() - 5;
-		minY = Player.Y() - 5;
-	}
-	while(true){
-		var randomX = Player.X() + Math.floor(Math.random() * 6) - 3;
-		var randomY = Player.Y() + Math.floor(Math.random() * 6) - 3;
-		if(
-			randomX >= minX && randomX <= maxX && 
-			randomY >= minY && randomY <= maxY && 
-			Orion.GetDistance(randomX, randomY) >= 2){
-			Orion.WalkTo(randomX, randomY , Player.Z(), 0);
-			Orion.Wait(90000);
-		}
-	}
-}
-
 function Autostart()
 {
 	Startup();
@@ -41,17 +17,7 @@ Orion.IgnoreReset();
 // 						the vlaue of the default profile
 	
 // default profile - this may be overwritten in autostart
-var profile = {
-			//useSpecial: true,
-			//useLightningStrike: true,
-			useAttack: true,
-			//useWraithForm: true,
-			//useLootCorpses: true,
-			useBandages: true,
-			useSkipTypesToIgnore: true,
-			//leadership: ['Militon [T0SS]'],
-			//useRunToTarget: true,
-		};
+var profile = {};
 
 var profiles = {
 		allFeatures: {
@@ -73,6 +39,7 @@ var profiles = {
 			leadership: [], 
 		}
 	};
+	
 	
 // Features included that are not optional: 
 //	Insures Looted Items
@@ -129,17 +96,12 @@ function Startup(){
 		Orion.Print("Failed To Read Profile, Last Successful Profile: ", friendProfile);
 	} else {
 		SaveSuccessfullProfileRead(friendProfile);
-	}
-	
+	}	
 	
 	var railDestOptions = {
 		voidpool: 'voidpool',
 		lurg: 'lurg'
 	}
-	
-	//auto start anti-gm
-	Orion.Exec('AntiGM', true);
-
 	
 	// autostart setup rails
 	if(friendProfile.indexOf('lurg') > -1){
@@ -147,7 +109,6 @@ function Startup(){
 		Orion.Exec('ManageRails', false, [railDestOptions.lurg, false] );
 	}
 	
-
 	//Orion.Print("We are running voidpool rail");
 	//Orion.Exec('ManageRails', false, [railDestOptions.voidpool, true] );
 
@@ -200,7 +161,8 @@ function Startup(){
 			useSkipTypesToIgnore: true,
 			leadership: ['Jiggily Josh'],
 			//useRunToTarget: true,
-			useIgnoreReset: true
+			useIgnoreReset: true,
+			//useRunToTarget: true
 		};
 		CombatLoop();
 	} else if(friendProfile.indexOf('Archertamer') > -1){
@@ -370,24 +332,18 @@ function CombatLoop(){
 		//Myrmidon Armor
 		'0x13D4': 'Armor Set',					'0x13DB': 'Armor Set',
 		'0x13D6': 'Armor Set',					'0x13DA': 'Armor Set',
-		
 		//Elven Leafweave
 		'0x2B75': 'Armor Set',					'0x2B78': 'Armor Set',
-		
 		//Greymist Armor
 		'0x13CB': 'Armor Set',					'0x13CC': 'Armor Set',	
 		//'0x13C6': 'Armor Set'
-		
 		//Assassin Armor
 		'0x13C6': 'Armor Set',					'0x13CC': 'Armor Set',
 		'0x13CB': 'Armor Set',					'0x13C5': 'Armor Set',
-		
 		//Plate Of Honor
 		'0x1411': 'Armor Set',					'0x1415': 'Armor Set',	
-		
 		//Death's Essence
 		'0x13C6': "Armor Set",				'0x13CB': "Armor Set",
-		
 		//Hunter's Garb
 		'0x2FC9': "Armor Set",				'0x2FC8': "Armor Set",
 		
@@ -413,9 +369,10 @@ function CombatLoop(){
 		'0x2B0E': 'Gorget Of Honesty',
 		
 		//air water earth fire
-		'0xAEA6': 'Paladin Shield Of ', '': '', '': '', '0xAED3': 'Paladin Shield Of ',			
-		'': '', '0xAEB3': 'Paladin Hammer Of ', '': '', '': '',		
-		'': '', '0xAEB2': 'Paladin Cloak Of ', '0xAEC1': 'Paladin Cloak Of ', '0xAED0': 'Paladin Cloak Of ',
+		'0xAEA6': 'Paladin Shield Of ', '0xAEB5': 'Paladin Shield Of ', '0xAEC4': 'Paladin Shield Of ', '0xAED3': 'Paladin Shield Of ',			
+		'0xAEA4': 'Paladin Hammer Of ', '0xAEB3': 'Paladin Hammer Of ', '0xAEC2': 'Paladin Hammer Of ', '0xAED1': 'Paladin Hammer Of ',		
+		'0xAEA3': 'Paladin Cloak Of ', '0xAEB2': 'Paladin Cloak Of ', '0xAEC1': 'Paladin Cloak Of ', '0xAED0': 'Paladin Cloak Of ',
+		'0xAEA5': 'Paladin Fork Of ', '0xAEB4': 'Paladin Fork Of ', '0xAEC3': 'Paladin Fork Of ', '0xAED2': 'Paladin Fork Of ', 
 		
 		'0x46B3': 'Page Of Lore',
 		
@@ -536,6 +493,24 @@ function CombatLoop(){
 		return enemyIds;
 	}
 	
+	var LeaderToFollow = function() {
+		if( leadership.filter(function(name){
+			if(Player.Properties().indexOf(name) > -1) return true;
+			}).length > 0) return null;
+		var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", 10, 'green|blue');
+		if(!friendlys || friendlys.length === 0) return null;
+		friendlys = friendlys.filter(function(friend){
+			if(!friend) return false;
+			if(leadership.filter(function(name){
+				var friendProps = friend.Properties();
+				if(friendProps.indexOf(name) > -1) return true;
+			}).length > 0) return true;
+		});
+		if(!friendlys || friendlys.length === 0) return null;
+		if(Player.Serial() === friendlys[0].Serial())  return null;
+		return friendlys[0].Serial();
+	}
+	
 	var GetTarget = function(){
 		var dist = 0;
 		var enemies = [];
@@ -576,16 +551,22 @@ function CombatLoop(){
 			lastAttackTimestamp = new Date().getTime();
 	    	Orion.Attack(enemy);
 	    	if(useRunToTarget){
-	    		var enemyObject = Orion.FindObject(enemy);
-	    		if(enemyObject && !Orion.GetGlobal('moving')){
-	    			var destX = enemyObject.X();
-	    			var destY = enemyObject.Y();
-	    			if(moveToBoundry.miny && destY < moveToBoundry.miny) destY = moveToBoundry.miny;
-	    			if(moveToBoundry.maxy && destY > moveToBoundry.maxy) destY = moveToBoundry.maxy;
-	    			if(moveToBoundry.minx && destX < moveToBoundry.minx) destX = moveToBoundry.minx;
-	    			if(moveToBoundry.maxx && destX > moveToBoundry.maxx) destX = moveToBoundry.maxx;
-	    			Orion.WalkTo(destX, destY, 1, MinDistToTarget, 255, 1, 1,  500);
+	    		var imLeadership = profile.leadership.length > 0  && profile.leadership.filter(function(name){
+						if(Player.Properties().indexOf(name) > -1) return true;
+					}).length > 0;
+	    		if(imLeadership || !LeaderToFollow()){
+	    			var enemyObject = Orion.FindObject(enemy);
+		    		if(enemyObject && !Orion.GetGlobal('moving')){
+		    			var destX = enemyObject.X();
+		    			var destY = enemyObject.Y();
+		    			if(moveToBoundry.miny && destY < moveToBoundry.miny) destY = moveToBoundry.miny;
+		    			if(moveToBoundry.maxy && destY > moveToBoundry.maxy) destY = moveToBoundry.maxy;
+		    			if(moveToBoundry.minx && destX < moveToBoundry.minx) destX = moveToBoundry.minx;
+		    			if(moveToBoundry.maxx && destX > moveToBoundry.maxx) destX = moveToBoundry.maxx;
+		    			Orion.WalkTo(destX, destY, 1, MinDistToTarget, 255, 1, 1,  500);
+		    		}
 	    		}
+	    		
 		    	
 	    	}
 	    	
@@ -816,7 +797,7 @@ function CombatLoop(){
 	
 	
 	var timeBetweenFollowChecks = 5000;
-	var lastFollowCheck = 0;
+	var lastFollowCheck = 0;	
 	var FollowTheLeader = function (){
 		if(!leadership || leadership.length === 0) return;
 		var nowTime = new Date().getTime();
@@ -831,9 +812,8 @@ function CombatLoop(){
 			}).length > 0) return;
 			
 		var noFriends = false;
-		var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", 10, 'green|blue');
-		if(!friendlys || friendlys.length === 0)  noFriends = true;
-		if(noFriends){
+		var foundLeader = LeaderToFollow();
+		if(!foundLeader){
 			var holes = Orion.FindTypeEx("0x1775", "any", "ground", "mobile|ignoreself|inlos", 2, 'green|blue');
 			if(holes && holes.length > 0){
 				var validHoles = holes.filter(function(hole){
@@ -849,35 +829,12 @@ function CombatLoop(){
 			}
 		}
 		
-		friendlys = friendlys.filter(function(friend){
-			if(!friend) return false;
-			if(leadership.filter(function(name){
-				var friendProps = friend.Properties();
-				if(friendProps.indexOf(name) > -1) return true;
-			}).length > 0) return true;
-		});
-		
-		if(!friendlys || friendlys.length === 0) noFriends = true;
-		if(!noFriends && Player.Serial() === friendlys[0].Serial())  noFriends = true;
+		foundLeader = LeaderToFollow();
 		if(noFriends){
-			Orion.Print("i aint got no friends");
-			var holes = Orion.FindTypeEx("0x1775", "any", "ground", "inlos", 2);
-			if(holes && holes.length > 0){
-				var validHoles = holes.filter(function(hole){
-					if(hole.Properties().indexOf('A Hole') > -1){
-						return true;					
-					}
-				})
-				if(validHoles && validHoles.length > 0){
-					Orion.UseObject(validHoles[0].Serial());
-					Orion.Wait(3000);
-					
-				}
-			}
 			return;
 		}
 		
-		Orion.Follow(friendlys[0].Serial());
+		Orion.Follow(foundLeader);
 	}
 	
 	

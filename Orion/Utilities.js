@@ -575,25 +575,3 @@ function ResockBandages(){
 	    
 		
 	}
-
-function AntiGM()
-{
-    // Discord
-    var bot = "https://discord.com/api/webhooks/1229475741909913620/4ErLKZcMeD-L5-pfcLcMpHH59TfxhDyElXVA5sM7oagroLfHU4yrmGJgLJLYjgn5DyoU"; // Webhook url
-    var charName = Player.Name();
-    var paramText = "username="+charName+"&content=@everyone "+charName+" found a GM, need human confirmation!";
-	
-    while (true)
-    {
-        var startTime = Orion.Now();
-        var msg = Orion.WaitJournal("GM | Seer |Counselor ", startTime, 0);
-            Orion.Wait(1);
-            Orion.HttpPost(bot, paramText);
-            Orion.PlayWav('fileName');
-            Orion.Wait(1000);
-            Orion.PlayWav('fileName');
-            Orion.Wait(1000);
-            Orion.PlayWav('fileName');
-            Orion.Wait(1000);
-    }
-}
