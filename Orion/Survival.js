@@ -237,7 +237,7 @@ function FriendToHeal(dist, isChiv){
 		if(friendsToHealAroundUs.length > 0){
 			var randomFriendIndex = 0;
 			if(friendsToHealAroundUs.length > 1){
-				randomFriendIndex = Math.floor(Math.random() * (friendsToHealAroundUs.length - 1))
+				randomFriendIndex = Math.floor(Math.random() * friendsToHealAroundUs.length)
 			}
 			//Orion.Print("15");
 			return friendsToHealAroundUs[randomFriendIndex];
