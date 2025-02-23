@@ -106,6 +106,7 @@ function StayLoggedIn(){
 
 function BuyDirtStartup(){
 	Orion.Wait(10000);
+
 	if(Player.Y() === 3488 && Player.X() === 774) {
 		Orion.Print("Starting");
 		Orion.UseObject(backpack);
@@ -114,7 +115,7 @@ function BuyDirtStartup(){
 	}
 }
 
-function Autostart2        ()
+function Autostart()
 {
 	Orion.Wait(10000);
 	if(Player.Y() === 3488 && Player.X() === 774) {

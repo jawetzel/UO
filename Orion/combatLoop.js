@@ -6,7 +6,6 @@
 //#include Loot.js
 //#include Utilities.js
 //#include Rails.oajs
-//#include bow.oajs
 
 var maxX = 0;
 var maxY = 0;
@@ -164,7 +163,6 @@ function Startup(){
 			useLootCorpses: true,
 			useHonor: true,
 		};
-		Orion.Exec('RecallToTowns', true);
 		CombatLoop();
 	} else if(friendProfile.indexOf('junk') > -1){
 		Orion.Print('Were on a Junko Samp')
@@ -180,14 +178,13 @@ function Startup(){
 			useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
-			//leadership: ['Faery Rules'],
+			leadership: ['Jiggily Josh'],
 			//useRunToTarget: true,
 			isEj: isEj,
 			ejGear: isEj,
 			//useIgnoreReset: true
 			useCutCorpses: true,		
 		};
-		Orion.Exec('RecallToTowns', true);
 		CombatLoop();
 		
 	} else if(friendProfile.indexOf('toss') > -1){
@@ -195,23 +192,24 @@ function Startup(){
 		profile = {
 			useSpecial: true,
 			//useLightningStrike: true,
+			//useEnemyOfOne: true,
 			useAttack: true,
 			useWraithForm: true,
 			useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
-			leadership: ['Faery Rules'],
+			leadership: ['Jiggily Josh'],
 			//useRunToTarget: true,
+			useIgnoreReset: true
 		};
-		//Orion.Exec('RecallToTowns', true);
 		CombatLoop();
-	} else if(Player.Properties().indexOf(' Tamer') > -1 || friendProfile.indexOf('Archertamer') > -1){
+	} else if(friendProfile.indexOf('Archertamer') > -1){
 		Orion.Print('Were on a Archer Tamer')
 		profile = {
 			useAttack: true,
 			useSpecial: true,
 			useChivHeal: true,
-			useHealChivFriend: true,
+			//useHealChivFriend: true,
 			useBandages: true,
 			useLootCorpses: true,
 			//useEnemyOfOne: true,
@@ -221,7 +219,7 @@ function Startup(){
 			usePetCommands: true,
 			useVampForm: true,
 			useHonor: true,
-			leadership: [],
+			leadership: ['Jiggily Josh'],
 			useIgnoreReset: true
 		};
 		CombatLoop();
@@ -275,13 +273,15 @@ function CombatLoop(){
 		'Exodus Summoning Altar',
 		'Robe Of Rite',
 		'Plunderin', //Pirate event
-		'Of The Shattered Sanctum'
+		'Of The Shattered Sanctum',
+		'Bearing The Crest Of Minax',
+		"Defiler's Grasp"
 	]);
 	
 	UseHealPotionThreshold(25);
 	SetHealFriendThreshold(75);
 	var maxEnemyDistance =  15;
-	SetDropOffItems(['Plunderin', 'Of The Shattered Sanctum']);
+	SetDropOffItems(['Plunderin', 'Of The Shattered Sanctum','Bearing The Crest Of Minax']);
 	
 	// There isnt anything below this point you should need to change
 
@@ -411,6 +411,17 @@ function CombatLoop(){
 		'0x0F61': "Dragon's End", 						'0x2B06': 'Legs Of Honor',
 		'0x1BC3': "Lord Blackthorn's Exemplar", 	'0x3BB6': 'Map Of The Known World',
 		'0x2B0E': 'Gorget Of Honesty',
+		
+		//air water earth fire
+		'0xAEA6': 'Paladin Shield Of ', '': '', '': '', '0xAED3': 'Paladin Shield Of ',			
+		'': '', '0xAEB3': 'Paladin Hammer Of ', '': '', '': '',		
+		'': '', '0xAEB2': 'Paladin Cloak Of ', '0xAEC1': 'Paladin Cloak Of ', '0xAED0': 'Paladin Cloak Of ',
+		
+		'0x46B3': 'Page Of Lore',
+		
+		//plant types
+		'0xA0DF': 'Shadowblight Blooms',
+		
 	});
 	// will drop off items into secure bagball 
 	
@@ -487,6 +498,7 @@ function CombatLoop(){
 				if(playerSerial === enemyId) return;
 				var enemyObject = Orion.FindObject(enemyId);
 				if(enemyObject){
+					
 					var props = enemyObject.Properties().toLowerCase();
 					if(!props || props.length === 0) return;
 					if(	enemyObject.Notoriety() === 6 &&
@@ -520,6 +532,7 @@ function CombatLoop(){
 				}	
 			})						
 		}
+		
 		return enemyIds;
 	}
 	
@@ -884,14 +897,13 @@ function CombatLoop(){
 
 	var HideWhenIdle = function(){
 		var deltaTime = new Date().getTime() - lastAttackTimestamp;
-		if(deltaTime > 45000){
-			if(!Player.Hidden()){
-				var skill = Orion.SkillValue('hiding');
-				if(skill < 400) return;
-				Orion.UseSkill('hiding');
-				Orion.Wait(2000);
-			}
-		}
+		if(deltaTime < 45000) return;
+		if(Player.Hidden()) return;
+		var skill = Orion.SkillValue('hiding');
+		if(skill < 250) return;
+		Orion.Print("Attempting Hide");
+		Orion.UseSkill('hiding');
+		Orion.Wait(2000);
 	}
 	
 

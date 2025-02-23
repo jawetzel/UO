@@ -30,120 +30,27 @@ function SetuseLootEjGear(value){
 var GetPropValue = function(regex, props){
 	var matches = regex.exec(props);
 	if(!matches || matches.length < 2) return 0;
-	return matches[1];
+	
+	return parseInt(matches[1]);
 }
-
-
-var shouldKeepItemEjGear = function(props){
-	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
-	var isArmor = props.indexOf("Physical Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1;
-
-	var lmc = GetPropValue(/Lower Mana Cost (\d+)/, props);
-	var hci = GetPropValue(/Hit Chance Increase (\d+)/, props);
-	var di = GetPropValue(/Damage Increase (\d+)/, props);
-	var luck = GetPropValue(/Luck (\d+)/, props);
-	var phys = GetPropValue(/Physical Resist (\d+)/, props);
-	var fire = GetPropValue(/Fire Resist (\d+)/, props);
-	var poison = GetPropValue(/Poison Resist (\d+)/, props);
-	var brittle = props.indexOf('Brittle') > -1;
-	var antique =  props.indexOf('Antique') > -1;
-	var isWeapon = props.indexOf('Skill Required: ') > -1;
-	var isSsi = props.indexOf("Swing Speed Increase 10") > -1;
-	var isArtifact = props.indexOf("Artifact") > -1;
-	var isHpi  = props.indexOf("Hit Point Increase 5") > -1 || props.indexOf("Hit Point Increase 7") > -1;
-	if(isJewlery) {
-		return !antique && hci > 14 && di > 15 && luck > 80 && isSsi;
-	}
-	else if (isArmor){
-		return luck > 80 && phys > 10 && lmc > 4 && brittle && isArtifact;
-	} 
-	else if (isWeapon) {
-		return false;
-	} 
-	else {
-		return brittle && luck > 80 && isSsi && (isHpi || hci > 14 || luck > 140);
-	}
-}
-
-
-var ShouldKeepItem_CheckCleanSsi = function (props, itemId){
-		//handle clean SSI Jewls
-		//we are done picking these up for now
-		//return false;
-		
-		var ring = 'Ring';
-		var bracelet = 'Bracelet';
-		var dex = 'Dexterity Bonus';
-		var int = 'Intelligence Bonus';
-		var str = 'Strength Bonus';
-		var hci = 'Hit Chance Increase';
-		var di = 'Damage Increase';
-		var dci = 'Defense Chance Increase';
-		var ep = 'Enhance Potions';
-		var ssi = 'Swing Speed Increase 10%';
-		var weight = 'Weight';
-		var durability = 'Durability';
-		var prized = 'Prized';
-		var antique = 'Antique';
-		var sdi = 'Spell Damage Increase';
-		if(props.indexOf(ring) > -1 || props.indexOf(bracelet) > -1){
-			if(props.indexOf(ssi) > -1){
-				var weightIndex = props.indexOf(weight);	
-				var durabilityIndex = props.indexOf(durability);			
-				var propsSubstring = props.substring(weightIndex + weight.length, durabilityIndex);
-				if(propsSubstring.indexOf(ssi) === -1){
-					Orion.Wait(100);
-					return ShouldKeepItem(itemId);
-				}
-				var newLinesCount = propsSubstring.split('\n').length;
-				
-				if(newLinesCount === 2) return true;
-				if(newLinesCount === 3) return true;
-				if(newLinesCount === 4){
-					if(
-						propsSubstring.indexOf(dex) > -1
-						|| propsSubstring.indexOf(int) > -1
-						|| propsSubstring.indexOf(str) > -1
-						|| propsSubstring.indexOf(hci) > -1
-						|| (propsSubstring.indexOf(di) > -1 && propsSubstring.indexOf(sdi) === -1)
-						|| propsSubstring.indexOf(dci) > -1
-						|| propsSubstring.indexOf(ep) > -1
-						|| propsSubstring.indexOf(antique) > -1
-						|| propsSubstring.indexOf(prized) > -1	
-					) {
-						return true;
-					}
-				}
-				
-				if(newLinesCount === 5 && propsSubstring.indexOf(prized) > -1){
-					if(
-						propsSubstring.indexOf(dex) > -1
-						|| propsSubstring.indexOf(int) > -1
-						|| propsSubstring.indexOf(str) > -1
-						|| propsSubstring.indexOf(hci) > -1
-						|| (propsSubstring.indexOf(di) > -1 && propsSubstring.indexOf(sdi) === -1)
-						|| propsSubstring.indexOf(dci) > -1
-						|| propsSubstring.indexOf(ep) > -1
-					) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
 	
 var ShouldKeepItem_Splinter = function (props){
 		//handle splinter
-		
-		//todo handle clean splinter weapons (can be imbued)
-		var splinter = "Splintering Weapon";
-		var isOverCapSplinter = props.indexOf(splinter + " 25") > -1 || props.indexOf(splinter + " 30") > -1;
-		var isSplinter =  props.indexOf(splinter + " 20") > -1 || isOverCapSplinter;
 		var antique = 'Antique';
 		var isAntique = props.indexOf(antique) > -1;
 		var brittle = 'Brittle';
 		var isBrittle =  props.indexOf(brittle) > -1;
+		if(isAntique || isBrittle){
+				return false;
+		}	
+		var isSc = props.indexOf('Spell Channeling') > -1;
+		
+		//todo handle clean splinter weapons (can be imbued)
+		var splinter = "Splintering Weapon";
+		
+		var isOverCapSplinter = props.indexOf(splinter + " 25") > -1 || props.indexOf(splinter + " 30") > -1;
+		var isSplinter =  props.indexOf(splinter + " 20") > -1 || isOverCapSplinter;
+		
 		var fireball = "Hit Fireball";
 		var isCappedFireball = props.indexOf(fireball + " 50") > -1
 		var isOverCapFireball = props.indexOf(fireball + " 60") > -1 || props.indexOf(fireball + " 70") > -1;
@@ -163,43 +70,27 @@ var ShouldKeepItem_Splinter = function (props){
 		var bokuto = "Bokuto";
 		var isBokuto = props.indexOf(bokuto) > -1;
 		
-		if(isSplinter || isOverCapSplinter){
-				var isHitSpell = isFireball || isLightning || isHarm;
-					
-				if(isAntique || isBrittle){
-						return false;
-				}	
+		if(isSplinter){
+				var isHitSpell = isFireball || isLightning || isHarm;				
 				
-				if(isBokuto && isHitSpell) {
+				if(isBokuto && isHitSpell && (isOverCapSplinter || isSc || isLowerD)) {
 					return true;
 				}
 									
-				if(isHitSpell && isOverCapSplinter){
+				if(isHitSpell &&  (isOverCapSplinter || isSc || isLowerD)){
 					return true;
 				}
 			
 				if(isOverCapLightning || isOverCapFireball || isOverCapHarm){
 					return true;
-				}
-			
-				//we will keep antique or brittle if HLD hit spell and splinter
-				if(isHitSpell && isLowerD){
-					return true;
-				} 
-		}
-		return false;
-	}
-	
-	function ShouldKeepItem_LuckShield(props){
-		if(props.indexOf("Luck 150") > -1 ){
-			//return true;
+				}							
 		}
 		return false;
 	}
 	
 	
 function CheckItem(){
-	Orion.Print(ShouldKeepItem(0x459BE29F));
+	Orion.Print(ShouldKeepItem(0x48F97250));
 }
 
 function FilterLastObjectJunkIntoLastTarget(){
@@ -213,10 +104,11 @@ function FilterLastObjectJunkIntoLastTarget(){
 	destItems.forEach(function(item){
 		counter++;
 		Orion.Print("Working item " + counter + "/" + destItems.length);
-		if(shouldKeepItemEjGear(Orion.FindObject(item).Properties()) === true){
+		if(ShouldKeepItem(item)){
 			Orion.MoveItem(item, 1000, targetBag);
 			Orion.Wait(1500);
 		}
+			
 	})
 }
 
@@ -276,10 +168,6 @@ function ShouldKeepItem(itemId){
 			if(props.indexOf("Tattered Treasure Map") > -1) return true;
 		}
 		
-		if(shouldKeepItemEjGear){
-			if(shouldKeepItemEjGear(props)) return true;
-		}
-		
 		//Handle Named Jewlery
 		if(isJewlery){
 				//I do not want arcane Jewl of sorcery.
@@ -287,8 +175,6 @@ function ShouldKeepItem(itemId){
 		}
 		
 		if(isJewlery){
-				
-				
 				var worthlessMods = [
 					'Luck', 'Night Sight', 
 					'Fire Resist', 'Physical Resist', 
@@ -335,9 +221,9 @@ function ShouldKeepItem(itemId){
 					return props.indexOf(mod) > -1
 				});
 				
-				if(usefullSkills.length === 0) return false;
+				if(usefullSkills.length < 2) return false;
 					
-				if((containsWorthlessMods.length + worthlessCountBonus) > 2) return false;
+				if((containsWorthlessMods.length + worthlessCountBonus) > 1) return false;
 				//exclude 7 mod 2 junk mod jewls
 				var nonModLines = ['Brittle', 'Antique', 'Prized', 'Gargoyles Only', 'Price: '];
 				var jewlLineBonus = nonModLines.filter(function(mod){
@@ -351,7 +237,6 @@ function ShouldKeepItem(itemId){
 				var is7Mod = (newLinesCount + jewlLineBonus) === 13;
 				if(is7Mod && (containsWorthlessMods.length + worthlessCountBonus) > 1) return false;
 				//this is where we could build out logic for junk combos on jewls
-				if(props.indexOf(" Of ") === -1 &&  props.indexOf('Major Artifact') > -1) return true;
 		}
 		
 		
@@ -360,42 +245,21 @@ function ShouldKeepItem(itemId){
 		} else if(is1hWeapon || is2hWeapon){ //if its  weapon and its not splinter I dont want it
 			return false;
 		}
-	
-		if(ShouldKeepItem_CheckCleanSsi(props, itemId)) return true;
-		
+			
 		//fuck sheilds
 		if(!isArmor && !isJewlery && !is2hWeapon && !is1hWeapon){
-			if(ShouldKeepItem_LuckShield(props)){
-				return true;
-			}
-			if(
-				props.indexOf("Spell Channeling") > -1 && 
-				props.indexOf("Faster Casting") === -1 && 
-				props.indexOf("Reactive") > -1 && 
-				props.indexOf("Defense") > -1 && 
-				props.indexOf("Antique") === -1
-			){
-				//return true;
-			}
 			return false;
 		}
 		
 		if(isArmor){
 			if(props.indexOf("Fortified") > -1 || props.indexOf("Of Defense") > -1){
 				return false;
-			}
-			
-			
-			
+			}			
 			if(
 					(props.indexOf("Mystic") > -1 || props.indexOf("Arcane") > -1) && 
 					(props.indexOf("Of Wizardry") > -1 || props.indexOf("Of Sorcery") > -1)){
 					return false;
-			}
-			
-			
-			
-	
+			}	
 			
 			var lrc = GetPropValue(/Lower Reagent Cost (\d+)/, props);
 			var lmc = GetPropValue(/Lower Mana Cost (\d+)/, props);
@@ -409,17 +273,19 @@ function ShouldKeepItem(itemId){
 			var dex = GetPropValue(/Dexterity Bonus (\d+)/, props);
 			var stam = GetPropValue(/Stamina Increase (\d+)/, props);
 			
+			var eater =  GetPropValue(/Eater  (\d+)/, props);
+			
 			if(lrc === 0 && lmc === 0) return false;
 			if(lrc > 0 && lrc < 15) return false;
 			if(lmc > 0 && lmc < 6) return false;
 			
-			var totalStats = intel + mana + str + hp + dex + stam;
+			var totalStats = intel + mana + str + hp + dex + stam; 
 			if(totalStats < 20) {
-				if(intel > 0 && intel < 3) return false;
-				if(mana > 0 && mana < 6) return false;
-				if(str > 0 && str < 3) return false;
+				if(totalStats < 5 && lrc > 0 && eater > 5) return false;
+				if(totalStats < 10 && lrc > 0 && eater === 0) return false;
+				if(totalStats < 15 && lrc === 0 &&  eater > 5) return false;
+				if(totalStats < 20 && lrc === 0 && eater === 0) return false;
 				if(hp > 0 && hp < 5) return false;
-				if(dex > 0 && dex < 3) return false;
 				if(stam > 0 && stam < 8) return false;
 				
 				var statPropCount = 0;

@@ -1,3 +1,70 @@
+var getDura = function(props){
+        if(!props || props.length === 0) return 255;
+        var matches = /Durability (\d+)\s\/\s(\d+)/.exec(props);
+        if(!matches || matches.length < 2) return 255;
+        return matches[1];
+}
+
+var getPOFKeg = function(){
+    var pofBarrels = [];
+    Orion.FindTypeEx(any, any, ground, "item", 2).forEach(function (obj)
+    {
+        if (Orion.Contains(obj.Properties(), "contents: "))
+        {
+          if (Orion.GumpExists("container", obj.Serial()))
+          {
+              Array.prototype.push.apply(pofBarrels, Orion.FindTypeEx('0x1940', any, obj.Serial()));
+          }          
+        }
+      }
+    );
+    if(!pofBarrels || pofBarrels.length == 0) return null;
+    var nonEmpty = pofBarrels.filter(function(barrel){
+        return barrel.Properties().indexOf('Uses Remaining: 0') === -1 
+    });
+    if(!nonEmpty || nonEmpty.length == 0) return null;
+    return nonEmpty[0];
+}
+
+function POFContainerLastObject(){
+    
+    
+    var pofItem = function(itemId){
+        var pof = getPOFKeg();
+        if(!pof){
+            Orion.Print("ran out of POF Kegs");
+             return false;
+        }
+        var item = Orion.FindObject(itemId);
+        if(!item) return false;
+        var durability = getDura(item.Properties());
+        if(durability >= 255) return false;
+        Orion.UseObject(pof.Serial());
+        Orion.WaitForTarget(2000);
+        Orion.TargetObject( itemId);
+        Orion.Wait(1500);
+        return true;
+    }
+    
+    var items = Orion.FindTypeEx('any', 'any', Orion.FindObject(lastobject).Serial());
+    
+    if(!items || items.length === 0){
+        Orion.Print('No items found to POF');
+    }
+    
+    Orion.Print("Found Items In Last Object " + items.length);
+    
+    var itemCount = 1;
+    items.forEach(function(item){
+        while(pofItem(item.Serial())){
+            Orion.Print("Working on item #" + itemCount);
+        }
+        itemCount++;
+    })
+    
+}
+
+
 function Run(){
 	Orion.Print("Target Source");
 	Orion.UseSkill("Arms Lore");

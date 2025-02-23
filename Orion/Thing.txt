@@ -1,1 +1,23 @@
-[{"type":"run","x":2099,"y":200,"z":7,"index":0},{"type":"run","x":2103,"y":198,"z":7,"index":1},{"type":"recall","recallType":"0x1F14","recallContainer":"backpack","recallName":"A Recall Rune For PaintedCaves (Felucca)","index":2}]
+function CountItemsInBag() {
+    // Prompt the user to target an item
+    Orion.UseSkill('Arms Lore');
+    Orion.Print("Select an item to count in your bag.");
+    Orion.WaitForTarget();
+    Orion.Wait(5000);
+    var target = Orion.FindObject(Orion.ClientLastTarget());
+    
+    if (!target) {
+        Orion.Print("No item selected. Exiting script.");
+        return;
+    }
+
+    // Get the graphic ID and color of the targeted item
+    var itemGraphic = target.Graphic();
+    var itemColor = target.Color();
+    
+    // Search the player's backpack for items matching the targeted item's graphic and color
+    var items = Orion.FindType(itemGraphic, itemColor, target.Container());
+
+    // Display the count of matching items
+    Orion.Print("You have " + items.length + " of this item in your backpack.");
+}

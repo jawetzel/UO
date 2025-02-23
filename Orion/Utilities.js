@@ -213,7 +213,7 @@ function ItemDropOff(){
 					){
 						var dest = findContainer("0x2256");
 						if(dest){
-							Orion.MoveItem(itemId, 1, dest);
+							Orion.MoveItem(itemId, 60000, dest);
 							Orion.Wait(1600);
 						}						
 					}			
@@ -325,7 +325,8 @@ var insurableText = [
 	'Exodus Sacrificial Dagger',
 	'Exodus Summoning Altar',
 	'Robe Of Rite',
-	'Plunderin' //Pirate event
+	'Plunderin', //Pirate event
+	'Bearing The Crest Of Minax',
 ];
 function SetItemsCheckBackpackUninsuredItems(items){
 	insurableText = items;

@@ -364,7 +364,7 @@ function RepriceVendor(){
 	// ex: .75 will take an item that was 10,000 gold and mark it to 7,500 Gold
 	// numbers over 1 will set a fixed Value
 	// ex: 10000 will make the price 10,000
-	var newPrice = 6 / 7;
+	var newPrice = .95;
 	// this will be the description of the item (if you use a named description your vendors will be searchable
 	var followUpText = "Jawetzel";    
 	var vendordistance = 0;
@@ -452,6 +452,7 @@ function RepriceVendor(){
     	 index++;
     	 
     	 var item = Orion.FindObject(itemId);
+    	 if(!item) return;
     	 var props = item.Properties();
     	 if(props.indexOf("Not For Sale") > -1) return;
     	 
