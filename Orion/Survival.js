@@ -102,10 +102,7 @@ function SetHealFriendThreshold(value){
 	healFriendThreshold = value;
 }
 var healFriendNames = [
-		'Muffin',			'Zazi',		'Hooch',			'Bill', 	// a list of my pets names
-		'save me tom cruise', //a message can be put in player journal to identify a friend
-		'T0SS', // a guild tag to identify friends
-		'a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U' // this will mark everyone as a friend
+		
 	];
 function SetHealFriendNames(value){
 	healFriendNames = value;
@@ -227,8 +224,11 @@ function FriendToHeal(dist, isChiv){
 						return;
 					}
 				}
-				if(friendObject.Distance() <= dist && ((friendObject.Hits() * 4) < healFriendThreshold)){
-					//Orion.Print("13");
+				if(
+					friendObject.Distance() <= dist && 
+					((friendObject.Hits() * 4) < healFriendThreshold && 
+					(friendObject.Hits() > 0 || friendObject.Dead())
+					)){
 					friendsToHealAroundUs.push(friendId);
 					return;
 				}

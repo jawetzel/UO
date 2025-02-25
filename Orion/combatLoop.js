@@ -1,5 +1,13 @@
 //Author: Jawetzel
 
+//sample profile setup: 
+//log on, in game open your characters profile.
+//type in junk 
+//if you want this character to follow someone 
+//type in lead="Jiggily"
+
+// After profile is setup select Autostart from the list of functions and run it
+
 //#include Timeouts.js 
 //#include LootEvaluator.js
 //#include Survival.js
@@ -12,34 +20,100 @@ function Autostart()
 	Startup();
 }
 Orion.IgnoreReset();
-
-//Instructions: To change what actions will be performed while script is running change
-// 						the vlaue of the default profile
 	
-// default profile - this may be overwritten in autostart
-var profile = {};
-
-var profiles = {
-		allFeatures: {
-			//chiv
-			useEnemyOfOne: true,			useDivineFury: true,			useConsecrateWeapon: true,
-			useChivHeal: true,					useHealChivFriend: true,
-			//combat
-			useAttack: true,						useSpecial: true,				useBandages: true,
-			useEnhancementPots: true,		useRestorePotions: true,	
-			useRunToTarget: true,
-			//Bushido
-			useLightningStrike: true,			useHonor: true,
-			useConfidence: true,				useEvasion: true,					
-			//Looting
+//To change what actions will be performed change these values
+//To add options, add a a line from the all features to the profile you wish to change below
+//To turn off options, delete the line from the profile you are modifying
+//allFeatures: {
+//			//chiv
+//			useEnemyOfOne: true,			useDivineFury: true,			useConsecrateWeapon: true,
+//			useChivHeal: true,					useHealChivFriend: true,
+//			//combat
+//			useAttack: true,						useSpecial: true,				useBandages: true,
+//			useEnhancementPots: true,		useRestorePotions: true,	
+//			useRunToTarget: true,
+//			//Bushido
+//			useLightningStrike: true,			useHonor: true,
+//			useConfidence: true,				useEvasion: true,					
+//			//Looting
+//			useLootCorpses: true,
+//			//Utility
+//			useCutCorpses: true,			
+//		}
+var profileOptions = [
+	{
+		name: 'samp',
+		options:  {
+			//useLightningStrike: true,
+			useSpecial: true,
+			useAttack: true,
+			useVampForm: true,
 			useLootCorpses: true,
-			//Utility
-			useCutCorpses: true,			
-			//auto follow
-			leadership: [], 
+			useHonor: true,
 		}
-	};
-	
+	},
+	{
+		name: 'junk',
+		options:  {
+			//useSpecial: true,
+			//useEnemyOfOne: true,
+			//useDivineFury: true,
+			//useConsecrateWeapon: true,
+			//useLightningStrike: true,
+			useAttack: true,
+			useVampForm: true,
+			useLootCorpses: true,
+			useBandages: true,
+			useSkipTypesToIgnore: true,
+			//useRunToTarget: true,
+			useIgnoreReset: true,
+			useCutCorpses: true,		
+		}
+	},	
+	{
+		name: 'toss',
+		options:  {
+			useSpecial: true,
+			//useLightningStrike: true,
+			//useEnemyOfOne: true,
+			useAttack: true,
+			useWraithForm: true,
+			useLootCorpses: true,
+			useBandages: true,
+			useSkipTypesToIgnore: true,
+			useRunToTarget: true,
+			useIgnoreReset: true,
+			useRunToTarget: true,
+		}
+	},
+	{
+		name: 'Archertamer',
+		options: {
+			useAttack: true,
+			useSpecial: true,
+			useChivHeal: true,
+			//useHealChivFriend: true,
+			useBandages: true,
+			useLootCorpses: true,
+			//useEnemyOfOne: true,
+			//useDivineFury: true,
+			//useConsecrateWeapon: true,
+			useSkipTypesToIgnore: true,
+			usePetCommands: true,
+			useVampForm: true,
+			useHonor: true,
+			useIgnoreReset: true
+		}
+	},
+	{
+		name: 'ArcherP',
+		options: {
+			useAttack: true,
+			useBandages: true,
+			useSpecial: true,
+		}
+	},
+]
 	
 // Features included that are not optional: 
 //	Insures Looted Items
@@ -79,6 +153,9 @@ var lootItemSets = {
 	}
 }
 
+// default profile - this will be overwritten in autostart
+var profile = {};
+
 function Startup(){
 	
 	Orion.Wait(5000);
@@ -112,103 +189,43 @@ function Startup(){
 	//Orion.Print("We are running voidpool rail");
 	//Orion.Exec('ManageRails', false, [railDestOptions.voidpool, true] );
 
-	Orion.Print(friendProfile);
-	// autostart setup profiles
-	if(friendProfile.indexOf('samp') > -1){
-		Orion.Print('Were on a Samp')
-		profile = {
-			//useLightningStrike: true,
-			useSpecial: true,
-			useAttack: true,
-			useVampForm: true,
-			useLootCorpses: true,
-			useHonor: true,
-		};
-		CombatLoop();
-	} else if(friendProfile.indexOf('junk') > -1){
-		Orion.Print('Were on a Junko Samp')
-		var isEj = friendProfile.indexOf('ej') > -1
-		profile = {
-			useSpecial: true,
-			//useEnemyOfOne: true,
-			//useDivineFury: true,
-			//useConsecrateWeapon: true,
-			//useLightningStrike: true,
-			useAttack: true,
-			useVampForm: true,
-			useLootCorpses: true,
-			useBandages: true,
-			useSkipTypesToIgnore: true,
-			leadership: ['Jiggily Josh'],
-			//useRunToTarget: true,
-			isEj: isEj,
-			ejGear: isEj,
-			//useIgnoreReset: true
-			useCutCorpses: true,		
-		};
-		CombatLoop();
-		
-	} else if(friendProfile.indexOf('toss') > -1){
-		Orion.Print('Were on a Thrower')
-		profile = {
-			useSpecial: true,
-			//useLightningStrike: true,
-			//useEnemyOfOne: true,
-			useAttack: true,
-			useWraithForm: true,
-			useLootCorpses: true,
-			useBandages: true,
-			useSkipTypesToIgnore: true,
-			leadership: ['Jiggily Josh'],
-			//useRunToTarget: true,
-			useIgnoreReset: true,
-			//useRunToTarget: true
-		};
-		CombatLoop();
-	} else if(friendProfile.indexOf('Archertamer') > -1){
-		Orion.Print('Were on a Archer Tamer')
-		profile = {
-			useAttack: true,
-			useSpecial: true,
-			useChivHeal: true,
-			//useHealChivFriend: true,
-			useBandages: true,
-			useLootCorpses: true,
-			//useEnemyOfOne: true,
-			//useDivineFury: true,
-			//useConsecrateWeapon: true,
-			useSkipTypesToIgnore: true,
-			usePetCommands: true,
-			useVampForm: true,
-			useHonor: true,
-			leadership: ['Jiggily Josh'],
-			useIgnoreReset: true
-		};
-		CombatLoop();
-	} else if(friendProfile.indexOf('ArcherP') > -1){
-		Orion.Print('Were on a Archer Tamer')
-		profile = {
-			useAttack: true,
-			useBandages: true,
-			useSpecial: true,
-		};
-		CombatLoop();
+	var validProfiles = profileOptions.filter(function(profileName){
+		if(friendProfile.indexOf(profileName.name) > -1){
+			Orion.Print("Running Profile: " + profileName.name);
+			profile = profileName.options;
+		}
+	})
+	
+	var profileLeadership = [];
+	if(friendProfile != null && friendProfile.indexOf("lead=") > -1){
+		var matches = /lead="([^"]*)"/.exec(friendProfile);
+		Orion.Print("Person to follow: " + matches[1]);
+		if(!matches || matches.length >= 2){
+			profileLeadership.push(matches[1]);
+		}
+	}
+	profile.leadership = profileLeadership;
+	
+	if(friendProfile.indexOf('ej') > -1){
+		profile.isEj = true;
 	}
 	
-	profile = {
-		};
-		CombatLoop();
+	CombatLoop();
 }
 
 // Editing below is for advanced configuration only
 
 function CombatLoop(){
 	var healFriendNames = [
-		'Muffin',			'Zazi',		'Hooch',			'Bill', 	// a list of my pets names
 		'save me tom cruise', //a message can be put in player journal to identify a friend
-		'T0SS', // a guild tag to identify friends
-		'a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U' // this will mark everyone as a friend
+		//'TWT'
+		//'a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U' // this will mark everyone as a friend
 	];
+	profileOptions.forEach(function(option){
+		healFriendNames.push(option.name);
+	});
+	Orion.Print("Friend Names We Are Looking for: " + healFriendNames);
+	
 	
 	var humanoidNamesToAttack = [
 		"Protector",
@@ -242,8 +259,17 @@ function CombatLoop(){
 	
 	UseHealPotionThreshold(25);
 	SetHealFriendThreshold(75);
-	var maxEnemyDistance =  15;
-	SetDropOffItems(['Plunderin', 'Of The Shattered Sanctum','Bearing The Crest Of Minax']);
+	var maxEnemyDistance =  25;
+	SetDropOffItems([
+		'Plunderin', 
+		'Of The Shattered Sanctum',
+		'Bearing The Crest Of Minax',
+		'Paladin Shield Of',
+		'Paladin Hammer Of',
+		'Paladin Cloak Of',
+		'Paladin Fork Of',
+		'Shadowblight Blooms'
+		]);
 	
 	// There isnt anything below this point you should need to change
 
@@ -315,8 +341,10 @@ function CombatLoop(){
 	var useRunToTarget = profile != null ? profile.useRunToTarget : false;
 	var MinDistToTarget = 5;
 	var moveToBoundry = {
-			//miny: 591,
-			//maxy: 623
+			miny: 3580,
+			maxy: 3600,
+			minx: 475,
+			maxx: 500
 		}
 	
 	var minimumManaForSpells = 20;
@@ -369,15 +397,15 @@ function CombatLoop(){
 		'0x2B0E': 'Gorget Of Honesty',
 		
 		//air water earth fire
-		'0xAEA6': 'Paladin Shield Of ', '0xAEB5': 'Paladin Shield Of ', '0xAEC4': 'Paladin Shield Of ', '0xAED3': 'Paladin Shield Of ',			
-		'0xAEA4': 'Paladin Hammer Of ', '0xAEB3': 'Paladin Hammer Of ', '0xAEC2': 'Paladin Hammer Of ', '0xAED1': 'Paladin Hammer Of ',		
-		'0xAEA3': 'Paladin Cloak Of ', '0xAEB2': 'Paladin Cloak Of ', '0xAEC1': 'Paladin Cloak Of ', '0xAED0': 'Paladin Cloak Of ',
-		'0xAEA5': 'Paladin Fork Of ', '0xAEB4': 'Paladin Fork Of ', '0xAEC3': 'Paladin Fork Of ', '0xAED2': 'Paladin Fork Of ', 
+		//'0xAEA6': 'Paladin Shield Of ', '0xAEB5': 'Paladin Shield Of ', '0xAEC4': 'Paladin Shield Of ', '0xAED3': 'Paladin Shield Of ',			
+		//'0xAEA4': 'Paladin Hammer Of ', '0xAEB3': 'Paladin Hammer Of ', '0xAEC2': 'Paladin Hammer Of ', '0xAED1': 'Paladin Hammer Of ',		
+		//'0xAEA3': 'Paladin Cloak Of ', '0xAEB2': 'Paladin Cloak Of ', '0xAEC1': 'Paladin Cloak Of ', '0xAED0': 'Paladin Cloak Of ',
+		//'0xAEA5': 'Paladin Fork Of ', '0xAEB4': 'Paladin Fork Of ', '0xAEC3': 'Paladin Fork Of ', '0xAED2': 'Paladin Fork Of ', 
 		
 		'0x46B3': 'Page Of Lore',
 		
 		//plant types
-		'0xA0DF': 'Shadowblight Blooms',
+		//'0xA0DF': 'Shadowblight Blooms',
 		
 	});
 	// will drop off items into secure bagball 
@@ -494,14 +522,14 @@ function CombatLoop(){
 	}
 	
 	var LeaderToFollow = function() {
-		if( leadership.filter(function(name){
+		if(  profile.leadership != null &&  profile.leadership.filter(function(name){
 			if(Player.Properties().indexOf(name) > -1) return true;
 			}).length > 0) return null;
 		var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", 10, 'green|blue');
 		if(!friendlys || friendlys.length === 0) return null;
 		friendlys = friendlys.filter(function(friend){
 			if(!friend) return false;
-			if(leadership.filter(function(name){
+			if(profile.leadership != null &&  profile.leadership.filter(function(name){
 				var friendProps = friend.Properties();
 				if(friendProps.indexOf(name) > -1) return true;
 			}).length > 0) return true;
@@ -551,7 +579,7 @@ function CombatLoop(){
 			lastAttackTimestamp = new Date().getTime();
 	    	Orion.Attack(enemy);
 	    	if(useRunToTarget){
-	    		var imLeadership = profile.leadership.length > 0  && profile.leadership.filter(function(name){
+	    		var imLeadership = profile.leadership != null && profile.leadership.length > 0  && profile.leadership.filter(function(name){
 						if(Player.Properties().indexOf(name) > -1) return true;
 					}).length > 0;
 	    		if(imLeadership || !LeaderToFollow()){
