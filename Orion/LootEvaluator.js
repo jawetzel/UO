@@ -33,6 +33,38 @@ var GetPropValue = function(regex, props){
 	
 	return parseInt(matches[1]);
 }
+
+var shouldKeepItemEjGear = function(props){
+	var isJewlery = (props.indexOf('Ring') > -1 && props.indexOf("Ringmail") === -1) || props.indexOf('Bracelet') > -1;
+	var isArmor = props.indexOf("Physical Resist") > -1 &&  props.indexOf("Fire Resist") > -1 && props.indexOf("Cold Resist") > -1;
+
+	var lmc = GetPropValue(/Lower Mana Cost (\d+)/, props);
+	var hci = GetPropValue(/Hit Chance Increase (\d+)/, props);
+	var di = GetPropValue(/Damage Increase (\d+)/, props);
+	var luck = GetPropValue(/Luck (\d+)/, props);
+	var phys = GetPropValue(/Physical Resist (\d+)/, props);
+	var fire = GetPropValue(/Fire Resist (\d+)/, props);
+	var poison = GetPropValue(/Poison Resist (\d+)/, props);
+	var brittle = props.indexOf('Brittle') > -1;
+	var antique =  props.indexOf('Antique') > -1;
+	var isWeapon = props.indexOf('Skill Required: ') > -1;
+	var isSsi = props.indexOf("Swing Speed Increase 10") > -1;
+	var isArtifact = props.indexOf("Artifact") > -1;
+	var isHpi  = props.indexOf("Hit Point Increase 5") > -1 || props.indexOf("Hit Point Increase 7") > -1;
+	if(isJewlery) {
+		return !antique && hci > 14 && di > 15 && luck > 80 && isSsi;
+	}
+	else if (isArmor){
+		return luck > 80 && phys > 10 && lmc > 4 && brittle && isArtifact;
+	} 
+	else if (isWeapon) {
+		return false;
+	} 
+	else {
+		return brittle && luck > 80 && isSsi && (isHpi || hci > 14 || luck > 140);
+	}
+}
+
 	
 var ShouldKeepItem_Splinter = function (props){
 		//handle splinter
@@ -160,7 +192,7 @@ function ShouldKeepItem(itemId){
 				return false;
 			}
 		}
-		
+		if(shouldKeepItemEjGear(props)) return true;
 		//Handle max level Tmaps 
 		if(useLootTMaps){
 			var cache = " Cache";
