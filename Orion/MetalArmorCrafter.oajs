@@ -1,0 +1,191 @@
+var mins = {
+	phys: 1,
+	fire: 14,
+	cold: 1,
+	poison: 8,
+	energy: 1
+}
+
+var maxs = {
+	phys: 11,
+	fire: 0,
+	cold: 0,
+	poison: 0,
+	energy: 0
+}
+
+var ingotColor =  '0x0000';
+
+var reloadIngots = function(){
+	var backpackIngots = Orion.FindTypeEx('0x1BF2', ingotColor);
+	var totalIngots = 0;
+	if(backpackIngots && backpackIngots.length > 0){
+		backpackIngots.forEach(function(backpackIngot){
+			totalIngots = totalIngots + backpackIngot.Count();
+		});
+	}
+	if(totalIngots > 50) return;
+	Orion.Print("Looking For More Ingots");
+	
+    var ingots = [];
+    Orion.FindTypeEx('any', 'any', ground, "item", 2).forEach(function (obj)
+    {
+        if (Orion.Contains(obj.Properties(), "contents: "))
+        {
+          if (Orion.GumpExists("container", obj.Serial()))
+          {
+              Array.prototype.push.apply(ingots, Orion.FindTypeEx('0x1BF2', ingotColor, obj.Serial()));
+          }          
+        }
+      }
+    );
+    if(!ingots || ingots.length == 0) return;
+    
+    Orion.MoveItem(ingots[0].Serial(), 500);
+    Orion.Wait(1500);
+}
+
+var backpackItemsHash = {};
+var detectNewBackpackItem = function(){
+	var backpackItems = Orion.FindTypeEx('any');
+	var newItems = [];
+	var updatedBackpackItemsHash = {};
+	if(backpackItems && backpackItems.length > 0){
+		backpackItems.forEach(function(item){
+			
+			updatedBackpackItemsHash[item.Serial()] = true;
+			if(!backpackItemsHash[item.Serial()]){		
+				newItems.push(item);
+			} 			
+		});
+	}
+	
+	backpackItemsHash = updatedBackpackItemsHash;
+	if(backpackItems.length > 0 && backpackItems.length === newItems.length){
+		// this is a new backpack
+		return [];		
+	}
+		
+	Orion.Print("Found New BackPackItems: " + newItems.length);
+	return newItems;
+}
+
+var shouldKeepItem = function(itemId){
+	var itemObject = Orion.FindObject(itemId);
+	if(!itemObject) return false;
+	var props = itemObject.Properties();
+	if(!props){
+		Orion.Wait(500);
+		 props = itemObject.Properties();
+	}
+	
+	if(props.indexOf("Exceptional") === -1) return false;
+	
+	var phys = parseInt(props.match(/Physical Resist (.*)%/)[1]);
+	var fire = parseInt(props.match(/Fire Resist (.*)%/)[1]);
+	var cold = parseInt(props.match(/Cold Resist (.*)%/)[1]);
+	var poison = parseInt(props.match(/Poison Resist (.*)%/)[1]);
+	var energy = parseInt(props.match(/Energy Resist (.*)%/)[1]);
+	
+	Orion.Print(phys + " " + fire + " " + cold + " " + poison + " " + energy);
+			
+	if( 
+		((phys >= mins.phys) && (maxs.phys < 1 || phys <= maxs.phys)) && 
+		((fire >= mins.fire) && (maxs.fire < 1 || fire <= maxs.fire)) && 
+		((cold >= mins.cold) && (maxs.cold < 1 || cold <= maxs.cold)) && 
+		((poison >= mins.poison) && (maxs.poison < 1 || poison <= maxs.poison)) && 
+		((energy >= mins.energy) && (maxs.energy < 1 || energy <= maxs.energy))
+	){
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+var lastKit = null;
+var firstRun = true;
+function MakeLastArmor(){
+	if(firstRun){
+		detectNewBackpackItem();
+		firstRun = false;
+	}
+	var tongs = '0x0FBC';
+	
+	var tools = Orion.FindType(tongs, '0x0000', backpack);
+	if(!tools || tools.length < 1){
+		Orion.Print("Outa tongs");
+		return;
+	}
+	
+	reloadIngots();
+	
+	if(!lastKit || lastKit !== tools[0]){
+		lastKit = tools[0];
+		Orion.UseObject(tools[0]);
+		Orion.Wait(1200);
+	}
+	
+	var gump0 = Orion.GetGump(tools[0],  '0x000001CC');
+	if (gump0 !== null || Orion.WaitForGump(1000))
+	{
+		if (gump0 === null)
+		{
+			gump0 = Orion.GetGump(tools[0],  '0x000001CC');
+		}
+		if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000001CC'))
+		{
+			gump0.Select(Orion.CreateGumpHook(1999)); // make last
+			Orion.Wait(100);
+		}
+	}
+	
+	Orion.WaitForGump(1000, true);
+	Orion.Wait(900);
+	
+	var foundMaking = detectNewBackpackItem();
+	if(!foundMaking || foundMaking.length === 0) {
+		MakeLastArmor();
+		return;
+	}
+	
+	if(!Orion.FindObject(tools[0])){
+		tools = Orion.FindType(tongs, '0x0000', backpack);
+		if(!tools || tools.length < 1){
+			Orion.Print("Outa tongs");
+			return;
+		}
+		else {
+			lastKit = tools[0];
+			Orion.UseObject(tools[0]);
+			Orion.Wait(1200);
+		}
+	}
+	
+	foundMaking.forEach(function(foundItem){
+			if(shouldKeepItem(foundItem.Serial())){
+				return;
+			}
+						
+			var gump0 = Orion.GetGump(tools[0],  '0x000001CC');
+			if (gump0 !== null || Orion.WaitForGump(1000))
+			{
+				if (gump0 === null)
+				{
+					gump0 = Orion.GetGump(tools[0],  '0x000001CC');
+				}
+				if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x000001CC'))
+				{
+					gump0.Select(Orion.CreateGumpHook(7000)); // smelt item
+					Orion.Wait(100);
+				}
+			}
+			
+			
+			
+			Orion.WaitForTarget(1000);
+			Orion.TargetObject(foundItem.Serial());
+			Orion.Wait(100);
+	});
+	MakeLastArmor();
+}

@@ -8,13 +8,100 @@ var pots = ['0x0F07', '0x0F0C', '0x0F08', '0x0F0B', '0x0F09', '0x0F0A'];
 // you should not need to configure below this point
 var bottleType = '0x0F0E';
 //silk, nightshade, ash, ginseng, man root, garlic, blood moss, black pearl
-var regs = ['0x0F8D', '0x0F88', '0x0F8C', '0x0F85', '0x0F86', '0x0F84', '0x0F7B', '0x0F7A'];
+var regs = [
+	'0x1BF2', // ingots 
+	'0x0F8D', '0x0F88', '0x0F8C', '0x0F85', '0x0F86', '0x0F84', '0x0F7B', '0x0F7A'
+	];
+
+
+var tinkersToolsType = '0x1EB9';
+var tinkerToolMenuOption = 9003;
+var tinkerMakeTinkerOption = 11;
+var tinkerMakeAlchToolOption = 9;
+
+var initialTinkerRun = true;
+var lastToolId = null;
+var MakeMoreTools = function(){
+	var find = Orion.FindType(tinkersToolsType, 'any', 'backpack');
+	if(find.length < 3){
+		while(Orion.FindType(tinkersToolsType, 'any', 'backpack').length < 7){
+			Orion.UseObject(find[0])
+			if(Orion.WaitForGump(3000)){
+				lastToolId = find[0];
+			}
+			Orion.Wait(750);
+			if(!initialTinkerRun){
+				var gump0 = Orion.GetGump('last');
+				if (gump0.ID() === '0x000001CC')
+				{
+					gump0.Select(Orion.CreateGumpHook(tinkerToolMenuOption));
+					Orion.WaitForGump(3000);
+				}
+				Orion.Wait(750);
+				initialTinkerRun = false;
+			}
+			var gump0 = Orion.GetGump('last');
+			if (gump0.ID() === '0x000001CC')
+			{
+				gump0.Select(Orion.CreateGumpHook(tinkerMakeTinkerOption));
+				Orion.WaitForGump(3000);
+			}
+		}
+	}
+	var initialTool = find[0];
+	Orion.UseObject(find[0])
+	if(Orion.WaitForGump(3000)){
+		lastToolId = find[0];
+	}
+	Orion.Wait(750);
+	var gump0 = Orion.GetGump('last');
+	if(!initialTinkerRun){
+		
+		if (gump0.ID() === '0x000001CC')
+		{
+			gump0.Select(Orion.CreateGumpHook(tinkerToolMenuOption));
+			Orion.WaitForGump(3000);
+		}
+		Orion.Wait(750);
+		initialTinkerRun = false;
+	}
+	
+	for(var i = 0; i < 10; i++){
+		if(!Orion.FindObject(initialTool)){
+			// use new tool 
+			find = Orion.FindType(tinkersToolsType, 'any', 'backpack');
+			initialTool = find[0];
+			Orion.UseObject(initialTool);
+			Orion.WaitForGump(3000);
+			
+		}
+		gump0 = Orion.GetGump('last');
+		if (gump0.ID() === '0x000001CC')
+		{
+			gump0.Select(Orion.CreateGumpHook(tinkerMakeAlchToolOption));
+			Orion.WaitForGump(3000);
+			Orion.Wait(250);
+		}
+	}
+	//todo make alchy tools 
+	var find = Orion.FindType('0x0E9B', 'any', 'backpack');		
+		find = Orion.FindType('0x0E9B', 'any', 'backpack');
+		Orion.UseObject(find[0])
+		if(Orion.WaitForGump(3000)){
+			lastToolId = find[0];
+		}
+		Orion.Wait(1250)
+}
 
 //must have all alchie tools premade
-var lastToolId = null;
+
 var FindTool = function(hardReset){
+	if(!Orion.FindType('0x0E9B', 'any', 'backpack') || Orion.FindType('0x0E9B', 'any', 'backpack').length === 0){
+		MakeMoreTools();
+	}
 	if(hardReset || !lastToolId || !Orion.FindObject(lastToolId)){
-		var find = Orion.FindType('0x0E9B', 'any', 'backpack');
+		var find = Orion.FindType('0x0E9B', 'any', 'backpack');		
+		find = Orion.FindType('0x0E9B', 'any', 'backpack');
 		Orion.UseObject(find[0])
 		if(Orion.WaitForGump(3000)){
 			lastToolId = find[0];
@@ -83,14 +170,26 @@ var CheckResources = function(){
 	});
 }
 
-while(true){
-	 FindTool(false);
-	 CheckResources();
-	 DepositCraftedAndGetBottles();
-	 var gump0 = Orion.GetGump('last');
-	 if (gump0.ID() === '0x000001CC')
-	{
-		gump0.Select(Orion.CreateGumpHook(1999));
-		Orion.WaitForGump(3000);
+function Autostart(){
+	Orion.Wait(6000);
+	var secureLocation = Orion.FindObject(secureId);
+	if(!secureLocation || Player.X() !== secureLocation.X() || Player.Y() !== secureLocation.Y()){
+		return;
+	}
+	
+	Orion.UseObject(secureId);
+	Orion.Wait(2000);
+	while(true){
+		 FindTool(false);
+		 CheckResources();
+		 DepositCraftedAndGetBottles();
+		 var gump0 = Orion.GetGump('last');
+		 if (gump0.ID() === '0x000001CC')
+		{
+			gump0.Select(Orion.CreateGumpHook(1999));
+			Orion.WaitForGump(3000);
+		}
 	}
 }
+
+

@@ -23,7 +23,12 @@ var resources = [
 	 '0x0F8C',
 	 '0x0F8D',
 	 '0x0EF3',
-	 '0x0F0E'
+	 '0x0F0E',
+	 '0x0F78',
+	 '0x0F7D',
+	 '0x0F8A',
+	 '0x0F8E',
+	 '0x0F8F'
 ]
 
 function DeedFullStacksInLastObject(){
@@ -68,7 +73,12 @@ function CombineStacks () {
 				if(count > 0) {
 					var posx = resources.indexOf(resource);
 					Orion.Print(posx);
-					Orion.MoveItem(itemId, 60000, lastObjectItem.Serial(), 45 + (posx * 12), 20);
+					var posy = 20;
+					if(posx > 7) {
+						posx = posx % 8;
+						posy = 100
+					}
+					Orion.MoveItem(itemId, 60000, lastObjectItem.Serial(), 45 + (posx * 12), posy);
 					Orion.Wait(1200);
 				}
 			});

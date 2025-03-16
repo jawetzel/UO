@@ -55,14 +55,14 @@ var shouldKeepItemEjGear = function(props){
 		return !antique && hci > 14 && di > 15 && luck > 80 && isSsi;
 	}
 	else if (isArmor){
-		return luck > 80 && phys > 10 && lmc > 4 && brittle && isArtifact;
-	} 
-	else if (isWeapon) {
-		return false;
+		return luck > 80 && phys > 10 && fire > 10 && lmc > 4 && brittle && isArtifact;
 	} 
 	else {
-		return brittle && luck > 80 && isSsi && (isHpi || hci > 14 || luck > 140);
-	}
+		return false;
+	} 
+	//else {
+	//	return brittle && luck > 80 && isSsi && (isHpi || hci > 14 || luck > 140);
+	//}
 }
 
 	
@@ -314,9 +314,9 @@ function ShouldKeepItem(itemId){
 			var totalStats = intel + mana + str + hp + dex + stam; 
 			if(totalStats < 20) {
 				if(totalStats < 5 && lrc > 0 && eater > 5) return false;
-				if(totalStats < 10 && lrc > 0 && eater === 0) return false;
-				if(totalStats < 15 && lrc === 0 &&  eater > 5) return false;
-				if(totalStats < 20 && lrc === 0 && eater === 0) return false;
+				if(totalStats < 7 && lrc > 0 && eater === 0) return false;
+				if(totalStats < 13 && lrc === 0 &&  eater > 5) return false;
+				if(totalStats < 18 && lrc === 0 && eater === 0) return false;
 				if(hp > 0 && hp < 5) return false;
 				if(stam > 0 && stam < 8) return false;
 				

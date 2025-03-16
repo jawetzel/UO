@@ -1,4 +1,4 @@
-var InitialSkill = "Chivalry";
+var InitialSkill = "Necromancy";
 
 
 var spellName = '';
@@ -59,7 +59,7 @@ var necroSpells  = [{
     }
 ];
 
-var spells = chivSpells;
+var spells = necroSpells;
 
 function  SetSpellAndTimeout(){
     var skill = Orion.SkillValue(InitialSkill);

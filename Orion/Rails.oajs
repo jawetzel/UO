@@ -195,11 +195,16 @@ var lastRecordY = 0;
 var RunRail = function(filepath){
 	var rail = ReadFile(filepath);
 	var index = 0;
+	Orion.Print(rail);
 	rail.forEach(function(location){
 		if(Player.Dead()) return;
 		if(location.type === "run"){
 			var giveUpTime =  new Date().getTime() + 30000;
+			
 			while(!Orion.WalkTo(location.x, location.y, location.z, 0, 255, 1, 1, 6000) && giveUpTime > new Date().getTime()){
+				while(ValidEnemysWithinTiles(8, false).length > 0 && giveUpTime > new Date().getTime()){
+					Orion.Wait(500);
+				}
 				Orion.Wait(1000);
 			}
 		}
@@ -298,14 +303,88 @@ var isOverloaded = function(){
 	return false;
 }
 
-function ManageRails(railDest, startupTrip){
+function startup(){
+	Orion.Exec('ManageRails', false, ['deceit', false, true] );
+}
+
+	var enemyTypes = 'gray|criminal|enemy|red|orange'			; // 'gray | criminal | enemy | red'
+
+var monsterNamesToIgnore = [
+		"(summoned)",
+		"(tame)",
+		"(bonded)",
+		"spectral armor",
+		"Spectral Armor",
+	];
+	var redNamesToIgnore = [
+		
+		'skeletal dragon',
+		'a lich lord',
+		'a flesh golem',
+		'a revenant',
+		'TWT',
+		'-OSG',
+		'H+G',
+		'*DPS',
+		'CMC',
+		'GRL.',
+		'GLOW',
+		'NOVA',
+		'R^M',
+		"(summoned)",
+		"(tame)",
+		"(bonded)",
+	];	
+	
+	var ValidEnemysWithinTiles = function(dist, firstOnly){
+		var playerSerial = Player.Serial();
+		var enemyIds = [];
+		var enemy = Orion.FindType("any", "any", "ground", "live|ignoreself|inlos", dist, enemyTypes);	
+		if(enemy && enemy.length > 0){	
+			enemy.forEach(function(enemyId){
+				if(firstOnly && enemyIds.length > 0) return;
+				if(playerSerial === enemyId) return;
+				var enemyObject = Orion.FindObject(enemyId);
+				if(enemyObject){
+					
+					var props = enemyObject.Properties().toLowerCase();
+					if(!props || props.length === 0) return;
+					if(	enemyObject.Notoriety() === 6 &&
+							redNamesToIgnore.filter(function(name){
+								return props.indexOf(name.toLowerCase()) > -1;
+							}).length > 0 
+						){
+							 return;
+						}
+					
+					if(	monsterNamesToIgnore.filter(function(name){
+								return props.indexOf(name.toLowerCase()) > -1;
+							}).length > 0 
+						) {
+							 return;
+						}			
+					//Orion.Print(props);
+					enemyIds.push(enemyId);
+				}
+				else {
+					enemyIds.push(enemyId);
+					return;
+				}	
+			})						
+		}
+		
+		return enemyIds;
+	}
+
+function ManageRails(railDest, startupTrip, continualLoop){
 	Orion.Print("Running manage Rails: " + railDest);
 	var basePath = Orion.CurrentScriptDirPath();
 	var railFilePaths = {
 		house: basePath + '/RailFiles/HouseDropOff.txt',
 		voidpool: basePath + '/RailFiles/VoidEntrance.txt',
 		lurg: basePath + '/RailFiles/Lurg.txt',
-		lurgExit: basePath + '/RailFiles/LurgExit.txt'
+		lurgExit: basePath + '/RailFiles/LurgExit.txt',
+		deceit: basePath + '/RailFiles/deceit.txt',
 	};
 	var runDropoff = function(){
 		Orion.Print("Going To Location HOME");
@@ -322,6 +401,12 @@ function ManageRails(railDest, startupTrip){
 		RunRail(railFilePaths[railDest]);
 	}
 	
+	if(continualLoop){
+		while(true){
+			RunRail(railFilePaths[railDest]);
+		}
+		
+	}
 
 	while(true){
 		//todo scan low durability

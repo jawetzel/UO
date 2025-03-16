@@ -1,15 +1,47 @@
 //secure malas 0x46D9BEAE
 //secure fel 0x460ACA94
-var secureId = '0x46D9BEAE';
-if(Player.X() === 2101 && Player.Y() === 196){
-	secureId = '0x460ACA94';
+var secureId = '';
+
+// 500 plants started 3/10/2025
+// 8506 greater Poison
+// 14066 greater cure 
+
+// there are aprox 14 days of maintenenace 
+
+// 3/13 - maintanance day 2 complete - poison 7859 - cure 13901
+// 2 days of 500 plants consumed  poison 674 and cure 165
+
+// 3/15 - maintenance day 4 complete - poison - cure 
+// 2 days of 500 plants consumed  poison  and cure 
+
+
+//todo we need a better detection method - maybe look for nearest 1 tile, and open all the bags and look for the necessaries 
+//todo we need to pick up the released bowls, scrape them out, fill with new dirt, bag them up, break bag, lock down, water, plant seed
+//only do when count of bowls picked up gets to 100
+//over time with the better dirt it will space out the plants so we will get a simular harvest every day
+//run this on a sceduled job 
+
+//3/9/25 people selling stacks of 100 petals at 500k, at at 2 full cycles per month 1200 plants this is 100m/month
+
+// '0x002B' Bright Orange Poppies Seeds
+// '0x0042' Bright Green Snake Plant Seeds
+var seedColor = '0x002B';
+function Autostart(){
+	Orion.Wait(15000);
+	Orion.UseObject(backpack);
+	Orion.Wait(3000);
+	if(Player.X() === 828 && Player.Y() === 201){
+		secureId = '0x460ACA94';
+		PLANTTENDER();
+		Orion.CloseUO()
+	}
+	
 }
-if(Player.X() === 1910 && Player.Y() === 1430){
-	secureId = '0x413FE221';
-}
-if(Player.X() === 1926 && Player.Y() === 1477){
-	secureId = '0x413FE257';
-}
+
+
+// you should not need to edit below this point
+var axeGraphic = '0x0F43'; // hatchet
+var seedGraphic = '0x0DCF';
 
 var boxGrpahic = '0x0E7E|0x09A9';
 var dirtGraphic = '0x1602';
@@ -49,15 +81,16 @@ var pickablePlants = [
      0x1A9A, //# peculiar flax                         - flax bundle
 ]
 
-//will fill all empty bowls when stanging over dirt to fill in backpackpack and open subcontainers.
-function FillBowlsInBackpackAndMoveToCrate(){
+//will fill all empty bowls with fertile dirt, will fill in backpackpack and open subcontainers.
+var FillBowlsInBackpackAndMoveToCrate = function(){
 	Orion.UseObject(secureId);
 	Orion.Wait(2000);
-
+	
 	var bowls = Orion.FindType(plantBowlGraphic, "any", "backpack", " " , "finddistance", " ", true);
 	bowls = bowls.filter(function(bowlId){
 		return Orion.FindObject(bowlId).Properties().indexOf('Dirt') === -1;
 	});
+	if(!bowls || bowls.length === 0) return;
 	
 	var checkStock = function(){
 		var fertileDirts = Orion.FindType(fertileDirtGraphic, 'any', 'backpack');
@@ -94,11 +127,15 @@ function FillBowlsInBackpackAndMoveToCrate(){
 		Orion.TargetObject(validFertiles[0]);
 		Orion.Wait(1200);
 	})
-	var boxes = Orion.FindType(boxGrpahic, "any", "backpack", " " , "finddistance", " ", false);
-	Orion.Print(boxes)
+	var boxesContainer = Orion.FindType(boxGrpahic, "any", secureId);
+	Orion.UseObject(boxesContainer[0]);
+	Orion.Wait(2000);
+	
+	var boxes = Orion.FindType(boxGrpahic, "any", boxesContainer[0]);
 	if(!boxes || boxes.length === 0) return;
 	var box = boxes[0];
-	
+	Orion.MoveItem(box);
+	Orion.Wait(2000);
 	var dirts = Orion.FindType(dirtGraphic, "any", "backpack", " " , "finddistance", " ", true);
 	Orion.Print(dirts)
 	dirts.forEach(function(dirt){
@@ -113,7 +150,15 @@ function FillBowlsInBackpackAndMoveToCrate(){
 	});
 }
 
-function LockDownDirts(){
+var  BreakBoxAndLockDownDirts = function(){
+	var boxes = Orion.FindType(boxGrpahic, "any");
+	var axes = Orion.FindType(axeGraphic, "any");
+	if(boxes && boxes.length > 0 && axes && axes.length > 0){
+		Orion.UseObject(axes[0]);
+		Orion.WaitForTarget(2000);
+		Orion.TargetObject(boxes[0]);
+		Orion.Wait(2000);
+	}
 	var groundDirts = Orion.FindType(dirtGraphic, "any", "ground", "" , "2");
 	Orion.Print(groundDirts.length);
 	if(!groundDirts || groundDirts.length < 1) return;
@@ -129,8 +174,11 @@ function LockDownDirts(){
 	});
 }
 
-function ApplyLastObjectSeeds(){
-	var lastObjectSeed = Orion.FindObject(lastobject);
+var ApplySeedsToSecuredBowls = function(){
+	Orion.UseObject(secureId);
+	Orion.Wait(2000);
+	var seeds = Orion.FindTypeEx(seedGraphic, seedColor, secureId); 
+	var lastObjectSeed = seeds[0];
 	var lastObjectSeedId = lastObjectSeed.Serial();
 	var lastObjectSeedGraphic = lastObjectSeed.Graphic();
 	var lastObjectSeedColor = lastObjectSeed.Color();
@@ -163,99 +211,8 @@ function ApplyLastObjectSeeds(){
 	});	
 }
 
-function PickPlants(){
-	var resourceTypes = [
-		'0x0DCF', //seed
-		'0x5736', //seed renewal
-		'0x0F42', //green thorn
-		'0x1021', //orange petal
-	];
 
-
-	
-	Orion.OpenContainer(secureId);
-	Orion.Wait(1200);
-	
-	var plantGumpId = '0x00007492';
-	var pickingGumpId = '0x000056CE';
-	
-	var plants = Orion.FindType(pickablePlants.join("|"), 'any', 'ground', ' ', 2);
-	
-	var depositResources = function(ignoreWeight){
-		if(Player.Weight() > 400 || ignoreWeight){
-			var found = Orion.FindType(resourceTypes.join("|"), 'any', 'backpack');
-			if(found && found.length > 0){
-				found.forEach(function(resourceId){
-					Orion.MoveItem(resourceId, 60000, secureId);
-					Orion.Wait(1200);
-				});
-			}
-		}
-	}
-	
-	
-	var pickPlant = function (plantId){
-		depositResources();
-		var plantObject = Orion.FindObject(plantId);
-		var props = plantObject.Properties();
-		if(props.indexOf("Locked") === -1){
-			return;
-		}
-		Orion.UseObject(plantId);
-		var startTime = new Date().getTime();
-		if(!Orion.WaitForGump(3000)){
-			Orion.Wait(1200);
-			Orion.UseObject(plantId);
-			Orion.WaitForGump(3000);
-			Orion.Wait(1200);
-		}
-		
-		if (
-			props.toLowerCase().indexOf("green") > -1 || 
-			props.toLowerCase().indexOf("orange") > -1
-			){
-			
-			Orion.GetGump(plantId, plantGumpId).Select(Orion.CreateGumpHook(1));
-			Orion.WaitForGump(3000);
-			
-			while(Orion.GetGump(plantId, pickingGumpId).TextList()[2].indexOf( "0/") === -1){
-				var gump = Orion.GetGump(plantId, pickingGumpId).Select(Orion.CreateGumpHook(8));
-				Orion.WaitForGump(3000);
-			}
-			while(Orion.GetGump(plantId, pickingGumpId).TextList()[1].indexOf( "0/") === -1){
-				var gump = Orion.GetGump(plantId, pickingGumpId).Select(Orion.CreateGumpHook(6));
-				Orion.WaitForGump(3000);
-			}
-			
-			if(
-			Orion.GetGump(plantId, pickingGumpId).TextList()[2].indexOf( "0/0") > -1 && 
-			Orion.GetGump(plantId, pickingGumpId).TextList()[1].indexOf( "0/0") > -1
-			){
-				Orion.Say("I wish to release this");
-				Orion.WaitForTarget(1000);
-				Orion.TargetObject(plantId);
-				Orion.Wait(200);
-			}
-			
-		}
-		Orion.GetGump(plantId, pickingGumpId).Close();
-		Orion.Wait(1200 - (new Date().getTime() - startTime));
-	}
-	
-	
-	var index = 0;
-	plants.forEach(function(plantId){
-		index++;
-		Orion.Print("Working on plant: " + index + " / " + plants.length)
-		pickPlant(plantId);
-	});
-	
-	depositResources(true);
-	TendPlant();
-}
-
-
-function TendPlant(){
+var TendPlant = function(){
 	
 	Orion.OpenContainer(secureId);
 	Orion.Wait(1200);
@@ -440,3 +397,126 @@ function TendPlant(){
 	DepositResources();
 	
 }
+
+function PLANTTENDER(){
+	var resourceTypes = [
+		'0x0DCF', //seed
+		'0x5736', //seed renewal
+		'0x0F42', //green thorn
+		'0x1021', //orange petal
+		'0x0F81', //fertile dirt 
+		
+	];
+
+
+	
+	Orion.OpenContainer(secureId);
+	Orion.Wait(1200);
+	
+	var plantGumpId = '0x00007492';
+	var pickingGumpId = '0x000056CE';
+	var dumpPlantGumpId = '0x0000738E';
+	
+	var plants = Orion.FindType(pickablePlants.join("|"), 'any', 'ground', ' ', 2);
+	
+	var depositResources = function(ignoreWeight){
+		if(Player.Weight() > 400 || ignoreWeight){
+			var found = Orion.FindType(resourceTypes.join("|"), 'any', 'backpack');
+			if(found && found.length > 0){
+				found.forEach(function(resourceId){
+					Orion.MoveItem(resourceId, 60000, secureId);
+					Orion.Wait(1200);
+				});
+			}
+		}
+	}
+	
+	
+	var pickPlant = function (plantId){
+		depositResources();
+		var plantObject = Orion.FindObject(plantId);
+		var props = plantObject.Properties();
+		if(props.indexOf("Locked") === -1){
+			return;
+		}
+		Orion.UseObject(plantId);
+		var startTime = new Date().getTime();
+		if(!Orion.WaitForGump(3000)){
+			Orion.Wait(1200);
+			Orion.UseObject(plantId);
+			Orion.WaitForGump(3000);
+			Orion.Wait(1200);
+		}
+		
+		if (
+			props.toLowerCase().indexOf("green") > -1 || 
+			props.toLowerCase().indexOf("orange") > -1
+			){
+			
+			Orion.GetGump(plantId, plantGumpId).Select(Orion.CreateGumpHook(1));
+			Orion.WaitForGump(3000);
+			
+			while(Orion.GetGump(plantId, pickingGumpId).TextList()[2].indexOf( "0/") === -1){
+				var gump = Orion.GetGump(plantId, pickingGumpId).Select(Orion.CreateGumpHook(8));
+				Orion.WaitForGump(3000);
+			}
+			while(Orion.GetGump(plantId, pickingGumpId).TextList()[1].indexOf( "0/") === -1){
+				var gump = Orion.GetGump(plantId, pickingGumpId).Select(Orion.CreateGumpHook(6));
+				Orion.WaitForGump(3000);
+			}
+			
+			if(
+			Orion.GetGump(plantId, pickingGumpId).TextList()[2].indexOf( "0/0") > -1 && 
+			Orion.GetGump(plantId, pickingGumpId).TextList()[1].indexOf( "0/0") > -1
+			){
+				var gump = Orion.GetGump(plantId, pickingGumpId).Select(Orion.CreateGumpHook(1));
+				Orion.WaitForGump(3000);
+				var gump = Orion.GetGump(plantId, plantGumpId).Select(Orion.CreateGumpHook(12));
+				Orion.WaitForGump(3000);
+				var gump = Orion.GetGump(plantId, dumpPlantGumpId).Select(Orion.CreateGumpHook(1));
+				Orion.WaitForGump(3000);
+				
+				Orion.Say("I wish to release this");
+				Orion.WaitForTarget(1000);
+				Orion.TargetObject(plantId);
+				Orion.Wait(200);
+				Orion.MoveItem(plantId);
+				Orion.Wait(1300);
+				var bowls = Orion.FindType(plantBowlGraphic, "any", "backpack", " " , "finddistance", " ", true);
+				bowls = bowls.filter(function(bowlId){
+					return Orion.FindObject(bowlId).Properties().indexOf('Dirt') === -1;
+				});
+				if(bowls && bowls.length > 80){
+					FillBowlsInBackpackAndMoveToCrate();
+					BreakBoxAndLockDownDirts();
+				}
+			}
+			
+		}
+		Orion.GetGump(plantId, pickingGumpId).Close();
+		Orion.Wait(1200 - (new Date().getTime() - startTime));
+	}
+	
+	
+	var index = 0;
+	plants.forEach(function(plantId){
+		index++;
+		Orion.Print("Working on plant: " + index + " / " + plants.length)
+		pickPlant(plantId);
+	});
+	
+	depositResources(true);
+	Orion.Wait(2000);
+	FillBowlsInBackpackAndMoveToCrate();
+	Orion.Wait(2000);
+	BreakBoxAndLockDownDirts();
+	Orion.Wait(2000);
+	TendPlant();
+	Orion.Wait(2000);
+	ApplySeedsToSecuredBowls();
+	Orion.Wait(2000);
+	depositResources(true);
+	
+	var seeds = Orion.FindType(seedGraphic);
+}
+

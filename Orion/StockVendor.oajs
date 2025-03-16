@@ -77,7 +77,7 @@ function StockLobjectWLtargBagInto(){
 		}
 		Orion.MoveItem(item, 1000, targetBag);
 			Orion.Wait(600);
-			Orion.SendPrompt("1000000 Jawetzel" + getSkillTotalSuffix(Orion.FindObject(item).Properties()))
+			Orion.SendPrompt("3000000" + getSkillTotalSuffix(Orion.FindObject(item).Properties()))
 			Orion.Wait(600);
 
 	})
@@ -366,7 +366,7 @@ function RepriceVendor(){
 	// ex: 10000 will make the price 10,000
 	var newPrice = .95;
 	// this will be the description of the item (if you use a named description your vendors will be searchable
-	var followUpText = "Jawetzel";    
+	var followUpText = "";    
 	var vendordistance = 0;
 
 
@@ -654,4 +654,28 @@ function OrgLoot(){
     	//}
 
     })
+}
+
+function CountItemsInBag() {
+    // Prompt the user to target an item
+    Orion.UseSkill('Arms Lore');
+    Orion.Print("Select an item to count in your bag.");
+    Orion.WaitForTarget();
+    Orion.Wait(5000);
+    var target = Orion.FindObject(Orion.ClientLastTarget());
+    
+    if (!target) {
+        Orion.Print("No item selected. Exiting script.");
+        return;
+    }
+
+    // Get the graphic ID and color of the targeted item
+    var itemGraphic = target.Graphic();
+    var itemColor = target.Color();
+    
+    // Search the player's backpack for items matching the targeted item's graphic and color
+    var items = Orion.FindType(itemGraphic, itemColor, target.Container());
+
+    // Display the count of matching items
+    Orion.Print("You have " + items.length + " of this item in your backpack.");
 }

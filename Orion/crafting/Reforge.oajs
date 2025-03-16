@@ -20,7 +20,7 @@ var getPOFKeg = function(){
     );
     if(!pofBarrels || pofBarrels.length == 0) return null;
     var nonEmpty = pofBarrels.filter(function(barrel){
-        return barrel.Properties().indexOf('Uses Remaining: 0') === -1 
+        return barrel.Properties().indexOf('Uses Remaining: 0') === -1
     });
     if(!nonEmpty || nonEmpty.length == 0) return null;
     return nonEmpty[0];
@@ -102,13 +102,13 @@ function Run(){
 		if(!tools) return;
 		var validTools = tools.filter(function(tool){
 			var props = Orion.FindObject(tool).Properties();
-			//if(
-				//props.indexOf("Uses Remaining: 1\n") > -1 || 
-				//props.indexOf("Uses Remaining: 2\n") > -1 ||
-				//props.indexOf("Uses Remaining: 3\n") > -1
-			//){
-			//	return false;
-			//}
+			if(
+				props.indexOf("Uses Remaining: 1\n") > -1 || 
+				props.indexOf("Uses Remaining: 2\n") > -1 ||
+				props.indexOf("Uses Remaining: 3\n") > -1
+			){
+				return false;
+			}
 			
 			return true;
 		});

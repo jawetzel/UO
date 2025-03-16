@@ -24,6 +24,8 @@ var HasHealing = function(){
 	return Orion.SkillValue('Healing') > 250;
 }
 
+var healingThreshold = 30;
+
 function UseBandages(WaitForObjectTimeout, RegisterUseObjectTimeout){
 	if(!HasHealing()) return;
 	if(IsApplyingBandages()){
@@ -46,7 +48,7 @@ function UseBandages(WaitForObjectTimeout, RegisterUseObjectTimeout){
 	
 	var bandages = Orion.FindType('0x0E21', 'any', backpack, ' ', 'finddistance', ' ', ' ', true);
 	if(bandages && bandages.length > 0){
-		if(Player.Hits() < Player.MaxHits() || Orion.BuffExists(poisonBuffIcon)){
+		if(Player.Hits() < Player.MaxHits() - healingThreshold || Orion.BuffExists(poisonBuffIcon)){
 			
 			WaitForObjectTimeout();
 			if( !IsApplyingBandages()){		

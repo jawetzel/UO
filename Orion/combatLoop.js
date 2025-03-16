@@ -42,32 +42,33 @@ Orion.IgnoreReset();
 //		}
 var profileOptions = [
 	{
-		name: 'samp',
+		name: 'decsamp',
 		options:  {
-			//useLightningStrike: true,
 			useSpecial: true,
 			useAttack: true,
 			useVampForm: true,
-			useLootCorpses: true,
+			useConfidence: true,
+			useEvasion: true,
 			useHonor: true,
+			useRunToTarget: true,
+			useConsecrateWeapon: true,
 		}
 	},
+	
 	{
 		name: 'junk',
 		options:  {
-			//useSpecial: true,
+			useSpecial: true,
 			//useEnemyOfOne: true,
 			//useDivineFury: true,
-			//useConsecrateWeapon: true,
+			useConsecrateWeapon: true,
 			//useLightningStrike: true,
 			useAttack: true,
 			useVampForm: true,
 			useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
-			//useRunToTarget: true,
-			useIgnoreReset: true,
-			useCutCorpses: true,		
+			//useIgnoreReset: true,
 		}
 	},	
 	{
@@ -77,13 +78,14 @@ var profileOptions = [
 			//useLightningStrike: true,
 			//useEnemyOfOne: true,
 			useAttack: true,
-			useWraithForm: true,
 			useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
-			useRunToTarget: true,
+			//useRunToTarget: true,
 			useIgnoreReset: true,
-			useRunToTarget: true,
+			//useRunToTarget: true,
+			useVampForm: true,
+			useLootTMaps: true
 		}
 	},
 	{
@@ -177,7 +179,13 @@ function Startup(){
 	
 	var railDestOptions = {
 		voidpool: 'voidpool',
-		lurg: 'lurg'
+		lurg: 'lurg',
+		deceit: 'deceit'
+	}
+	
+	if(friendProfile.indexOf('decsamp') > -1){
+		Orion.Print("We are running deceit rail");
+		Orion.Exec('ManageRails', false, ['deceit', false, true] );
 	}
 	
 	// autostart setup rails
@@ -254,12 +262,18 @@ function CombatLoop(){
 		'Plunderin', //Pirate event
 		'Of The Shattered Sanctum',
 		'Bearing The Crest Of Minax',
-		"Defiler's Grasp"
+		"Defiler's Grasp",
+		'Paladin Shield Of',
+		'Paladin Hammer Of',
+		'Paladin Cloak Of',
+		'Paladin Fork Of',
+		'Shadowblight Blooms',
+		'Quiver Of The Elements'
 	]);
 	
 	UseHealPotionThreshold(25);
-	SetHealFriendThreshold(75);
-	var maxEnemyDistance =  25;
+	SetHealFriendThreshold(50);
+	var maxEnemyDistance =  15;
 	SetDropOffItems([
 		'Plunderin', 
 		'Of The Shattered Sanctum',
@@ -339,12 +353,12 @@ function CombatLoop(){
 	var useAttack = profile != null ? profile.useAttack : false;
 	var useRearm =  profile != null ? profile.useRearm : false;
 	var useRunToTarget = profile != null ? profile.useRunToTarget : false;
-	var MinDistToTarget = 5;
+	var MinDistToTarget = 1;
 	var moveToBoundry = {
-			miny: 3580,
-			maxy: 3600,
-			minx: 475,
-			maxx: 500
+			//miny: 3580,
+			//maxy: 3600,
+			//minx: 475,
+			//maxx: 500
 		}
 	
 	var minimumManaForSpells = 20;
@@ -806,7 +820,7 @@ function CombatLoop(){
 			var skill = Orion.SkillValue('necromancy');
 			if(skill < 400) return;
 			if(Player.LRC() < 10) return;
-			if(Player.Mana() < 30) return;
+			if(Player.Mana() < 12) return;
 			if(useWraithForm){
 				if(!Orion.BuffExists('wraith form')) {
 					Orion.Cast('wraith form');
