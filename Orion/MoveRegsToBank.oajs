@@ -31,6 +31,18 @@ var resources = [
 	 '0x0F8F'
 ]
 
+function MoveLastBagToLastTarget() {
+	var moveToBag = Orion.ClientLastTarget();
+	var itemsToMove = Orion.FindTypeEx('any', 'any', lastobject);
+	if(!itemsToMove || itemsToMove.length === 0) return;
+	itemsToMove.forEach(function(item){
+		Orion.MoveItem(item.Serial(), item.Count(), moveToBag, item.X(), item.Y());
+		Orion.Wait(1300);
+	});
+	
+	
+}
+
 function DeedFullStacksInLastObject(){
 	var deeds = Orion.FindType('0x14F0', '0x0047', backpack);
 	var regs = Orion.FindType('any', 'any', lastobject);

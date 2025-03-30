@@ -47,11 +47,11 @@ var profileOptions = [
 			useSpecial: true,
 			useAttack: true,
 			useVampForm: true,
-			useConfidence: true,
-			useEvasion: true,
-			useHonor: true,
+			//useConfidence: true,
+			//useEvasion: true,
+			//useHonor: true,
 			useRunToTarget: true,
-			useConsecrateWeapon: true,
+			//useConsecrateWeapon: true,
 		}
 	},
 	
@@ -61,7 +61,7 @@ var profileOptions = [
 			useSpecial: true,
 			//useEnemyOfOne: true,
 			//useDivineFury: true,
-			useConsecrateWeapon: true,
+			//useConsecrateWeapon: true,
 			//useLightningStrike: true,
 			useAttack: true,
 			useVampForm: true,
@@ -82,9 +82,9 @@ var profileOptions = [
 			useBandages: true,
 			useSkipTypesToIgnore: true,
 			//useRunToTarget: true,
-			useIgnoreReset: true,
+			//useIgnoreReset: true,
 			//useRunToTarget: true,
-			useVampForm: true,
+			useWraithForm: true,
 			useLootTMaps: true
 		}
 	},
@@ -134,7 +134,7 @@ var lootItemSets = {
 		'0x5747': true, //raptor teeth
 		'0x400B': true, //shame crystals
 		'0x0F87': true, // lucky coin
-		'0x226F': true, //wraith form
+		'0x5748': true, //ichor
 		'0x573E': true, //void Orion
 		'0x5728': true, //void core
 		'0x0E21': true, //bandages
@@ -152,6 +152,7 @@ var lootItemSets = {
 		'0x572D': true, //Lava Serpent Crust
 		
 		'0x1844': true, //compassion sage
+		
 	}
 }
 
@@ -249,7 +250,8 @@ function CombatLoop(){
 		'Seawitch', //Pirate event
 		'Marauder', //Pirate event
 		'Scallywag', //Pirate event
-		'Pillager' //Pirate event
+		'Pillager', //Pirate event
+		'Neira'
 	];
 	// will insurte items dropped in bag as artifacts
 	SetItemsCheckBackpackUninsuredItems([
@@ -268,12 +270,13 @@ function CombatLoop(){
 		'Paladin Cloak Of',
 		'Paladin Fork Of',
 		'Shadowblight Blooms',
-		'Quiver Of The Elements'
+		'Quiver Of The Elements',
+		'Skull Of'
 	]);
 	
 	UseHealPotionThreshold(25);
-	SetHealFriendThreshold(50);
-	var maxEnemyDistance =  15;
+	SetHealFriendThreshold(60);
+	var maxEnemyDistance =  8;
 	SetDropOffItems([
 		'Plunderin', 
 		'Of The Shattered Sanctum',
@@ -353,7 +356,7 @@ function CombatLoop(){
 	var useAttack = profile != null ? profile.useAttack : false;
 	var useRearm =  profile != null ? profile.useRearm : false;
 	var useRunToTarget = profile != null ? profile.useRunToTarget : false;
-	var MinDistToTarget = 1;
+	var MinDistToTarget = 5;
 	var moveToBoundry = {
 			//miny: 3580,
 			//maxy: 3600,
@@ -819,7 +822,7 @@ function CombatLoop(){
 		if(useWraithForm || useVampForm) {
 			var skill = Orion.SkillValue('necromancy');
 			if(skill < 400) return;
-			if(Player.LRC() < 10) return;
+			if(Player.LRC() < 5) return;
 			if(Player.Mana() < 12) return;
 			if(useWraithForm){
 				if(!Orion.BuffExists('wraith form')) {

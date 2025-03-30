@@ -1,16 +1,16 @@
 var locations = [
-	{x: Player.X(), y: Player.Y()},
-	{x: Player.X() - 22, y: Player.Y()},
-	{x: Player.X() - 22, y: Player.Y() + 1},
-	{x: Player.X(), y: Player.Y() + 1}
+	//{x: Player.X(), y: Player.Y()},
+	//{x: Player.X() - 16, y: Player.Y()},
+	{x: Player.X(), y: Player.Y() - 10},
+	{x: Player.X(), y: Player.Y()}
 ];
 
 function run(){
 	while(!Player.Dead()){	//looping logic
 		for(var i = 0; i < locations.length; i++){ //for each rail point
 			while(Player.X() !== locations[i].x || Player.Y() !== locations[i].y){ //am i there?
-				Orion.WalkTo(locations[i].x, locations[i].y, 0, 0, 255, 0, 0, 125); //lets go there one step
-				Orion.Wait(12000); //lets wait 12s between steps
+				Orion.WalkTo(locations[i].x, locations[i].y, 0, 0, 255, 1, 1, 3000); //lets go there one step
+				//Orion.Wait(100); //lets wait 12s between steps
 			}
 		}
 	}

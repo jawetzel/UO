@@ -199,13 +199,13 @@ var RunRail = function(filepath){
 	rail.forEach(function(location){
 		if(Player.Dead()) return;
 		if(location.type === "run"){
-			var giveUpTime =  new Date().getTime() + 30000;
+			var giveUpTime =  new Date().getTime() + 450000;
 			
-			while(!Orion.WalkTo(location.x, location.y, location.z, 0, 255, 1, 1, 6000) && giveUpTime > new Date().getTime()){
+			while(!Orion.WalkTo(location.x, location.y, location.z, 0, 255, 1, 1, 750) && giveUpTime > new Date().getTime()){
 				while(ValidEnemysWithinTiles(8, false).length > 0 && giveUpTime > new Date().getTime()){
 					Orion.Wait(500);
 				}
-				Orion.Wait(1000);
+				//Orion.Wait(1000);
 			}
 		}
 		if(location.type === "recall"){

@@ -197,7 +197,6 @@ function ShouldKeepItem(itemId){
 		if(useLootTMaps){
 			var cache = " Cache";
 			if(props.indexOf(cache) > -1) return true;
-			if(props.indexOf("Tattered Treasure Map") > -1) return true;
 		}
 		
 		//Handle Named Jewlery

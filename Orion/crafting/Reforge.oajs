@@ -105,7 +105,9 @@ function Run(){
 			if(
 				props.indexOf("Uses Remaining: 1\n") > -1 || 
 				props.indexOf("Uses Remaining: 2\n") > -1 ||
-				props.indexOf("Uses Remaining: 3\n") > -1
+				props.indexOf("Uses Remaining: 3\n") > -1 ||
+				props.indexOf("Uses Remaining: 4\n") > -1 ||
+				props.indexOf("Uses Remaining: 5\n") > -1
 			){
 				return false;
 			}

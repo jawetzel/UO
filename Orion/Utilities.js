@@ -29,8 +29,8 @@ function AutoRepair(){
 	var isRepairableAndNeedsRepairs = function(props){
 			if(!props || props.length === 0) return false;
 			if(props.indexOf("Durability ") === -1) return false;
-			var durability = getDura(props);
-			return durabilityMin > durability;
+			var durability = getDuraDelta(props);
+			return durability > durabilityMin;
 	}
 	
 	var repairBenches = Orion.FindType("0xA27F", "any", "ground", "", 1);	
@@ -236,7 +236,6 @@ function ItemDropOff(){
 			Orion.OpenContainer(backpackPouch[0]);
 			Orion.Wait(1400);
 			var itemsInBackpack = Orion.FindType('any', 'any', backpackPouch[0]);
-			Orion.Print(backpackPouch);
 			itemsInBackpack.forEach(function(itemId){
 				var itemObject = Orion.FindObject(itemId);
 				if(!itemObject) return;
@@ -256,6 +255,163 @@ function ItemDropOff(){
 	eventItemDropOff();
 	
 	
+	var pinkScrollDropOff = function(){	
+		var dropDestinations = Orion.FindType('0x577E', "0x0490", "ground", "", 2);
+		if(!dropDestinations || dropDestinations.length === 0) return null;
+		dropDestinations = dropDestinations.filter(function(destId){
+			var destObject = Orion.FindObject(destId);
+			if(!destObject) return false;
+			var destProps = destObject.Properties();
+			if(destProps.indexOf('Locked Down') === -1) return false;
+			var countLine = destProps.split('Scrolls In Book: ')[1];
+			var countString = countLine.split('/300')[0];
+			var count = Number(countString);
+			return count < 300;
+		});
+		
+		if(!dropDestinations || dropDestinations.length === 0) return;
+		openBackpack();
+	
+		var itemsInBackpack = Orion.FindType('0x14EF', '0x0490');
+		if(!itemsInBackpack || itemsInBackpack.length === 0) return;	
+		
+		Orion.MoveItem(itemsInBackpack[0], 1, dropDestinations[0]);
+		Orion.Wait(1400);
+	}
+	 
+	 pinkScrollDropOff();
+	
+	var whiteScrollDropOff = function(){	
+		
+		var dropDestinations = Orion.FindTypeEx('0x9AA7', "0x0481", "ground", "", 2);
+		if(!dropDestinations || dropDestinations.length === 0) return null;
+		dropDestinations = dropDestinations.filter(function(destObject){
+			if(!destObject) return false;
+			var destProps = destObject.Properties();
+			if(destProps.indexOf('Locked Down') === -1) return false;
+			var countLine = destProps.split('Scrolls In Book: ')[1];
+			var countString = countLine.split('/300')[0];
+			var count = Number(countString);
+			return count < 300;
+		});
+		if(!dropDestinations || dropDestinations.length === 0) return;
+		
+		var bookLocations = {};
+		var books = Orion.FindType('0x0FF2', "0x0000", "ground", "", 2);
+		
+		if(!books || books.length === 0) return null;
+		books.forEach(function(book){
+			var foundBook = Orion.FindObject(book);
+			if(!foundBook) return false;
+			var bookProps = foundBook.Properties();
+			if(bookProps.indexOf('Locked Down') === -1) return false;
+			if(bookProps.indexOf('120s') > -1) {
+				bookLocations['120s'] = {
+					x: foundBook.X(),
+					y: foundBook.Y()
+				};
+			}
+			if(bookProps.indexOf('115s') > -1) {
+				bookLocations['115s'] = {
+					x: foundBook.X(),
+					y: foundBook.Y()
+				};
+			}
+			if(bookProps.indexOf('110s') > -1) {
+				bookLocations['110s'] = {
+					x: foundBook.X(),
+					y: foundBook.Y()
+				};
+			}
+		});
+		if(!dropDestinations || dropDestinations.length === 0) return;
+		
+		bookLocations
+		var name105 = '(105 Skill)';
+		var name110 = '(110 Skill)';
+		var name115 = '(115 Skill)';
+		var name120 = '(120 Skill)';
+		
+		openBackpack();
+		var itemsInBackpack = Orion.FindTypeEx('0x14EF', '0x0481');
+		if(!itemsInBackpack || itemsInBackpack.length === 0) return;	
+		
+		//todo determine if this is a 110, 115, or 120
+		//todo determine which drop dest is for 110 115 or 120
+		
+		if(itemsInBackpack[0].Properties().indexOf(name105) > -1) {
+			var trashBarrels = Orion.FindTypeEx("0x0E77", "any", "ground", "", 2);	
+			if(trashBarrels && trashBarrels.length > 0) dropDestinations = trashBarrels;
+			
+		}
+		if(itemsInBackpack[0].Properties().indexOf(name110) > -1) {
+			dropDestinations = dropDestinations.filter(function(dest){
+				if(!bookLocations['110s']) return false;
+				if(dest.X() !== bookLocations['110s'].x || dest.Y() !== bookLocations['110s'].y) return false;
+				return true;			
+			});
+		}
+		if(itemsInBackpack[0].Properties().indexOf(name115) > -1) {
+			dropDestinations = dropDestinations.filter(function(dest){
+				if(!bookLocations['115s']) return false;
+				if(dest.X() !== bookLocations['115s'].x || dest.Y() !== bookLocations['115s'].y) return false;
+				return true;			
+			});
+		}
+		if(itemsInBackpack[0].Properties().indexOf(name120) > -1) {
+			dropDestinations = dropDestinations.filter(function(dest){
+				if(!bookLocations['120s']) return false;
+				if(dest.X() !== bookLocations['120s'].x || dest.Y() !== bookLocations['120s'].y) return false;
+				return true;			
+			});
+		}
+		
+		if(!dropDestinations || dropDestinations.length === 0) {
+			Orion.Ignore(itemsInBackpack[0].Serial());
+		} else {
+			Orion.MoveItem(itemsInBackpack[0].Serial(), 1, dropDestinations[0].Serial());
+			Orion.Wait(1400);
+		}		
+	}	
+	
+	whiteScrollDropOff();
+	
+	
+	var masteryDropOff = function(){
+		// lumpy bagball 0x2257
+		var trashBarrels = Orion.FindTypeEx("0x0E77", "any", "ground", "", 2);	
+		if(!trashBarrels || trashBarrels.length === 0) return;
+		
+		var dropDestinations = Orion.FindTypeEx("0x2257", "any", "ground", "", 2);	
+		if(!dropDestinations || dropDestinations.length === 0) return;
+		
+		dropDestinations = dropDestinations.filter(function(destObject){
+			if(!destObject) return false;
+			var destProps = destObject.Properties();
+			if(destProps.indexOf('Locked Down & Secure') === -1) return false;
+			var countLine = destProps.split('Contents: ')[1];
+			var countString = countLine.split('/125')[0];
+			var count = Number(countString);
+						
+			var weightLine =  destProps.split('Items, ')[1];
+			var weightString =  weightLine.split(' Stones')[0];
+			var weight =  Number(weightString);
+			
+			return count < 100 && weight < 475;
+		});
+		
+		if(!dropDestinations || dropDestinations.length === 0) return;
+		
+		var itemsInBackpack = Orion.FindTypeEx('0x1E22', '0x0000');
+		if(!itemsInBackpack || itemsInBackpack.length === 0) return;
+		if(itemsInBackpack[0].Properties().indexOf('Volume III') > -1){
+			Orion.MoveItem(itemsInBackpack[0].Serial(), 1, dropDestinations[0].Serial());
+		} else {
+			Orion.MoveItem(itemsInBackpack[0].Serial(), 1, trashBarrels[0].Serial());			
+		}
+		Orion.Wait(1400);
+	}
+	masteryDropOff();
 	
 }
 
