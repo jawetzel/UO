@@ -1,3 +1,33 @@
+function PrintGumpInfo() {
+	var groundObjects = Orion.FindType('any', 'any', "ground", "", 0);
+	groundObjects.forEach(function(plant){
+		Orion.MoveItem(plant, 1, '0x45D29A3B');
+		Orion.Wait(1500);
+	})
+	
+}
+
+function SelectNextHostileAndAttack() {
+	while(true){
+		 // Find all valid hostiles in range
+	    var hostiles = Orion.FindTypeEx(-1, -1, ground, 'live', 16);
+	
+	    // If no hostiles found
+	    if (hostiles.length === 0) {
+	        Orion.Print('No hostiles found.');
+	        NextHostileIndex = 0;
+	        return;
+	    }
+	
+		hostiles.forEach(function(hostile){
+			Orion.Wait(5);
+	
+	    	// Attack the target
+	    	Orion.Attack(hostile.Serial());
+	
+		})
+	}
+}
 
 function Casting(){
 	while(true){

@@ -1,0 +1,105 @@
+function Autostart()
+{
+	MainTamerLoop();
+}
+
+function MainTamerLoop() {
+    var penCoords = [
+        { x: 1121, y: 3576 }, // start
+        { x: 1134, y: 3576 },
+        { x: 1134, y: 3589 },
+        { x: 1124, y: 3589 }
+    ];
+
+    while (!Player.Dead()) {
+        for (var i = 0; i < penCoords.length; i++) {
+            Orion.WalkTo(penCoords[i].x, penCoords[i].y, Player.Z(), 0);
+            while (Player.X() !== penCoords[i].x || Player.Y() !== penCoords[i].y) {
+                Orion.Wait(500);
+            }
+            if(Player.Hits() < 100) {
+            	Orion.Cast("Close wounds");
+            	Orion.WaitForTarget(2000);
+            	Orion.TargetObject(Player.Serial());
+            	Orion.Wait(750);
+            }
+            LookForHorse();
+        }
+    }
+}
+
+function LookForHorse() {
+    var horses = Orion.FindTypeEx('0x00E9|0x00E8', '-1', ground, 'mobile|live', 20);
+    Orion.Wait(250);
+    if(horses.length > 0) {
+    	AttemptTame(horses[0].Serial());
+    }
+}
+
+function AttemptTame(serial) {
+    if (!serial || !Orion.ObjectExists(serial)) return;
+    var horse = Orion.FindObject(serial);
+    if (!horse) return;
+
+    Orion.Print("Attempting to tame pretty horse...");
+
+    // Step 1: Move within 2 tiles
+    while (Orion.GetDistance(horse.Serial()) > 2) {
+        Orion.WalkTo(horse.X(), horse.Y(), horse.Z());
+        Orion.Wait(500);
+        horse = Orion.FindObject(serial);
+        if (!horse) return;
+    }
+
+    // Step 2: Begin taming
+    Orion.UseSkill('Animal Taming');
+    Orion.WaitTargetObject(serial);
+    var start = Orion.Now();
+    var timeout = start + 13000;
+
+    while (Orion.Now() < timeout) {
+        Orion.Wait(500);
+        horse = Orion.FindObject(serial);
+        if (!horse) return;
+
+        // Reposition if too far
+        if (Orion.GetDistance(horse.Serial()) > 2) {
+            Orion.WalkTo(horse.X(), horse.Y(), horse.Z());
+        }
+    }
+
+    // Step 3: Check tame status
+    if (IsTamed(serial)) {
+        KillTarget(serial);
+    } else if (Orion.ObjectExists(serial)) {
+        AttemptTame(serial); // retry
+    } else {
+        Orion.IgnoreObject(serial);
+    }
+}
+
+
+function IsTamed(serial) {
+    var obj = Orion.FindObject(serial);
+    if (!obj) return false;
+    return obj.Properties().indexOf("tame") !== -1;
+}
+
+function KillTarget(serial) {
+    if (!serial || !Orion.ObjectExists(serial)) return;
+    var target = Orion.FindObject(serial);
+    if (!target) return;
+    Orion.Say("all follow me");
+    Orion.RenameMount(serial, "Null");
+    Orion.Say("Null Release");
+    Orion.WalkTo(target.X(), target.Y(), target.Z());
+    Orion.Wait(500);
+    bull = Orion.FindObject(serial);
+    if (!bull) return;
+     Orion.Attack(serial);
+    Orion.Wait(3000);
+    if( Orion.FindObject(serial) ) {
+    	Orion.Wait(3000);
+    }
+   	Orion.Ignore(serial);
+}

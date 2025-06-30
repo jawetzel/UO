@@ -193,6 +193,16 @@ function Run (){
 function Autostart()
 {
 	Orion.Wait(10000);
+	
+	if(Player.Y() === 3983 && Player.X() === 5284) {
+		Orion.Print("Starting");
+		Orion.Say("Bank");
+		Orion.Wait(2000);
+		Orion.UseObject(backpack);
+		Orion.Wait(2000);
+		Run();
+	}
+	
 	if(Player.Y() === 3981 && Player.X() === 5287) {
 		Orion.Print("Starting");
 		Orion.Say("Bank");

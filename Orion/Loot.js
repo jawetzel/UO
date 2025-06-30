@@ -148,7 +148,7 @@ function LootGoldGround(WaitForObjectTimeout, RegisterUseObjectTimeout){
 
 function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepItem){
 	var corpseGraphic = '0x2006'
-	var corpses = Orion.FindType(0x2006, any, ground, "inlos", 2);
+	var corpses = Orion.FindType(0x2006, any, ground, "", 2);
 	 if (!corpses.length)
     {
         return;
@@ -161,17 +161,19 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
     	Orion.Ignore(corpseId);
 		return;
     }
-    
+    if(!Orion.FindObject(corpseId)) return;
 	if(!corpse.IsCorpse()){
 		Orion.Print("Is Not Corpse");
 		Orion.Print(corpse.Properties());
 		Orion.Ignore(corpseId);
 		return;
 	}
+	 if(!Orion.FindObject(corpseId)) return;
 	if(!corpse.Properties() ){
 		Orion.Wait(200);
 		Orion.FindObject(corpseId);
 	}
+	 if(!Orion.FindObject(corpseId)) return;
 	if(!corpse.Properties() || corpse.Properties().toLowerCase().indexOf("A Corpse Of ".toLowerCase()) > -1) {
 		Orion.Print("No Corpse Props");
 		Orion.Print(corpse);
@@ -193,7 +195,7 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 			WaitForObjectTimeout()
 		}
 	}
-	
+	 if(!Orion.FindObject(corpseId)) return;
 	var containerId = Orion.OpenContainer(corpseId);
 	RegisterUseObjectTimeout()
 	Orion.Wait(900);
@@ -206,9 +208,12 @@ function LootCorpses(WaitForObjectTimeout, RegisterUseObjectTimeout, ShouldKeepI
 		return;
 	}
 	var itemsInCorpse = Orion.FindType('any', 'any', lastcontainer);
+	Orion.Wait(750);
 	var lootbag = Orion.FindType(lootBagType, 'any', 'backpack');
 	itemsInCorpse.forEach(function(item){
+		if(!Orion.ObjectExists(item)) return;
 		var itemInstance = Orion.FindObject(item);
+		if(!Orion.ObjectExists(item)) return;
 		if(itemInstance && itemInstance.Container() !== Orion.GetSerial(backpack) &&  itemInstance.Container() !== lootbag[0]){
 			Orion.Print("Evaluate Item");
 			var itemGraphic = itemInstance.Graphic();

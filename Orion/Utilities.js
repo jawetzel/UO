@@ -241,7 +241,7 @@ function ItemDropOff(){
 				if(!itemObject) return;
 				var dest = findContainer("0x0E76");
 				if(dest){
-					Orion.MoveItem(itemId, 1, dest);
+					Orion.MoveItem(itemId, 5000, dest);
 					Orion.Wait(1600);
 				}				
 			});
@@ -416,44 +416,57 @@ function ItemDropOff(){
 }
 
 
-var trashItems = {
-		'0x2D32': 'Blade Dance',
-		'0x2D33': 'Soul Seeker',
-		'0x268A': 'Helm Of Swiftness',
-		'0x2FB7': 'Quiver Of Rage',
-		'0x2D34': 'Talon Bite',
-		'0x2D23': 'Raed',
-		'0x2D21': 'Flesh Ripper',
-		'0x2D2B': 'Windsong',
-		'0x2D35': 'Righteous Anger',
-		'0x1411': 'Plate Of Honor',
-		'0x13BE': 'Fey Leggings',
-		'0x2FB8': 'Brightsight Lenses',
-		'0x1F04': 'Robe Of The Equinox',
-		'0x2B75': 'Elven Leafweave',
-		'0x2D2A': 'Wildfire Bow',
-		'0x13C6': 'Assassin Armor',
-		'0x1415': 'Plate Of Honor',
-		'0x13D4': 'Myrmidon Armor',
-		'0x2D30': 'Bonesmasher',
-		'0x13CB': 'Greymist Armor',
-		'0x2B78': 'Elven Leafweave',
-		'0x13DB': 'Myrmidon Armor',
-		'0x13CC': 'Greymist Armor',
-		'0x13D6': 'Myrmidon Armor',
-		'0x13DA': 'Myrmidon Armor',
-		'0x13CC': 'Assassin Armor',
-		'0x13CB': 'Assassin Armor',
-		'0x2B6E': 'Aegis Of Grace',
-		'0x1F03': 'Robe Of The Eclipse',
-		'0x2D31': 'Boomstick',
-		'0x13C6': "Death's Essence",
-		'0x2F5A': 'Bloodwood Spirit',
-		'0x2FC9': "Hunter's Garb",
-		'0x13CB': "Death's Essence",
-	};
+var trashItems = [
+		//Myrmidon Armor
+  		['0x13D4', 'Armor Set'],  ['0x13DB', 'Armor Set'],  ['0x13D6', 'Armor Set'],
+	  	['0x13DA', 'Armor Set'],  ['0x13D5', 'Armor Set'],	['0x140C', 'Armor Set'],
+	  	//Elven Leafweave
+	  	['0x2B75', 'Armor Set'],  ['0x2B78', 'Armor Set'],
+	  	//Greymist Armor
+ 		['0x13CB', 'Armor Set'],	['0x13CC', 'Armor Set'],	['0x13C6', 'Armor Set'],
+ 		//Assassin Armor
+ 		['0x13C6', 'Armor Set'],	['0x13CC', 'Armor Set'],  ['0x13CB', 'Armor Set'],  
+ 		['0x13C5', 'Armor Set'],
+	  	
+	  	//Plate Of Honor
+	  	['0x1411', 'Armor Set'],  ['0x1415', 'Armor Set'], 	['0x1412', 'Armor Set']
+	  	//Death's Essence
+  		['0x13C6', 'Armor Set'],	['0x13CB', 'Armor Set'],  
+  		//Hunter's Garb
+  		['0x2FC9', 'Armor Set'],  ['0x2FC8', 'Armor Set'],	['0x2FC5', 'Armor Set'],
+  		['0x2FC6', 'Armor Set'],
+  
+  		// ML arties
+  		['0x2D32', 'Blade Dance'],  ['0x2D33', 'Soul Seeker'],  ['0x268A', 'Helm Of Swiftness'],
+  		['0x2FB7', 'Quiver Of Rage'],  ['0x2D34', 'Talon Bite'],  ['0x2D23', 'Raed'],
+  		['0x2D21', 'Flesh Ripper'],  ['0x2D2B', 'Windsong'],  ['0x2D35', 'Righteous Anger'],
+  		['0x13BE', 'Fey Leggings'],  ['0x2FB8', 'Brightsight Lenses'],  ['0x1F04', 'Robe Of The Equinox'],
+  		['0x2D2A', 'Wildfire Bow'],  ['0x2D30', 'Bonesmasher'],  ['0x2B6E', 'Aegis Of Grace'],
+  		['0x1F03', 'Robe Of The Eclipse'],  ['0x2D31', 'Boomstick'],  ['0x2F5A', 'Bloodwood Spirit'],
+  		['0x2307', 'Pads Of The Cu Sidhe'],  ['0x2F5B', 'Totem Of The Void'],  ['0x2FB7', 'Quiver Of Rage'],
+  
+ 		['0x2B08', 'Breastplate Of Justice'],  ['0x2B0A', 'Arms Of Compassion'],  ['0x2B12', 'Sollerets Of Sacrifice'],
+  		['0x13F5', 'Katrina'],  ['0x3BB3', '10th Anniversary Sculpture'],  ['0x1BC4', 'Sentinel'],
+  		['0x2B0C', 'Gauntlets Of Valor'],  ['0x13F8', 'Jaana'],  ['0x2B10', 'Helm Of Spirituality'],
+	  	['0x3BB5', 'Ankh Pendant'],  ['0x0F61', "Dragon's End"],  ['0x2B06', 'Legs Of Honor'],
+  		['0x1BC3', "Lord Blackthorn's Exemplar"],  ['0x3BB6', 'Map Of The Known World'],  ['0x2B0E', 'Gorget Of Honesty'],
+  
+  		['0x46B3', 'Page Of Lore'],
+];
 function SetAutoTrashItems(items){
 	trashItems = items;
+}
+
+function isTrashItem(itemObject) {
+    for (var i = 0; i < trashItems.length; i++) {
+        var graphic = trashItems[i][0];
+        var propertyName = trashItems[i][1];
+        
+        if (itemObject.Graphic() === graphic && itemObject.Properties().indexOf(propertyName) > -1) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function AutoTrashItems (){
@@ -464,11 +477,9 @@ function AutoTrashItems (){
 		itemsInBackpack.forEach(function(itemId){
 			var itemObject = Orion.FindObject(itemId);
 			if(!itemObject) return;
-			if(trashItems.hasOwnProperty(itemObject.Graphic())){
-				if(itemObject.Properties().indexOf(trashItems[itemObject.Graphic()]) > -1){
-					Orion.MoveItem(itemId, 1, trashBarrels[0]);
-					Orion.Wait(1600);
-				}			
+			if (isTrashItem(itemObject)) {
+				Orion.MoveItem(itemId, 1, trashBarrels[0]);
+				Orion.Wait(1600);	
 			}
 		})
 	}
@@ -512,7 +523,7 @@ function CheckBackpackUninsuredItems(){
 
 function RecoverCorpse(){
 	var playerName = Player.Name();
-	var corpses = Orion.FindType(any, any, ground, "inlos", 2);
+	var corpses = Orion.FindType(any, any, ground, "", 2);
 	corpses.forEach(function(corpseId){
 		var corpseObject =  Orion.FindObject(corpseId);
 		if(!corpseObject) return;
@@ -565,8 +576,12 @@ var SaveDressSet = function(){
 	     	if(item.Graphic() !== '0x1F03' || item.Name() !== 'Robe'){
 	     		savedConfig[Player.Serial()].dress[i] = item.Serial();
 	     	} else {
-	     		Orion.MoveItem(item.Serial(), 1, 'ground', Player.X() - 1, Player.Y() - 1)
+	     		Orion.MoveItem(item.Serial(), 1, 'ground', Player.X() - 1, Player.Y() - 1);	     		
 	     		Orion.Wait(1400);
+	     		if(Orion.FindObject(item.Serial()) && Orion.FindObject(item.Serial()).Container() !== '0xFFFFFFFF'){
+	     			Orion.MoveItem(item.Serial(), 1, 'ground', Player.X() + 1, Player.Y() + 1);
+	     			Orion.Wait(1400);
+	     		}
 	     	}
      	}
      }
@@ -591,6 +606,22 @@ function SaveSuccessfullProfileRead(friendProfile){
 	WriteConfig(savedConfig);
 }
 	
+function DumpDeathRobe(){
+	var item = Orion.ObjAtLayer(22);	
+	var items = Orion.FindTypeEx('0x1F03', '0x08FD', 'backpack');
+	if(items !== null && items.length > 0) {
+		item = items[0];
+	}
+	if(item !== null && item.Exists() && item.Graphic() === '0x1F03'  && item.Name() === 'Robe' && item.Color() === '0x08FD') {
+		Orion.MoveItem(item.Serial(), 1, 'ground', Player.X() - 1, Player.Y() - 1);	     		
+  		Orion.Wait(1400);
+  		if(Orion.FindObject(item.Serial()) && Orion.FindObject(item.Serial()).Container() !== '0xFFFFFFFF'){
+  			Orion.MoveItem(item.Serial(), 1, 'ground', Player.X() + 1, Player.Y() + 1);
+  			Orion.Wait(1400);
+  		}
+	}
+}	
+	
 var timeBetweenNakedChecks = 30000;
 var lastNakedCheck = 0;
 function WhyAreWeNaked(){
@@ -601,10 +632,10 @@ function WhyAreWeNaked(){
 	}
 	lastNakedCheck = nowTime;
 	checkBackpackOpen();
-	
-	if(Orion.FindType('any', 'any').length > 115){
-		return;
-	}
+	DumpDeathRobe();
+	//if(Orion.FindType('any', 'any').length > 115){
+	//	return;
+	//}
 	var savedConfig = ReadConfig(); // ReadConfiog();
 	if(savedConfig[Player.Serial()] && savedConfig[Player.Serial()].dress){
 		if(!Orion.GumpExists('paperdoll', Player.Serial())) {
@@ -624,12 +655,14 @@ function WhyAreWeNaked(){
 	     	}
 	     }
 	}
+	
+	
 }
 
 
 function ResockBandages(){
 
-		var resourceBoxGraphic = '0x09A8';
+		var resourceBoxGraphic = '0x09A8|0x0E80';
 		var resourceBoxes = Orion.FindTypeEx(resourceBoxGraphic, "any", "ground", "", 1);	
 		if(!resourceBoxes || resourceBoxes.length === 0) return;
 		
@@ -674,15 +707,14 @@ function ResockBandages(){
 		
 		var resourceBandages = Orion.FindTypeEx(bandageGraphic, "any", resourceBoxes[0].Serial());
 		if(!resourceBandages || resourceBandages.length === 0) return;
-				
-		if(validBandageBelts && validBandageBelts.length > 0) {
-			Orion.MoveItem(resourceBandages[0].Serial(), (1000 - bandageCount), validBandageBelts[0].Serial());
-		} else {
-			Orion.MoveItem(resourceBandages[0].Serial(), (1000 - bandageCount));
+		if((1000 - bandageCount) > 0) {
+			if(validBandageBelts && validBandageBelts.length > 0) {
+				Orion.MoveItem(resourceBandages[0].Serial(), (1000 - bandageCount), validBandageBelts[0].Serial());
+			} else {
+				Orion.MoveItem(resourceBandages[0].Serial(), (1000 - bandageCount));
+			}
 		}
-				
-		
-		Orion.Wait(1200);
+		Orion.Wait(1200);		
 	}
 	
 	function RestockArrows(){

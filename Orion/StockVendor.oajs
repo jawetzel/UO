@@ -1,6 +1,25 @@
 //#include LootEvaluator.js
 
 
+function FilterItemsFromTargetToLastObject(){
+	var soirceBag = Orion.ClientLastTarget();
+	var targetBag = Orion.FindObject(lastobject).Serial();
+	Orion.Wait(1500);
+	Orion.UseObject(soirceBag);
+	Orion.Wait(1500);
+	var destItems = Orion.FindTypeEx('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
+	
+	destItems.forEach(function(item){
+		if(shouldKeepItemEjGear(item.Properties())) {
+		//if(ShouldKeepItem(item.Serial())) {
+			Orion.MoveItem(item.Serial(), 1000, targetBag);
+			Orion.Wait(1400);
+		}
+		
+
+	})
+}
+
 function LockBagballsDown(){
 	var findItems0 = Orion.FindType('0x2256');
 	findItems0.forEach(function(item){
@@ -79,17 +98,17 @@ function StockLobjectWLtargBagInto(){
 	var soirceBag = Orion.ClientLastTarget();
 	var targetBag = Orion.FindObject(lastobject).Serial();
 	
-	var destItems = Orion.FindType('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
+	var destItems = Orion.FindTypeEx('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
 	Orion.Print(soirceBag);
 	Orion.Print(targetBag);
 	Orion.Print(destItems);
 	destItems.forEach(function(item){
-		if(Orion.FindObject(item).Properties().indexOf('Insured') > -1){
-			InsureItem(item);
+		if(item.Properties().indexOf('Insured') > -1){
+			InsureItem(item.Serial());
 		}
-		Orion.MoveItem(item, 1000, targetBag);
+		Orion.MoveItem(item.Serial(), 1000, targetBag, item.X(), item.Y());
 			Orion.Wait(600);
-			Orion.SendPrompt("3000000" + getSkillTotalSuffix(Orion.FindObject(item).Properties()) + " " + generateDateTag())
+			Orion.SendPrompt("8000000"); // + getSkillTotalSuffix(item.Properties()) + " " + generateDateTag())
 			Orion.Wait(600);
 
 	})
@@ -285,14 +304,14 @@ function StockLastTargetToVendors(){
 	    		}
 	    	}
 	    	else if(isLrcGear(props)){
-	    		if(vendorSubContainers['HP'].length > 0) {
-	    			var validContainers = getValidBagFromBags(vendorSubContainers['HP']);
+	    		if(vendorSubContainers['LRC'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['LRC']);
 	    			if(validContainers.length > 0) destBag = validContainers[0];
 	    		}
 	    	}
 	    	else if(isHpGear(props)){
-	    		if(vendorSubContainers['LRC'].length > 0) {
-	    			var validContainers = getValidBagFromBags(vendorSubContainers['LRC']);
+	    		if(vendorSubContainers['HP'].length > 0) {
+	    			var validContainers = getValidBagFromBags(vendorSubContainers['HP']);
 	    			if(validContainers.length > 0) destBag = validContainers[0];
 	    		}
 	    	}
@@ -372,16 +391,18 @@ function FillLobjectBagWithLtargetSWScrolls(){
 }
 
 function RepriceVendor(){
+	Orion.Print("Hello");
 	// numbers under 1 will mark a percentage
 	// ex: .75 will take an item that was 10,000 gold and mark it to 7,500 Gold
 	// numbers over 1 will set a fixed Value
 	// ex: 10000 will make the price 10,000
-	var newPrice = .65;
+	var newPrice = .9;
 	// this will be the description of the item (if you use a named description your vendors will be searchable
 	var followUpText = "";    
-	var vendordistance = 2;
-
-
+	var vendordistance = 1;
+	var daysBetweenReprice = 0;
+	var minPrice = 3000000;
+	var ddeleteBag = Orion.FindObject(lastobject).Serial();;
 	// you shouldnt need to reprice below this point
 	
 	//finds vendors
@@ -449,13 +470,8 @@ function RepriceVendor(){
  	 	return true;
     });
     if(validVendorItems && validVendorItems.length > 0){
-    	validVendorItems.forEach(function(validItem){
-    		if(!ShouldKeepItem(validItem)){
-    			Orion.MoveItem(validItem, 1, 0x4720540A);
-    			Orion.Wait(1300);
-    			return;
-    		}
-    	
+   		var currentDate = new Date();
+    	validVendorItems.forEach(function(validItem){    	
     		// should we reprice this item? 
     		// some kind of date logic here saying we arent going to reprice an item unless its date is over X days 
     		var props = Orion.FindObject(validItem).Properties();
@@ -472,11 +488,11 @@ function RepriceVendor(){
 				    var month = parseInt(dateStr.substring(4, 6), 10) - 1; // JS months are 0-based
 				    var day = parseInt(dateStr.substring(6, 8), 10);
 				    var extractedDate = new Date(year, month, day);
-    				var currentDate = new Date();
+    				
     				var timeDiff = currentDate - extractedDate;
     				var diffDays = timeDiff / (1000 * 60 * 60 * 24);
     				Orion.Print("diffDays: " + diffDays);
-    				if(diffDays > 30){
+    				if(diffDays > daysBetweenReprice){
     					validItems.push(validItem);
     				}
     			}
@@ -513,7 +529,11 @@ function RepriceVendor(){
     	 var cleanPriceText = priceText.split(",").join("");
     	 var number = parseInt(cleanPriceText);
     	 
-    	 
+    	 if(number < minPrice && ddeleteBag) {
+    	 	Orion.MoveItem(itemId, 5000, ddeleteBag);
+    	 	Orion.Wait(1500);
+    	 	return;
+    	 }
     	
     	var description = followUpText + getSkillTotalSuffix(Orion.FindObject(itemId).Properties()) + " " + generateDateTag();
     	
@@ -536,8 +556,8 @@ function RepriceVendor(){
 	    	  	Orion.MoveItem(itemId, 1000, containerId, oldItemX, oldItemY);
 	    	  	 Orion.Wait(700);
 	    	  }
-	    	  Orion.Print(updatedPrice + description)
-	    	 Orion.SendPrompt(updatedPrice + description)
+	    	  Orion.Print(updatedPrice)// + description)
+	    	 Orion.SendPrompt(updatedPrice)// + description)
 	    	 Orion.Wait(500);
     	 }    	
     })

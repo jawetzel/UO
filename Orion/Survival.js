@@ -24,7 +24,7 @@ var HasHealing = function(){
 	return Orion.SkillValue('Healing') > 250;
 }
 
-var healingThreshold = 30;
+var healingThreshold = 5;
 
 function UseBandages(WaitForObjectTimeout, RegisterUseObjectTimeout){
 	if(!HasHealing()) return;
@@ -121,7 +121,7 @@ var isFriend = {};
 var ignoreAfkDead = {}
 function FriendToHeal(dist, isChiv){
 	var friendsAroundUs = [];
-	var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", dist, 'green|blue');
+	var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself", dist, 'green|blue');
 
 	if(friendlys && friendlys.length > -1){
 		friendlys.forEach(function(friendObject){
@@ -228,9 +228,10 @@ function FriendToHeal(dist, isChiv){
 				}
 				if(
 					friendObject.Distance() <= dist && 
-					((friendObject.Hits() * 4) < healFriendThreshold && 
-					(friendObject.Hits() > 0 || friendObject.Dead())
-					)){
+					(
+						(friendObject.Hits() * 4) < healFriendThreshold || friendObject.Dead()
+					)
+					){
 					friendsToHealAroundUs.push(friendId);
 					return;
 				}

@@ -1,0 +1,306 @@
+//Author: Jawetzel
+//Release Date: 6/27/2025
+//Version: 1.0
+
+// Requierments: 
+// A runebook labeled "Clydesdale" containing at least 2 runes with the following names: 
+// 		rune 1: "Clydesdale" - a rune to the location near horses 
+//		rune 2: "Stables" - a rune to a stables within reach of stable master 
+//		All of these names are case sensetive
+// 	A guy with chiv and the ability to beat a horse to death 
+//		It will use enemy of one, and chiv heal self between horses 
+//		It will be using chiv to recall around 
+//  Start off without a mount, its going to mount the horses to recall to stables and put them away
+// 
+// Optional: 
+//	Chromatic totems in backpack - not in a sub bag 
+// 
+// Operation: 
+// Look down to coordOptions - this is a list of the different spawn locations it can handle 
+// Look down to var penCoords = coordOptions.T2AEastSouth;
+// 		This is where you are deciing which spawn location you want to run out of
+// 		You would change which option is selected. Ex: 
+//			var penCoords = coordOptions.T2AEastSouth;
+//			var penCoords = coordOptions.T2AEastNorth;
+
+var coordOptions = {
+	T2AEastSouth: [	
+			{ x: 6127, y: 3950 }
+		],
+	T2AEastNorth: [	
+			{x: 6109, y: 3863}
+		]
+};
+
+var penCoords = coordOptions.T2AEastSouth;
+
+//----YOU SHOULD NOT NEED TO EDIT BELOW THIS LINE----
+//----YOU SHOULD NOT NEED TO EDIT BELOW THIS LINE----
+//----YOU SHOULD NOT NEED TO EDIT BELOW THIS LINE----
+
+function Autostart()
+{
+	Orion.Wait(6000);
+	travel("Clydesdale", "Clydesdale");
+	MainTamerLoop();
+}
+
+var chromaticTotemGraphic = '0x9F1A';
+var backpackChromaticTotemGraphic = '0x9F1B';
+
+function MainTamerLoop() {
+    
+
+    while (!Player.Dead()) {
+    	if(IsOtherTotemActive()){
+    		Orion.Wait(1000);
+    		continue;
+    	}
+        for (var i = 0; i < penCoords.length; i++) {
+            while (Player.X() !== penCoords[i].x || Player.Y() !== penCoords[i].y) {
+            	Orion.WalkTo(penCoords[i].x, penCoords[i].y, Player.Z(), 0);
+                Orion.Wait(500);
+            }
+            PlaceTotem();
+            if(Player.Hits() < 100) {
+            	Orion.Cast("Close wounds");
+            	Orion.WaitForTarget(2000);
+            	Orion.TargetObject(Player.Serial());
+            	Orion.Wait(750);
+            }
+            LookForHorse();
+        }
+    }
+}
+
+var IsOtherTotemActive = function() {
+	var myName = Player.Name();
+	var totems = Orion.FindTypeEx(chromaticTotemGraphic, 'any', "ground", "", 30);
+	if(!totems || totems.length === 0) return false;
+	return totems[0].Properties().indexOf(myName) > -1;
+}
+
+var isTotemActive = function(){
+	var groundObjects = Orion.FindType('any', 'any', "ground", "", 10);
+	var totems = Orion.FindTypeEx(chromaticTotemGraphic, 'any', "ground", "", 30);
+	if(!totems || totems.length === 0) return false;
+	return true;
+}
+
+var PlaceTotem = function() {
+	var totems = Orion.FindType(backpackChromaticTotemGraphic, 'any', 'backpack');
+	if(!totems || totems.length === 0) return;
+	if (isTotemActive()) return;
+	Orion.Wait(2000);
+	Orion.UseObject(totems[0]);
+	Orion.Wait(2000);
+}
+
+var travel = function(bookName, locationName){
+	
+		var runebooks = Orion.FindTypeEx("0x22C5", -1, 'backpack');
+		if(!runebooks || runebooks.length === 0){
+			Orion.Print("No Runebook Found - Help!");
+			return;
+		}
+		var namedRunebooks = runebooks.filter(function(book){
+			if(!book) return false;
+			var props = book.Properties();
+			if(!props) return false;
+			return props.indexOf(bookName) > -1;
+		});
+		if(!namedRunebooks || namedRunebooks.length === 0){
+			Orion.Print("I found Runebooks, but none were named - Help!");
+			return;
+		}
+		var originalLocation = {
+			x: Player.X(),
+			y: Player.Y()
+		}
+		
+		var performRecall = function(){
+			Orion.UseObject(namedRunebooks[0].Serial());
+			if (Orion.WaitForGump(3000))
+			{					
+				var gump = Orion.GetGump(namedRunebooks[0].Serial(), '0x00000059');
+				if ((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x00000059'))
+				{						
+					var runeInd = gump.TextList().indexOf(locationName) - 2;
+					var buttonIndex = 75 + runeInd;
+					gump.Select(Orion.CreateGumpHook(buttonIndex));
+					Orion.Wait(5000);
+				}
+			}
+		}
+		
+		performRecall();
+		if(Player.X() === originalLocation.x && Player.Y() === originalLocation.y){
+			performRecall();
+		}
+
+	}
+
+function LookForHorse() {
+    var horses = Orion.FindTypeEx('0x0673', '-1', ground, 'mobile|live', 20);
+    if(horses && horses.length > 0) {
+    	horses = horses.filter(function(horse){
+    		var props = horse.Properties();
+    		return props.indexOf("tame") === -1 && props.indexOf("bonded") === -1;
+    	});
+    }
+    Orion.Wait(250);
+    if(horses && horses.length > 0) {
+    	
+    
+    	var color = horses[0].Color();
+    	if(
+    		//Very Common
+    		color === '0x0000' ||
+    		//Common
+    		color === '0x0ACB' || color === '0x0AC9' || 
+    		//Uncommon
+    		color === '0x09C4' || color === '0x0A76' 
+    		)	 
+    	{    		
+    		Orion.Print("Killing Horse: " + color);
+    		var start = Orion.Now();
+		    var timeout = start + 45000;			   
+    		while(Orion.Now() < timeout && Orion.FindObject(horses[0].Serial())){
+    			var horse = Orion.FindObject(horses[0].Serial());
+    			if(!horse) break;
+    			Orion.Attack(horses[0].Serial());
+    			Orion.WalkTo(horse.X(), horse.Y(), horse.Z());
+    			Orion.Attack(horses[0].Serial());
+    			if(!Orion.BuffExists('0x754e')){
+		    		Orion.Cast('Enemy of One');
+		    	}
+    			Orion.Wait(1000);    		
+				if(!Orion.AbilityStatus('Primary')){
+					Orion.UseAbility('Primary');
+	    			Orion.Wait(250);
+				}	
+				Orion.Wait(1000);    		
+				if(!Orion.AbilityStatus('Primary')){
+					Orion.UseAbility('Primary');
+	    			Orion.Wait(250);
+				}	
+    		}    		
+    	}
+    	else if (    	    			    		
+    			//uncommon blue 
+    			color === '0x0848' ||
+    			//Rare
+    			color === '0x0A63' || color === '0x0A2D' || 
+    			//Verry Rate
+    			color === '0x081B' || color === '0x0AC1' || 
+    			//Uber rare 
+    			color === '0x0AD7' || color === '0x0ADD'
+    		)
+    	{
+    		Orion.Print("Taming Horse: " + color);
+    		AttemptTame(horses[0].Serial());
+    	} else {
+    		Orion.Print("I dont know what to do with this color: " + color);
+    	}
+    }
+}
+
+function AttemptTame(serial) {
+    if (!serial || !Orion.ObjectExists(serial)) return;
+    var horse = Orion.FindObject(serial);
+    if (!horse) return;
+
+    Orion.Print("Attempting to tame pretty horse...");
+
+    // Step 1: Move within 2 tiles
+    while (Orion.GetDistance(horse.Serial()) > 2) {
+        Orion.WalkTo(horse.X(), horse.Y(), horse.Z());
+        Orion.Wait(500);
+        horse = Orion.FindObject(serial);
+        if (!horse) return;
+    }
+
+    // Step 2: Begin taming
+    Orion.UseSkill('Animal Taming');
+    Orion.WaitTargetObject(serial);
+    var start = Orion.Now();
+    var timeout = start + 13000;
+
+    while (Orion.Now() < timeout) {
+        Orion.Wait(500);
+        horse = Orion.FindObject(serial);
+        if (!horse) return;
+
+        // Reposition if too far
+        if (Orion.GetDistance(horse.Serial()) > 2) {
+            Orion.WalkTo(horse.X(), horse.Y(), horse.Z());
+        }
+    }
+
+    // Step 3: Check tame status
+    if (IsTamed(serial)) {
+        KillTarget(serial);
+    } else if (Orion.ObjectExists(serial)) {
+        AttemptTame(serial); // retry
+    } else {
+        Orion.IgnoreObject(serial);
+    }
+}
+
+
+function IsTamed(serial) {
+    var obj = Orion.FindObject(serial);
+    if (!obj) return false;
+    return obj.Properties().indexOf("tame") !== -1;
+}
+
+var parsePetNameFromColor = function (color){
+	if(color === '0x0848') {
+		return "UncommonBlue"
+	}
+	
+	if(color === '0x0A63') {
+		return "RareBlue"
+	}
+	if(color === '0x0A2D') {
+		return "RarePurple"
+	}
+
+	if(color === '0x0AC1') {
+		return "VeryRareShadowRed"
+	}
+	if(color === '0x081B') {
+		return "VeryRareRed"
+	}
+	
+	if(color === '0x0ADD') {
+		return "UberRareBlack"
+	}
+	if(color === '0x0AD7'){
+		return "UberRarePurple"
+	}
+	return "broken";
+}
+
+function KillTarget(serial) {
+    if (!serial || !Orion.ObjectExists(serial)) return;
+    var target = Orion.FindObject(serial);
+    if (!target) return;
+    Orion.Say("all follow me");
+    Orion.WarMode(0);
+    Orion.Wait(500);
+    Orion.UseObject(serial);
+    Orion.Wait(2000);
+    travel("Clydesdale", "Stables");
+    Orion.UseObject(self);
+    Orion.Wait(1000);
+    Orion.RenameMount(serial, parsePetNameFromColor(target.Color()));
+    Orion.Wait(2000);
+    Orion.Say("stall");
+    Orion.WaitForTarget();
+    Orion.TargetObject(serial);
+    Orion.Wait(2000);
+   	Orion.Ignore(serial);
+   	travel("Clydesdale", "Clydesdale");
+    Orion.Wait(1000);
+}

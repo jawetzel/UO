@@ -67,8 +67,7 @@ function IDOCBarrels(){
 		return props.indexOf("A House Sign") > -1 && 
 			props.indexOf("Name: ") > -1 && 
 			props.indexOf("Owner: ") > -1 && 
-			props.indexOf("Condition: ") > -1 && 
-			props.indexOf("Collapsing In: ") > -1 ;
+			props.indexOf("Condition: ") > -1;
 			
 	});
 	Orion.Print(houseSigns);
@@ -80,6 +79,7 @@ function IDOCBarrels(){
 	var houseY = houseSign.Y() - 1;
 	
 	while(houseSign.Exists()){
+		Orion.EmoteAction('bow');
 		Orion.Wait(1000);
 	}
 	
@@ -94,6 +94,7 @@ function IDOCBarrels(){
 	
     while (!Player.Dead()) {
         // hidePeople();
+        
         var barrels = Orion.FindType('0x0FAE|0x0E77|0x1EB5', '-1', ground, 'near', '15', ' ');
         var barrel;
         if(barrels){
@@ -160,10 +161,13 @@ function placeHouse(){
 		'13x17': {
 			menuOption: 5182
 		},
+		'9x14': {
+			menuOption: 5131
 		
+		}
 		
 	}
-	var sizeToUse = sizeDict['18x18'];
+	var sizeToUse = sizeDict['9x14'];
 	
 	var pos = {
 		x: placePos.x,

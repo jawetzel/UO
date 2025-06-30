@@ -15,12 +15,3 @@ function run(){
 		}
 	}
 }
-
-function Other(){
-	while(!Player.Dead()){	//looping logic
-		var coord = Orion.SextantToXY("40o 42'N,  33o 53'W",1)
-		Orion.WalkTo(coord.X(), coord.Y(), 0, 0, 255, 1, 1, 300000);
-	
-	}
-	
-}

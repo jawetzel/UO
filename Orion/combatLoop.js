@@ -15,6 +15,106 @@
 //#include Utilities.js
 //#include Rails.oajs
 
+function SortDeeds()
+{
+	var findItems0 = Orion.FindType('0x14F0', '0xFFFF', 'backpack', 'item|fast|recurse');
+	if (findItems0 && findItems0.length > 0)
+	{
+		Orion.MoveItem(findItems0[0], 1, 'backpack', 142, 65);
+		Orion.Wait('1200');
+		Orion.Ignore(findItems0[0]);
+		SortDeeds();
+	}
+	
+}
+
+function walkAround() {
+	var startX = Player.X();
+	var startY = Player.Y();
+	var endY = Player.Y() - 20;
+	var targetY = startY;
+	while(true) {
+		Orion.WalkTo(startX, targetY, Player.Z(), 0, 200, 0, 1, 100);
+		Orion.Wait(15000);
+		if(Player.Y() === startY) {
+			targetY = endY;
+		} else if (Player.Y() === endY) {
+			targetY = startY;
+		} 
+	}
+}
+
+function resetLocation() {
+	travelToSpawnEntrance();
+}
+
+var travelToSpawnEntrance = function() {
+		var runebooks = Orion.FindType("0x22C5", -1, 'backpack');
+		if(!runebooks || runebooks.length === 0){
+			return;
+		}
+		
+		Orion.UseObject(runebooks[0]);
+		if (Orion.WaitForGump(3000))
+		{
+			var gump = Orion.GetGump('last');
+			if ((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x00000059'))
+			{
+				var runeInd = gump.TextList().indexOf("SkaraGate") - 2;
+				var buttonIndex = 75 + runeInd;
+				gump.Select(Orion.CreateGumpHook(buttonIndex));
+				Orion.Wait(5000);
+			}
+		}
+		Orion.WalkTo(643, 2067, 5, 0, 0, 1, 0, 5000);
+		if (Orion.WaitForGump(3000))
+		{
+			var gump0 = Orion.GetGump('last');
+			if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x00000258'))
+			{
+				var gumpHook0 = Orion.CreateGumpHook(1);
+				gumpHook0.AddCheck(20, true);
+				gump0.Select(gumpHook0);
+				Orion.Wait(100);
+			}
+		}
+		Orion.Wait(5000);
+		Orion.WalkTo(282, 1016, 0, 0, 0, 1, 0, 5000);
+		Orion.Wait(500);
+		Orion.Say('.');
+		Orion.Wait(4000);
+		
+		while(Player.X() !== 804 && Player.Y() !== 992){
+			Orion.WalkTo(804, 992, 27, 0, 255, 1, 1, 20000);
+			Orion.Wait(2000);
+		}
+	}
+
+	var returnHome = function(){
+		var home = {
+		 	x: 2170, y: 2118, z: 7
+		};
+		var runebooks = Orion.FindType("0x22C5", -1, 'backpack');
+		if(!runebooks || runebooks.length === 0){
+			return;
+		}
+		Orion.UseObject(runebooks[0]);
+		if (Orion.WaitForGump(3000))
+		{
+			var gump = Orion.GetGump('last');
+			if ((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x00000059'))
+			{
+				var runeInd = gump.TextList().indexOf("DropHouse") - 2;
+				var buttonIndex = 75 + runeInd;
+				gump.Select(Orion.CreateGumpHook(buttonIndex));
+				Orion.Wait(5000);
+			}
+		}
+		Orion.WalkTo(home.x, home.y, home.z, 0, 0, 1, 0, 5000);
+		Orion.Wait(120000);
+		travelToSpawnEntrance();
+	}
+
 function Autostart()
 {
 	Startup();
@@ -58,7 +158,7 @@ var profileOptions = [
 	{
 		name: 'junk',
 		options:  {
-			useSpecial: true,
+			//useSpecial: true,
 			//useEnemyOfOne: true,
 			//useDivineFury: true,
 			//useConsecrateWeapon: true,
@@ -72,20 +172,58 @@ var profileOptions = [
 		}
 	},	
 	{
+		name: 'wolfspider',
+		options:  {
+			useSpecial: true,
+			useEnemyOfOne: true,
+			//useDivineFury: true,
+			//useConsecrateWeapon: true,
+			//useLightningStrike: true,
+			useAttack: true,
+			useVampForm: true,
+			useLootCorpses: true,
+			useBandages: true,
+			useSkipTypesToIgnore: true,
+			useIgnoreReset: true,
+		}
+	},	
+	{
 		name: 'toss',
 		options:  {
 			useSpecial: true,
+			useConsecrateWeapon: true,
 			//useLightningStrike: true,
 			//useEnemyOfOne: true,
 			useAttack: true,
-			useLootCorpses: true,
+			//useLootCorpses: true,
 			useBandages: true,
 			useSkipTypesToIgnore: true,
 			//useRunToTarget: true,
 			//useIgnoreReset: true,
 			//useRunToTarget: true,
 			useWraithForm: true,
-			useLootTMaps: true
+			//useLootTMaps: true
+		}
+	},
+	{
+		name: 'newbie',
+		options:  {
+			useSpecial: true,
+			//useLightningStrike: true,
+			useEnemyOfOne: true,
+			useAttack: true,
+			//useLootCorpses: true,
+			//useBandages: true,
+			//useSkipTypesToIgnore: true,
+			//useVampForm: true,
+			//useRunToTarget: true,
+			//useIgnoreReset: true,
+			//useRunToTarget: true,
+			//useWraithForm: true,
+			//useLootTMaps: true,
+			//useCutCorpses: true
+			//useLootGold: true,
+			//useConsecrateWeapon: true,
 		}
 	},
 	{
@@ -115,6 +253,14 @@ var profileOptions = [
 			useSpecial: true,
 		}
 	},
+	{
+		name: 'looter',
+		options:  {
+			useLootCorpses: true,
+			useIgnoreReset: true,
+			useLootForFrags: true
+		}
+	},
 ]
 	
 // Features included that are not optional: 
@@ -138,7 +284,7 @@ var lootItemSets = {
 		'0x573E': true, //void Orion
 		'0x5728': true, //void core
 		'0x0E21': true, //bandages
-		//'0x0EED': true, // gold
+		'0x0EED': false, // gold
 		
 		'0x0F3F': true, //arrows
 		'0x1BD1': true, // feathers
@@ -151,8 +297,23 @@ var lootItemSets = {
 		'0x571C': true, //Essence Of Passion
 		'0x572D': true, //Lava Serpent Crust
 		
+		'0x0E24': true, //Silver Serpent Venom'
+		
 		'0x1844': true, //compassion sage
 		
+		// big gems 
+		'0x3190': true,
+		'0x3191': true,
+		'0x3192': true,
+		'0x3193': true,
+		'0x3194': true,
+		'0x3195': true,
+		'0x3196': true,
+		'0x3197': true,
+		'0x3198': true,
+		'0x3199': true,
+		
+		'0x0F80': true, //demon bone
 	}
 }
 
@@ -169,7 +330,7 @@ function Startup(){
 	var profileRead = friendObject.ProfileReceived();
 	Orion.GetProfile(playerSerial);
 	var friendProfile = friendObject.Profile();
-	SetLootItems(lootItemSets.defaultItemSet);
+	
 	
 	if(friendProfile.length === 0){
 		friendProfile = LastSuccessfullProfileRead();		
@@ -219,6 +380,12 @@ function Startup(){
 		profile.isEj = true;
 	}
 	
+	var lootSet = lootItemSets.defaultItemSet;
+	lootSet['0x0EED'] = profile != null ? profile.useLootGold :  false, // gold
+	
+	SetLootItems(lootItemSets.defaultItemSet);
+	
+	
 	CombatLoop();
 }
 
@@ -228,7 +395,7 @@ function CombatLoop(){
 	var healFriendNames = [
 		'save me tom cruise', //a message can be put in player journal to identify a friend
 		//'TWT'
-		//'a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U' // this will mark everyone as a friend
+		'a', 'A', 'e', 'E', 'i', 'I', 'o', 'O', 'u', 'U' // this will mark everyone as a friend
 	];
 	profileOptions.forEach(function(option){
 		healFriendNames.push(option.name);
@@ -251,7 +418,15 @@ function CombatLoop(){
 		'Marauder', //Pirate event
 		'Scallywag', //Pirate event
 		'Pillager', //Pirate event
-		'Neira'
+		'Neira',
+		'Shadow Reaver Soldier',
+		'Shadow Reaver Initiate',
+		'Shadow Reaver Lieutenant',
+		'Shadow Reaver Royal Guard',
+		'Shadow Reaver Captain',
+		'Shadow Reaver Acolyte',
+		'Shadow Reaver Cabalist'
+		
 	];
 	// will insurte items dropped in bag as artifacts
 	SetItemsCheckBackpackUninsuredItems([
@@ -265,18 +440,14 @@ function CombatLoop(){
 		'Of The Shattered Sanctum',
 		'Bearing The Crest Of Minax',
 		"Defiler's Grasp",
-		'Paladin Shield Of',
-		'Paladin Hammer Of',
-		'Paladin Cloak Of',
-		'Paladin Fork Of',
-		'Shadowblight Blooms',
-		'Quiver Of The Elements',
-		'Skull Of'
+		'Skull Of',
+		'Of The Riftborne',
+		'Quiver Of The Elements'
 	]);
 	
 	UseHealPotionThreshold(25);
-	SetHealFriendThreshold(60);
-	var maxEnemyDistance =  8;
+	SetHealFriendThreshold(80);
+	var maxEnemyDistance =  13;
 	SetDropOffItems([
 		'Plunderin', 
 		'Of The Shattered Sanctum',
@@ -285,7 +456,9 @@ function CombatLoop(){
 		'Paladin Hammer Of',
 		'Paladin Cloak Of',
 		'Paladin Fork Of',
-		'Shadowblight Blooms'
+		'Shadowblight Blooms',
+		'Quiver Of The Elements',
+		'Of The Riftborne'
 		]);
 	
 	// There isnt anything below this point you should need to change
@@ -350,13 +523,13 @@ function CombatLoop(){
 	SetHealFriendNames(healFriendNames);
 		
 	// probably dont configure below here
-	var timeBetweenLoops = 100; //time in ms between loop cycle
+	var timeBetweenLoops = 250; //time in ms between loop cycle
 	var enemyTypes = 'gray|criminal|enemy|red|orange'			; // 'gray | criminal | enemy | red'
 	
 	var useAttack = profile != null ? profile.useAttack : false;
 	var useRearm =  profile != null ? profile.useRearm : false;
 	var useRunToTarget = profile != null ? profile.useRunToTarget : false;
-	var MinDistToTarget = 5;
+	var MinDistToTarget = 1;
 	var moveToBoundry = {
 			//miny: 3580,
 			//maxy: 3600,
@@ -373,58 +546,47 @@ function CombatLoop(){
 	SetuseLootEjGear(profile != null ? profile.ejGear :   false)
 	
 	// will trash items in house trash barrel
-	SetAutoTrashItems({
+	SetAutoTrashItems([
 		//Myrmidon Armor
-		'0x13D4': 'Armor Set',					'0x13DB': 'Armor Set',
-		'0x13D6': 'Armor Set',					'0x13DA': 'Armor Set',
-		//Elven Leafweave
-		'0x2B75': 'Armor Set',					'0x2B78': 'Armor Set',
-		//Greymist Armor
-		'0x13CB': 'Armor Set',					'0x13CC': 'Armor Set',	
-		//'0x13C6': 'Armor Set'
-		//Assassin Armor
-		'0x13C6': 'Armor Set',					'0x13CC': 'Armor Set',
-		'0x13CB': 'Armor Set',					'0x13C5': 'Armor Set',
-		//Plate Of Honor
-		'0x1411': 'Armor Set',					'0x1415': 'Armor Set',	
-		//Death's Essence
-		'0x13C6': "Armor Set",				'0x13CB': "Armor Set",
-		//Hunter's Garb
-		'0x2FC9': "Armor Set",				'0x2FC8': "Armor Set",
-		
-		'0x2D32': 'Blade Dance',				'0x2D33': 'Soul Seeker',
-		'0x268A': 'Helm Of Swiftness',		'0x2FB7': 'Quiver Of Rage',
-		'0x2D34': 'Talon Bite',					'0x2D23': 'Raed',
-		'0x2D21': 'Flesh Ripper',				'0x2D2B': 'Windsong',
-		'0x2D35': 'Righteous Anger',		'0x13BE': 'Fey Leggings',	
-		'0x2FB8': 'Brightsight Lenses',		'0x1F04': 'Robe Of The Equinox',	
-		'0x2D2A': 'Wildfire Bow',				'0x2D30': 'Bonesmasher',
-		'0x2B6E': 'Aegis Of Grace',			'0x1F03': 'Robe Of The Eclipse',	
-		'0x2D31': 'Boomstick',					'0x2F5A': 'Bloodwood Spirit',	
-		'0x2307': 'Pads Of The Cu Sidhe','0x2F5B': 'Totem Of The Void',
-		
-		//voidpool drops
-		'0x2B08': 'Breastplate Of Justice', 			'0x2B0A': 'Arms Of Compassion',
-		'0x2B12': 'Sollerets Of Sacrifice', 				'0x13F5': 'Katrina',
-		'0x3BB3': '10th Anniversary Sculpture', 	'0x1BC4': 'Sentinel',
-		'0x2B0C': 'Gauntlets Of Valor', 					'0x13F8': 'Jaana',
-		'0x2B10': 'Helm Of Spirituality',				'0x3BB5': 'Ankh Pendant',
-		'0x0F61': "Dragon's End", 						'0x2B06': 'Legs Of Honor',
-		'0x1BC3': "Lord Blackthorn's Exemplar", 	'0x3BB6': 'Map Of The Known World',
-		'0x2B0E': 'Gorget Of Honesty',
-		
-		//air water earth fire
-		//'0xAEA6': 'Paladin Shield Of ', '0xAEB5': 'Paladin Shield Of ', '0xAEC4': 'Paladin Shield Of ', '0xAED3': 'Paladin Shield Of ',			
-		//'0xAEA4': 'Paladin Hammer Of ', '0xAEB3': 'Paladin Hammer Of ', '0xAEC2': 'Paladin Hammer Of ', '0xAED1': 'Paladin Hammer Of ',		
-		//'0xAEA3': 'Paladin Cloak Of ', '0xAEB2': 'Paladin Cloak Of ', '0xAEC1': 'Paladin Cloak Of ', '0xAED0': 'Paladin Cloak Of ',
-		//'0xAEA5': 'Paladin Fork Of ', '0xAEB4': 'Paladin Fork Of ', '0xAEC3': 'Paladin Fork Of ', '0xAED2': 'Paladin Fork Of ', 
-		
-		'0x46B3': 'Page Of Lore',
-		
-		//plant types
-		//'0xA0DF': 'Shadowblight Blooms',
-		
-	});
+  		['0x13D4', 'Armor Set'],  ['0x13DB', 'Armor Set'],  ['0x13D6', 'Armor Set'],
+	  	['0x13DA', 'Armor Set'],  ['0x13D5', 'Armor Set'],	['0x140C', 'Armor Set'],
+	  	//Elven Leafweave
+	  	['0x2B75', 'Armor Set'],  ['0x2B78', 'Armor Set'], ['0x2B77', 'Armor Set'],
+	  	//Greymist Armor
+ 		['0x13CB', 'Armor Set'],	['0x13CC', 'Armor Set'],	['0x13C6', 'Armor Set'],
+ 		//Assassin Armor
+ 		['0x13C6', 'Armor Set'],	['0x13CC', 'Armor Set'],  ['0x13CB', 'Armor Set'],  
+ 		['0x13C5', 'Armor Set'],
+	  	
+	  	//Plate Of Honor
+	  	['0x1411', 'Armor Set'],  ['0x1415', 'Armor Set'], 	['0x1412', 'Armor Set'],
+	  	['0x1414', 'Armor Set'],	['0x1417', 'Armor Set'],	['0x1413', 'Armor Set'],
+	  	//Death's Essence
+  		['0x13C6', 'Armor Set'],	['0x13CB', 'Armor Set'],  
+  		//Hunter's Garb
+  		['0x2FC9', 'Armor Set'],  ['0x2FC8', 'Armor Set'],	['0x2FC5', 'Armor Set'],
+  		['0x2FC6', 'Armor Set'],
+  		//marksman set 
+  		['0x2FB7', 'Marksman Set'],
+  
+  		// ML arties
+  		['0x2D32', 'Blade Dance'],  ['0x2D33', 'Soul Seeker'],  ['0x268A', 'Helm Of Swiftness'],
+  		['0x2FB7', 'Quiver Of Rage'],  ['0x2D34', 'Talon Bite'],  ['0x2D23', 'Raed'],
+  		['0x2D21', 'Flesh Ripper'],  ['0x2D2B', 'Windsong'],  ['0x2D35', 'Righteous Anger'],
+  		['0x13BE', 'Fey Leggings'],  ['0x2FB8', 'Brightsight Lenses'],  ['0x1F04', 'Robe Of The Equinox'],
+  		['0x2D2A', 'Wildfire Bow'],  ['0x2D30', 'Bonesmasher'],  ['0x2B6E', 'Aegis Of Grace'],
+  		['0x1F03', 'Robe Of The Eclipse'],  ['0x2D31', 'Boomstick'],  ['0x2F5A', 'Bloodwood Spirit'],
+  		['0x2307', 'Pads Of The Cu Sidhe'],  ['0x2F5B', 'Totem Of The Void'],  ['0x2FB7', 'Quiver Of Rage'],
+  
+ 		['0x2B08', 'Breastplate Of Justice'],  ['0x2B0A', 'Arms Of Compassion'],  ['0x2B12', 'Sollerets Of Sacrifice'],
+  		['0x13F5', 'Katrina'],  ['0x3BB3', '10th Anniversary Sculpture'],  ['0x1BC4', 'Sentinel'],
+  		['0x2B0C', 'Gauntlets Of Valor'],  ['0x13F8', 'Jaana'],  ['0x2B10', 'Helm Of Spirituality'],
+	  	['0x3BB5', 'Ankh Pendant'],  ['0x0F61', "Dragon's End"],  ['0x2B06', 'Legs Of Honor'],
+  		['0x1BC3', "Lord Blackthorn's Exemplar"],  ['0x3BB6', 'Map Of The Known World'],  ['0x2B0E', 'Gorget Of Honesty'],
+  
+  		['0x46B3', 'Page Of Lore'],
+]
+);
 	// will drop off items into secure bagball 
 	
 	SetRepairDurabilityMin(90);
@@ -493,17 +655,21 @@ function CombatLoop(){
 		}
 		var playerSerial = Player.Serial();
 		var enemyIds = [];
-		var enemy = Orion.FindType("any", "any", "ground", "live|ignoreself|inlos", dist, enemyTypes);	
+		var enemy = Orion.FindType("any", "any", "ground", "live|ignoreself", dist, enemyTypes);	
 		if(enemy && enemy.length > 0){	
 			enemy.forEach(function(enemyId){
+				if(!Orion.ObjectExists(enemyId)) return;
 				if(firstOnly && enemyIds.length > 0) return;
 				if(playerSerial === enemyId) return;
 				var enemyObject = Orion.FindObject(enemyId);
-				if(enemyObject){
-					
-					var props = enemyObject.Properties().toLowerCase();
+				
+				if(enemyObject && Orion.ObjectExists(enemyId)){
+					var enemyGraphic = enemyObject.Graphic();
+					var enemyNoti = enemyObject.Notoriety();
+					var props = enemyObject.Properties();
 					if(!props || props.length === 0) return;
-					if(	enemyObject.Notoriety() === 6 &&
+					var props =props.toLowerCase();					
+					if(	enemyNoti === 6 &&
 							redNamesToIgnore.filter(function(name){
 								return props.indexOf(name.toLowerCase()) > -1;
 							}).length > 0 
@@ -518,7 +684,7 @@ function CombatLoop(){
 							 return;
 						}
 					if(!useSkipTypesToIgnore && 
-					typesToIgnore[enemyObject.Graphic()] && 
+					typesToIgnore[enemyGraphic] && 
 					humanoidNamesToAttack.filter(function(name){
 								return props.indexOf(name.toLowerCase()) > -1;
 							}).length === 0
@@ -542,10 +708,11 @@ function CombatLoop(){
 		if(  profile.leadership != null &&  profile.leadership.filter(function(name){
 			if(Player.Properties().indexOf(name) > -1) return true;
 			}).length > 0) return null;
-		var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself|inlos", 10, 'green|blue');
+		var friendlys = Orion.FindTypeEx("any", "any", "ground", "mobile|ignoreself", 10, 'green|blue');
 		if(!friendlys || friendlys.length === 0) return null;
 		friendlys = friendlys.filter(function(friend){
-			if(!friend) return false;
+			
+			if(!friend || !Orion.ObjectExists(friend.Serial())) return false;
 			if(profile.leadership != null &&  profile.leadership.filter(function(name){
 				var friendProps = friend.Properties();
 				if(friendProps.indexOf(name) > -1) return true;
@@ -579,10 +746,11 @@ function CombatLoop(){
 	var AttackTarget = function(enemy){
 		if(!enemy) return;
 		 if(enemy){
+		 	if(!Orion.ObjectExists(enemy)) return;
 		 	var enemyObject = Orion.FindObject(enemy);
 			if(useHonor && (!lastEnemyHonored || lastEnemyHonored.toString() !== enemy.toString())){
 				var enemyObject = Orion.FindObject(enemy);
-				if(enemyObject){
+				if(enemyObject && Orion.ObjectExists(enemy)){
 					Orion.GetStatus(enemy);
 					Orion.Wait(100);
 					if(enemyObject.Hits() === 25){
@@ -600,8 +768,9 @@ function CombatLoop(){
 						if(Player.Properties().indexOf(name) > -1) return true;
 					}).length > 0;
 	    		if(imLeadership || !LeaderToFollow()){
+	    			if(!Orion.ObjectExists(enemy)) return;
 	    			var enemyObject = Orion.FindObject(enemy);
-		    		if(enemyObject && !Orion.GetGlobal('moving')){
+		    		if(enemyObject && Orion.ObjectExists(enemy) && !Orion.GetGlobal('moving')){
 		    			var destX = enemyObject.X();
 		    			var destY = enemyObject.Y();
 		    			if(moveToBoundry.miny && destY < moveToBoundry.miny) destY = moveToBoundry.miny;
@@ -859,7 +1028,7 @@ function CombatLoop(){
 		var noFriends = false;
 		var foundLeader = LeaderToFollow();
 		if(!foundLeader){
-			var holes = Orion.FindTypeEx("0x1775", "any", "ground", "mobile|ignoreself|inlos", 2, 'green|blue');
+			var holes = Orion.FindTypeEx("0x1775", "any", "ground", "mobile|ignoreself", 2, 'green|blue');
 			if(holes && holes.length > 0){
 				var validHoles = holes.filter(function(hole){
 					if(hole.Properties().indexof('A Hole') > -1){
@@ -908,7 +1077,7 @@ function CombatLoop(){
 		Orion.Wait(2000);
 	}
 	
-
+	
 	var checkUninsuredCounter = 0;
 	var lastIgnoreResetTime = null;
 	var firstRunSaveDress = false;
@@ -956,7 +1125,7 @@ function CombatLoop(){
 	    LootGoldGround(WaitForObjectTimeout, RegisterUseObjectTimeout);	    
 	    AutoTrashItems();
 	    if(!isEj) ItemDropOff();
-	     if(!isEj) RestockArrows();
+	    if(!isEj) RestockArrows();
 	    AutoRepair();
 	    RecoverCorpse();
 	    WhyAreWeNaked();
@@ -965,6 +1134,7 @@ function CombatLoop(){
 	    FollowTheLeader();
 	    HideWhenIdle();
 	    Orion.Wait(timeBetweenLoops);
+	   
 	}
 }
 

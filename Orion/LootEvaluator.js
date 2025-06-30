@@ -51,11 +51,25 @@ var shouldKeepItemEjGear = function(props){
 	var isSsi = props.indexOf("Swing Speed Increase 10") > -1;
 	var isArtifact = props.indexOf("Artifact") > -1;
 	var isHpi  = props.indexOf("Hit Point Increase 5") > -1 || props.indexOf("Hit Point Increase 7") > -1;
+	
+	var lrc = GetPropValue(/Lower Reagent Cost (\d+)/, props);
+
+	var intel = GetPropValue(/Intelligence Bonus (\d+)/, props);
+	var mana = GetPropValue(/Mana Increase (\d+)/, props);
+			
+	var str =  GetPropValue(/Strength Bonus (\d+)/, props);
+	var hp = GetPropValue(/Hit Point Increase (\d+)/, props);
+			
+	var dex = GetPropValue(/Dexterity Bonus (\d+)/, props);
+	var stam = GetPropValue(/Stamina Increase (\d+)/, props);
+	
+	var statTotal = intel + mana + str + hp + dex + stam;
+	
 	if(isJewlery) {
 		return !antique && hci > 14 && di > 15 && luck > 80 && isSsi;
 	}
 	else if (isArmor){
-		return luck > 80 && phys > 10 && fire > 10 && lmc > 4 && brittle && isArtifact;
+		return luck > 80 && phys > 10 && fire > 10 && lmc > 4 && brittle && isArtifact && (statTotal > 4 || lrc > 5);
 	} 
 	else {
 		return false;
@@ -220,24 +234,7 @@ function ShouldKeepItem(itemId){
 				//up to 8 mods with 3 bad mods
 				var containsWorthlessMods = worthlessMods.filter(function(mod){
 					return props.indexOf(mod) > -1
-				});
-				var worthlessCountBonus = 0;
-				
-				var isWrestle = props.indexOf("Wrestling") > -1;
-				var isArchery = props.indexOf("Archery") > -1;
-				var isCombatSkill = props.indexOf("Swordsmanship") > -1 || 
-					props.indexOf("Fencing") > -1 || 
-					props.indexOf("Mace Fighting") > -1;
-				var isHealing = props.indexOf("Healing") > -1;
-				
-				if(isWrestle && isArchery) worthlessCountBonus++;
-				if(isWrestle && isCombatSkill) worthlessCountBonus++;
-				if(isWrestle && props.indexOf("Bushido") > -1) worthlessCountBonus++;
-				if(isArchery && props.indexOf("Parrying") > -1) worthlessCountBonus++;
-				
-				if(isHealing && props.indexOf("Magery") > -1) worthlessCountBonus++;
-				if(isHealing && props.indexOf("Mysticism") > -1) worthlessCountBonus++;
-				
+				});		
 				
 				var skills = [	"Anatomy",		"Animal Lore",		"Animal Taming",
 									"Archery",			"Bushido",				"Chivalry",
@@ -250,11 +247,65 @@ function ShouldKeepItem(itemId){
 									"Throwing",		"Wrestling"]
 				var usefullSkills = skills.filter(function(mod){
 					return props.indexOf(mod) > -1
-				});
+				});			
+			
 				
+				function removeConflictingSkills(sourceArray, conflictGroups) {
+				  var usedGroups = {};
+				  var result = [];
+				
+				  for (var i = 0; i < sourceArray.length; i++) {
+				    var skill = sourceArray[i];
+				    var isInConflict = false;
+				
+				    for (var j = 0; j < conflictGroups.length; j++) {
+				      var group = conflictGroups[j];
+				
+				      for (var k = 0; k < group.length; k++) {
+				        if (group[k] === skill) {
+				          var groupId = group.join("|"); // consistent ID per group
+				
+				          if (usedGroups[groupId]) {
+				            isInConflict = true;
+				            break;
+				          } else {
+				            usedGroups[groupId] = true;
+				            break;
+				          }
+				        }
+				      }
+				
+				      if (isInConflict) break;
+				    }
+				
+				    if (!isInConflict) {
+				      result.push(skill);
+				    }
+				  }
+				
+				  return result;
+				}
+							
+									
+				const conflicts = [
+				  ["Archery", "Fencing", "Macing", "Swordsmanship", "Throwing", "Wrestling"],
+				  ["Wrestling", "Anatomy"],
+				  ["Healing", "Magery"],
+				  ["Chivalry", "Magery"],
+				  ["Stealth", "Magery"],
+				  ["Stealth", "Evaluating Inteligence"],
+				  ["Stealth", "Focus"],
+				  ["Stealth", "Mysticism"],
+				  ["Stealth", "Necromancy"],
+				  ["Stealth", "Spirit Speak"],
+				  ["Stealth", "Wrestling"],
+				];
+				var beforeConflictsUsefulSkillCount = usefullSkills.length;
+				usefullSkills = removeConflictingSkills(usefullSkills, conflicts);
+				var removedConflictUsefullskillsCount = beforeConflictsUsefulSkillCount - usefullSkills.length;
 				if(usefullSkills.length < 2) return false;
 					
-				if((containsWorthlessMods.length + worthlessCountBonus) > 1) return false;
+				if((removedConflictUsefullskillsCount + containsWorthlessMods.length) > 1) return false;
 				//exclude 7 mod 2 junk mod jewls
 				var nonModLines = ['Brittle', 'Antique', 'Prized', 'Gargoyles Only', 'Price: '];
 				var jewlLineBonus = nonModLines.filter(function(mod){
@@ -306,40 +357,27 @@ function ShouldKeepItem(itemId){
 			
 			var eater =  GetPropValue(/Eater  (\d+)/, props);
 			
+			var mr =  GetPropValue(/Hit Point Regeneration  (\d+)/, props);
+			var hpr =  GetPropValue(/Mana Regeneration  (\d+)/, props);
+			
+			
 			if(lrc === 0 && lmc === 0) return false;
 			if(lrc > 0 && lrc < 15) return false;
 			if(lmc > 0 && lmc < 6) return false;
 			
-			var totalStats = intel + mana + str + hp + dex + stam; 
+			
+			if(lrc > 0 && stam > 0) return false;
+			
+			var totalStats = intel + mana + str + hp + dex + stam + mr + hpr; 
 			if(totalStats < 20) {
-				if(totalStats < 5 && lrc > 0 && eater > 5) return false;
-				if(totalStats < 7 && lrc > 0 && eater === 0) return false;
+				if(totalStats < 8 && lrc > 0 && eater > 5) return false;
+				if(totalStats < 10 && lrc > 0 && eater === 0) return false;
 				if(totalStats < 13 && lrc === 0 &&  eater > 5) return false;
 				if(totalStats < 18 && lrc === 0 && eater === 0) return false;
-				if(hp > 0 && hp < 5) return false;
-				if(stam > 0 && stam < 8) return false;
-				
-				var statPropCount = 0;
-				if(intel > 0) statPropCount++;
-				if(mana > 0) statPropCount++;
-				if(str > 0) statPropCount++;
-				if(hp > 0) statPropCount++;
-				if(dex > 0) statPropCount++;
-				if(stam > 0) statPropCount++;
-				
-				if(statPropCount < 2){
-					if(statPropCount === 1){
-						if(	
-							stam < 10 && 
-							hp < 7 
-							){
-							return false;
-						}
-					} else {
-						return false;
-					}	 
-				}
+					
 			}
+			if(stam > 0 && stam < 10) return false;
+			if(hp > 0 && hp < 5) return false;						
 		}
 		
 		//Handle Legendary

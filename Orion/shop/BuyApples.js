@@ -1,6 +1,6 @@
 
 var resources = [
-	 '0x0F0E',
+	 '0x09D0',
 ]
 
 var FindItems = function(){
@@ -40,7 +40,7 @@ var FindItems = function(){
 
 function FindVendors () {
 	var vendorTitles = [
-		'Provisioner', 'Apprentice', 'Alchemist'
+		'Provisioner', 'Farmer'
 	];
 	var yellows = Orion.FindType("any", "any", "ground", 'mobile|near', '3', 'yellow' );
 	

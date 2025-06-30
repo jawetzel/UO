@@ -167,10 +167,10 @@ var  BreakBoxAndLockDownDirts = function(){
 		var dirtObject = Orion.FindObject(groundDirt);
 		var props = dirtObject.Properties();
 		if(props.indexOf("Locked Down") === -1){
-			Orion.Say("I Wish To Lock This Down");
-			if (Orion.WaitForTarget(1000))
-				Orion.TargetObject(groundDirt);
-			Orion.Wait(1000);
+			//Orion.Say("I Wish To Lock This Down");
+			//if (Orion.WaitForTarget(1000))
+			//	Orion.TargetObject(groundDirt);
+			//Orion.Wait(1000);
 		}
 	});
 }
