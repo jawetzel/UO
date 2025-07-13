@@ -1,0 +1,201 @@
+function GetIntensity(){
+	var horseId = Orion.ClientLastTarget();
+	Orion.Print(PetIntensity(horseId));
+}
+
+var petCaps = {
+	"0x0673": {
+		minIntensity: 2102,
+		bonusPoints: 70,
+		hp: 200,		
+		stam: 150,		
+		mana: 150,		
+		str: 420,		
+		dex: 185,		
+		int: 150,		
+		resistPhys: 50,		
+		resistFire: 45,		
+		resistCold: 40,		
+		resistPoison: 40,		
+		resistEnergy: 40,
+	}
+}
+
+var animalLoreGumpId = '0x000001DB';
+
+var multipliers = {
+	hpMultiplier: 3,
+	stamMultiplier: .5,
+	manaMultiplier: .5,
+	strMultiplier: 3,
+	dexMultiplier: .1,
+	intMultiplier: .5,
+	resistPhysMultiplier: 3,
+	resistFireMultiplier: 3,
+	resistColdMultiplier: 3,
+	resistPoisonMultiplier: 3,
+	resistEnergyMultiplier: 3
+}
+
+var petMenuTextIndexes = {
+	0: {name: 'name'},
+	//stats
+	1: {name: 'hp', splitValue: true, firstNumber: false},
+	2: {name: 'stam', splitValue: true, firstNumber: false},
+	3: {name: 'mana', splitValue: true, firstNumber: false},
+	4: {name: 'str', number: true},
+	5: {name: 'dex', number: true},
+	6: {name: 'int', number: true},
+	//resists
+	11: {name: 'resistPhys', percentageValue: true},
+	12: {name: 'resistFire', percentageValue: true},
+	13: {name: 'resistCold', percentageValue: true},
+	14: {name: 'resistPoison', percentageValue: true},
+	15: {name: 'resistEnergy', percentageValue: true},
+	//Skills
+	22: {name: 'wrestle', splitValue: true, firstNumber: true},
+	23: {name: 'tactics', splitValue: true, firstNumber: true},
+	24: {name: 'resist', splitValue: true, firstNumber: true},
+	25: {name: 'healing', splitValue: true, firstNumber: true},
+	26: {name: 'poisoning', splitValue: true, firstNumber: true},
+	27: {name: 'detect', splitValue: true, firstNumber: true},
+	28: {name: 'hiding', splitValue: true, firstNumber: true},
+	29: {name: 'parry', splitValue: true, firstNumber: true},
+	//skills page 2
+	31: {name: 'mage', splitValue: true, firstNumber: true},
+	32: {name: 'eval', splitValue: true, firstNumber: true},
+	33: {name: 'med', splitValue: true, firstNumber: true},
+	34: {name: 'necro', splitValue: true, firstNumber: true},
+	35: {name: 'spiritSpeak', splitValue: true, firstNumber: true},
+	36: {name: 'myst', splitValue: true, firstNumber: true},
+	37: {name: 'focus', splitValue: true, firstNumber: true},
+	38: {name: 'spellweaving', splitValue: true, firstNumber: true},
+	39: {name: 'discord', splitValue: true, firstNumber: true},
+	//skills page 3
+	48: {name: 'bush', splitValue: true, firstNumber: true},
+	49: {name: 'ninja', splitValue: true, firstNumber: true},
+	51: {name: 'chiv', splitValue: true, firstNumber: true},
+}
+
+
+var GetLoreGump = function(){
+	var count = Orion.GumpCount();
+	for (var i = count - 1; i >= 0; i--)
+    {
+        var gump = Orion.GetGump(i);
+		if(gump.ID() === animalLoreGumpId){
+			return gump;
+		}
+    }
+    return null;
+}
+
+var ParseValueFromText = function(text, index, pet){
+	var regex = new RegExp(/<[^>]+>/g);
+	var petCap = null;
+	if(pet.name && petCaps[pet.graphic]){
+		petCap = petCaps[pet.graphic];
+	}
+	if(!pet.intensityTotal) pet.intensityTotal = 0;
+	if(!pet.intensityCapTotal) pet.intensityCapTotal = 0;
+	var cleanText = text.replace(regex, "");
+	if(!petMenuTextIndexes[index]) return pet;
+	if(petMenuTextIndexes[index].splitValue){
+		var values = cleanText.split("/");
+		if(petMenuTextIndexes[index].firstNumber){
+			pet[petMenuTextIndexes[index].name] = parseFloat(values[0]);
+		} else {
+			pet[petMenuTextIndexes[index].name] = parseFloat(values[1]);
+		}
+		if(petMenuTextIndexes[index].name === 'dex' || petMenuTextIndexes[index].name === 'stam'){
+			if(pet[petMenuTextIndexes[index].name] < 125) pet[petMenuTextIndexes[index].name]  = 125;
+		}
+		if(petCap){
+			pet[petMenuTextIndexes[index].name + 'Intensity'] = 
+				pet[petMenuTextIndexes[index].name] * multipliers[petMenuTextIndexes[index].name + 'Multiplier'];
+			pet[petMenuTextIndexes[index].name + 'IntensityCap'] = 
+				petCap[petMenuTextIndexes[index].name] * multipliers[petMenuTextIndexes[index].name + 'Multiplier'];
+			if(!isNaN(pet[petMenuTextIndexes[index].name + 'Intensity'])){
+				pet.intensityTotal = pet.intensityTotal + pet[petMenuTextIndexes[index].name + 'Intensity'];
+				pet.intensityCapTotal = pet.intensityCapTotal + pet[petMenuTextIndexes[index].name + 'IntensityCap'];
+			}
+		}
+	} else if(petMenuTextIndexes[index].percentageValue){
+		var parsedText = parseFloat(cleanText.split("%").join(""));
+		pet[petMenuTextIndexes[index].name] = parsedText;
+		if(petMenuTextIndexes[index].name === 'dex' || petMenuTextIndexes[index].name === 'stam' || 
+			petMenuTextIndexes[index].name === 'int' || petMenuTextIndexes[index].name === 'mana'
+		){
+			if(pet[petMenuTextIndexes[index].name] < 125) pet[petMenuTextIndexes[index].name]  = 125;
+		}
+		if(petCap){
+			pet[petMenuTextIndexes[index].name + 'Intensity'] = 
+				pet[petMenuTextIndexes[index].name] * multipliers[petMenuTextIndexes[index].name + 'Multiplier'];
+			pet[petMenuTextIndexes[index].name + 'IntensityCap'] = 
+				petCap[petMenuTextIndexes[index].name] * multipliers[petMenuTextIndexes[index].name + 'Multiplier'];
+			if(!isNaN(pet[petMenuTextIndexes[index].name + 'Intensity'])){
+				pet.intensityTotal = pet.intensityTotal + pet[petMenuTextIndexes[index].name + 'Intensity'];
+				pet.intensityCapTotal = pet.intensityCapTotal + pet[petMenuTextIndexes[index].name + 'IntensityCap'];
+			}
+		}
+	} else if(petMenuTextIndexes[index].number){
+		pet[petMenuTextIndexes[index].name] =  parseFloat(cleanText);
+		if(petMenuTextIndexes[index].name === 'dex' || petMenuTextIndexes[index].name === 'stam'){
+			if(pet[petMenuTextIndexes[index].name] < 125) pet[petMenuTextIndexes[index].name]  = 125;
+		}
+		if(petCap){
+			pet[petMenuTextIndexes[index].name + 'Intensity'] = 
+				pet[petMenuTextIndexes[index].name] * multipliers[petMenuTextIndexes[index].name + 'Multiplier'];
+			pet[petMenuTextIndexes[index].name + 'IntensityCap'] = 
+				petCap[petMenuTextIndexes[index].name] * multipliers[petMenuTextIndexes[index].name + 'Multiplier'];
+			if(!isNaN(pet[petMenuTextIndexes[index].name + 'Intensity'])){
+				pet.intensityTotal = pet.intensityTotal + pet[petMenuTextIndexes[index].name + 'Intensity'];
+				pet.intensityCapTotal = pet.intensityCapTotal + pet[petMenuTextIndexes[index].name + 'IntensityCap'];
+			}
+		}		
+	} else {
+		pet[petMenuTextIndexes[index].name] =  cleanText;
+	}
+	return pet;
+	
+	
+}
+
+var GetIntensityFromPet = function(pet){
+	if(pet.intensityTotal === 0 ||  pet.intensityCapTotal === 0) return null;
+	var petName = pet.name;	
+	var currentPetCaps = petCaps[pet.graphic];
+	pet.intensityTotal = pet.intensityTotal + currentPetCaps.bonusPoints
+	pet.intensityCapTotal = pet.intensityCapTotal + currentPetCaps.bonusPoints
+	var maxDelta = pet.intensityCapTotal - currentPetCaps.minIntensity;
+	var petDelta = pet.intensityTotal - currentPetCaps.minIntensity;
+	var decimal = petDelta / maxDelta;
+	var percent = decimal * 100;
+	return percent.toFixed(2);
+}
+
+var closeGump = function(){
+	var gump = GetLoreGump();
+	if(!gump) return null;
+	gump.Select(Orion.CreateGumpHook(0));
+}
+
+var PetIntensity = function(petId){
+	var gump = GetLoreGump();
+	if(!gump) return null;
+	var textList = gump.TextList();
+	
+	var pet = {
+		graphic: Orion.FindObject(petId).Graphic()
+
+	};
+	
+	for(var i = 0; i < textList.length; i++){
+		pet = ParseValueFromText(textList[i], i, pet);
+	}
+	var petIntensity = GetIntensityFromPet(pet);
+	gump.Select(Orion.CreateGumpHook(0));	
+	return petIntensity
+	
+	
+}

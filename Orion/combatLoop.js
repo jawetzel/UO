@@ -57,6 +57,7 @@ var travelToSpawnEntrance = function() {
 		Orion.UseObject(runebooks[0]);
 		if (Orion.WaitForGump(3000))
 		{
+			Orion.Wait(500);
 			var gump = Orion.GetGump('last');
 			if ((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x00000059'))
 			{

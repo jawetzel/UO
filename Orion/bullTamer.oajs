@@ -3,6 +3,13 @@ function Autostart()
 	MainTamerLoop();
 }
 
+var petTypes = {
+	"to55": "0x00E7|0x00D8|0x00D1", //cow cow goat (30-55)
+	"to70":  "0x0122|0x00DC", // boar lama (55-70)
+	"past70": "0x00E9|0x00E8" // bull 70+
+}
+
+
 function MainTamerLoop() {
     var penCoords = [
         { x: 1121, y: 3576 }, // start
@@ -13,23 +20,31 @@ function MainTamerLoop() {
 
     while (!Player.Dead()) {
         for (var i = 0; i < penCoords.length; i++) {
-            Orion.WalkTo(penCoords[i].x, penCoords[i].y, Player.Z(), 0);
-            while (Player.X() !== penCoords[i].x || Player.Y() !== penCoords[i].y) {
-                Orion.Wait(500);
-            }
+        	while (Player.X() !== penCoords[i].x || Player.Y() !== penCoords[i].y) {
+            	Orion.WalkTo(penCoords[i].x, penCoords[i].y, Player.Z(), 0);
+                LookForHorse();
+            }             
+           LookForHorse();
             if(Player.Hits() < 100) {
             	Orion.Cast("Close wounds");
             	Orion.WaitForTarget(2000);
             	Orion.TargetObject(Player.Serial());
             	Orion.Wait(750);
             }
-            LookForHorse();
         }
     }
 }
 
 function LookForHorse() {
-    var horses = Orion.FindTypeEx('0x00E9|0x00E8', '-1', ground, 'mobile|live', 20);
+	var skill = Orion.SkillValue('Animal Taming');
+	Orion.Print(skill);
+	var animals = null;
+	
+	if(skill < 500) animals = petTypes["to55"];
+	else if(skill < 650) animals =  petTypes["to70"];
+	else animals =  petTypes["past70"];
+	
+    var horses = Orion.FindTypeEx(animals, '-1', ground, 'mobile|live', 20);
     Orion.Wait(250);
     if(horses.length > 0) {
     	AttemptTame(horses[0].Serial());
@@ -99,7 +114,7 @@ function KillTarget(serial) {
      Orion.Attack(serial);
     Orion.Wait(3000);
     if( Orion.FindObject(serial) ) {
-    	Orion.Wait(3000);
+    	Orion.Wait(9000);
     }
    	Orion.Ignore(serial);
 }

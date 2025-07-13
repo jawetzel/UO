@@ -125,11 +125,8 @@ var ShouldKeepItem_Splinter = function (props){
 									
 				if(isHitSpell &&  (isOverCapSplinter || isSc || isLowerD)){
 					return true;
-				}
-			
-				if(isOverCapLightning || isOverCapFireball || isOverCapHarm){
-					return true;
-				}							
+				}					
+				
 		}
 		return false;
 	}
@@ -343,6 +340,10 @@ function ShouldKeepItem(itemId){
 					return false;
 			}	
 			
+			if(props.indexOf("Woodland") > -1){
+				return false;
+			}			
+			
 			var lrc = GetPropValue(/Lower Reagent Cost (\d+)/, props);
 			var lmc = GetPropValue(/Lower Mana Cost (\d+)/, props);
 
@@ -365,7 +366,11 @@ function ShouldKeepItem(itemId){
 			if(lrc > 0 && lrc < 15) return false;
 			if(lmc > 0 && lmc < 6) return false;
 			
-			
+			if(stam > 0 && (
+				props.indexOf("Platemail") > -1 || 
+				props.indexOf("Ringmail") > -1 || 
+				props.indexOf("Chainmail") > -1
+				)) return false;
 			if(lrc > 0 && stam > 0) return false;
 			
 			var totalStats = intel + mana + str + hp + dex + stam + mr + hpr; 

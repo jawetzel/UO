@@ -7,15 +7,15 @@ function FilterItemsFromTargetToLastObject(){
 	Orion.Wait(1500);
 	Orion.UseObject(soirceBag);
 	Orion.Wait(1500);
-	var destItems = Orion.FindTypeEx('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
+	var destItems = Orion.FindTypeEx('any', 'any', soirceBag, ' ', 'finddistance', ' ');
 	
 	destItems.forEach(function(item){
 		if(shouldKeepItemEjGear(item.Properties())) {
 		//if(ShouldKeepItem(item.Serial())) {
-			Orion.MoveItem(item.Serial(), 1000, targetBag);
-			Orion.Wait(1400);
+			
 		}
-		
+		Orion.MoveItem(item.Serial(), 1000, targetBag, item.X(), item.Y());
+			Orion.Wait(1400);
 
 	})
 }
@@ -30,6 +30,7 @@ function LockBagballsDown(){
 			Orion.TargetObject(item);
 		if (Orion.WaitForGump(1000))
 		{
+			Orion.Wait(500);
 			var gump0 = Orion.GetGump(item, '0x00000295');
 			if ((gump0 !== null) && (!gump0.Replayed()) && (gump0.ID() === '0x00000295'))
 			{
@@ -108,7 +109,7 @@ function StockLobjectWLtargBagInto(){
 		}
 		Orion.MoveItem(item.Serial(), 1000, targetBag, item.X(), item.Y());
 			Orion.Wait(600);
-			Orion.SendPrompt("8000000"); // + getSkillTotalSuffix(item.Properties()) + " " + generateDateTag())
+			Orion.SendPrompt("2000000"); // + getSkillTotalSuffix(item.Properties()) + " " + generateDateTag())
 			Orion.Wait(600);
 
 	})
@@ -190,7 +191,7 @@ function StockLastTargetToVendors(){
 	var sourceItems = Orion.FindTypeEx('any', 'any', soirceBag, ' ', 'finddistance', ' ', true);
 	
 	var vendorDist = 2; //2 if on top, higher if outside house stocking
-	var vendorName = 'Shop Name: Armor';
+	var vendorName = 'Shop Name:';
 	var vendorSubContainers = {
 		'Splinter': [],
 		'Shield': [],
@@ -329,8 +330,8 @@ function StockLastTargetToVendors(){
 				}
 				Orion.MoveItem(sourceItem.Serial(), 1000, destBag);
 				Orion.Wait(600);
-				Orion.Print(itemPrice + itemDescription + getSkillTotalSuffix(sourceItem.Properties()) + " " + generateDateTag());
-				Orion.SendPrompt(itemPrice + itemDescription + getSkillTotalSuffix(sourceItem.Properties()) + " " + generateDateTag())
+				Orion.Print(itemPrice);// + itemDescription + getSkillTotalSuffix(sourceItem.Properties()) + " " + generateDateTag());
+				Orion.SendPrompt(itemPrice);// + itemDescription + getSkillTotalSuffix(sourceItem.Properties()) + " " + generateDateTag())
 				Orion.Wait(800);
 	    	}
 	});
@@ -401,7 +402,7 @@ function RepriceVendor(){
 	var followUpText = "";    
 	var vendordistance = 1;
 	var daysBetweenReprice = 0;
-	var minPrice = 3000000;
+	var minPrice = 7000000;
 	var ddeleteBag = Orion.FindObject(lastobject).Serial();;
 	// you shouldnt need to reprice below this point
 	
@@ -527,19 +528,19 @@ function RepriceVendor(){
     	 var afterPriceText = props.substring(priceIndex + priceText.length);
     	 var priceText = afterPriceText.split("\n")[0];
     	 var cleanPriceText = priceText.split(",").join("");
-    	 var number = parseInt(cleanPriceText);
-    	 
-    	 if(number < minPrice && ddeleteBag) {
-    	 	Orion.MoveItem(itemId, 5000, ddeleteBag);
-    	 	Orion.Wait(1500);
-    	 	return;
-    	 }
+    	 var number = parseInt(cleanPriceText); 
     	
     	var description = followUpText + getSkillTotalSuffix(Orion.FindObject(itemId).Properties()) + " " + generateDateTag();
     	
     	 var updatedPrice = newPrice;
     	 if(newPrice < 1){
     	 	var updatedPrice = Math.floor(number * newPrice);  
+    	 }
+    	 
+    	  if(updatedPrice < minPrice && ddeleteBag) {
+    	 	Orion.MoveItem(itemId, 5000, ddeleteBag);
+    	 	Orion.Wait(1500);
+    	 	return;
     	 }
     	 if(number !== newPrice || Orion.FindObject(itemId).Properties().indexOf(description) === -1) {
     	 	 var oldItemX = item.X();

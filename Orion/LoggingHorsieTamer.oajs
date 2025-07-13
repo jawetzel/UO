@@ -34,10 +34,13 @@ var coordOptions = {
 		{ x: 5942, y: 4058 },		
 		{ x: 5964, y: 4070 },
 		{ x: 5975, y: 4030 },
+	],
+	IlshKirinPass: [
+		{ x:26 , y: 957}
 	]
 };
 
-var penCoords = coordOptions.T2AEastSouth;
+var penCoords = coordOptions.T2AWest;
 
 //----YOU SHOULD NOT NEED TO EDIT BELOW THIS LINE----
 //----YOU SHOULD NOT NEED TO EDIT BELOW THIS LINE----
@@ -47,8 +50,11 @@ var penCoords = coordOptions.T2AEastSouth;
 function Autostart()
 {
 	Orion.Wait(6000);
-	travel("Clydesdale", "Clydesdale");
 	MainTamerLoop();
+}
+
+function RenamePet(){
+	Orion.RenameMount(Orion.ClientLastTarget(), "ForSale-Jawetzel-SevenZero");
 }
 
 var chromaticTotemGraphic = '0x9F1A';
@@ -65,9 +71,16 @@ var AttackEnemy = function(){
 	return;
 }
 
-function MainTamerLoop() {
-    
 
+
+function MainTamerLoop() {
+	var start = 0;
+	if(Orion.Now() > start){
+		start = Orion.Now() + 300000;
+		Orion.Say("All follow me");
+		Orion.Say("All guard me");
+		
+	}
     while (!Player.Dead()) {
     	Orion.Print(IsOtherTotemActive());
     	if(IsOtherTotemActive()){
@@ -77,8 +90,17 @@ function MainTamerLoop() {
         for (var i = 0; i < penCoords.length; i++) {
             while (Player.X() !== penCoords[i].x || Player.Y() !== penCoords[i].y) {
             	Orion.WalkTo(penCoords[i].x, penCoords[i].y, Player.Z(), 0, 255, 1, 1, 1000);
+            	 if( Player.X() === penCoords[i].x || Player.Y() === penCoords[i].y){
+	            	 PlaceTotem();
+	            }
             	AttackEnemy();                
-                LookForHorse();
+            	LookForHorse();
+            	 if(Player.Hits() < 100) {
+	            	Orion.Cast("Close wounds");
+	            	Orion.WaitForTarget(2000);
+	            	Orion.TargetObject(Player.Serial());
+	            	Orion.Wait(750);
+	            }
             }
             if( Player.X() === penCoords[i].x || Player.Y() === penCoords[i].y){
             	 PlaceTotem();
@@ -100,7 +122,7 @@ function MainTamerLoop() {
 }
 
 var IsOtherTotemActive = function() {
-	var myName = Player.Name();
+	var myName = Player.Name().toUpperCase().replace("LORD ", "");
 	var totems = Orion.FindTypeEx(chromaticTotemGraphic, 'any', "ground", "", 30);
 	if(!totems || totems.length === 0) return false;
 	return totems[0].Properties().toUpperCase().indexOf(myName.toUpperCase()) === -1;
@@ -122,55 +144,6 @@ var PlaceTotem = function() {
 	Orion.Wait(2000);
 }
 
-var travel = function(bookName, locationName){
-	
-		var runebooks = Orion.FindTypeEx("0x22C5", -1, 'backpack');
-		if(!runebooks || runebooks.length === 0){
-			Orion.Print("No Runebook Found - Help!");
-			return;
-		}
-		var namedRunebooks = runebooks.filter(function(book){
-			if(!book) return false;
-			var props = book.Properties();
-			if(!props) return false;
-			return props.indexOf(bookName) > -1;
-		});
-		if(!namedRunebooks || namedRunebooks.length === 0){
-			Orion.Print("I found Runebooks, but none were named - Help!");
-			return;
-		}
-		var originalLocation = {
-			x: Player.X(),
-			y: Player.Y()
-		}
-		
-		var performRecall = function(){
-			Orion.UseObject(namedRunebooks[0].Serial());
-			if(!Orion.WaitForGump(3000)){
-				Orion.Wait(1200);
-				Orion.UseObject(namedRunebooks[0].Serial());
-				Orion.WaitForGump(3000)
-			}
-			Orion.Wait(1000);			
-			var gump = Orion.GetGump(namedRunebooks[0].Serial(), '0x00000059');
-			if ((gump !== null) && (!gump.Replayed()) && (gump.ID() === '0x00000059'))
-			{						
-				var runeInd = gump.TextList().indexOf(locationName) - 2;
-				var buttonIndex = 75 + runeInd;
-				gump.Select(Orion.CreateGumpHook(buttonIndex));
-				Orion.Wait(5000);
-				
-			} else {
-				Orion.Print("Recalling failed, no suitable gump found");
-			}
-		}
-		
-		performRecall();
-		if(Player.X() === originalLocation.x && Player.Y() === originalLocation.y){
-			performRecall();
-		}
-
-	}
 
 function LookForHorse() {
     var horses = Orion.FindTypeEx('0x0673', '-1', ground, 'mobile|live', 30);
@@ -182,7 +155,7 @@ function LookForHorse() {
     }
     Orion.Wait(250);
     if(horses && horses.length > 0) {
-    	Orion.Wait(1500);
+    	Orion.Wait(1000);
     	var horse = Orion.FindObject(horses[0].Serial());    
     	if(!horse) return;
     	var color = horse.Color();
@@ -194,11 +167,11 @@ function LookForHorse() {
     		//Common
     		color === '0x0ACB' || color === '0x0AC9' || 
     		//Uncommon
-    		color === '0x09C4' || color === '0x0A76'  ||	color === '0x0848' || 
-    		//Rare 
-    		color === '0x0A63' // Rare blue
+    		color === '0x09C4' || color === '0x0A76'  ||	color === '0x0848' ||
+    		//Rare
+    		color === '0x0A63'
     		)	 
-    	{    		
+    	{    		    	
     		Orion.Print("Killing Horse: " + color);
     		var start = Orion.Now();
 		    var timeout = start + 45000;			   
@@ -206,8 +179,7 @@ function LookForHorse() {
     			var horse = Orion.FindObject(horses[0].Serial());
     			Orion.Print("Walking to horse");
     			if(!horse) break;
-    			Orion.Attack(horses[0].Serial());
-    			Orion.WalkTo(horse.X(), horse.Y(), horse.Z(), 1, 255, 1, 1, 5000);
+    			Orion.WalkTo(horse.X(), horse.Y(), horse.Z(), 0, 255, 1, 1, 5000);
     			Orion.Attack(horses[0].Serial());
     			if(!Orion.BuffExists('0x754e')){
 		    		Orion.Cast('Enemy of One');
@@ -224,10 +196,9 @@ function LookForHorse() {
 				}	
     		}    		
     	}
-    	else if (    	    			    		
-    			
-    			//Rare
-    			color === '0x0A2D' || //rare purple
+    	else if (    	    	
+    		//Rare
+    			color === '0x0A2D' ||    			
     			//Verry Rate
     			color === '0x081B' || color === '0x0AC1' || 
     			//Uber rare 
@@ -276,7 +247,17 @@ function AttemptTame(serial) {
 
     // Step 3: Check tame status
     if (IsTamed(serial)) {
-        KillTarget(serial);
+    	var color = horse.Color();
+    	if(Player.Followers() < 4 && (color === '0x0A63' || color === '0x0A2D')){
+    		Orion.Say("All follow me");
+    		Orion.Say("All guard me");
+    		Orion.Wait(500);
+    	} else {
+    		// logout 
+    		DiscordAnnouncement();
+        	Orion.CloseUO();
+    	}
+        
     } else if (Orion.ObjectExists(serial)) {
         AttemptTame(serial); // retry
     } else {
@@ -300,7 +281,7 @@ var parsePetNameFromColor = function (color){
 	}
 
 	if(color === '0x0AC1') {
-		return "VeryRareDemonic"
+		return "VeryDemonic"
 	}
 	if(color === '0x081B') {
 		return "VeryRareAbyssal"
@@ -324,15 +305,6 @@ function KillTarget(serial) {
     if (!serial || !Orion.ObjectExists(serial)) return;
     var target = Orion.FindObject(serial);
     if (!target) return;
-    Orion.Say("all follow me");
-    Orion.WarMode(0);
-    Orion.Wait(3500);
-    Orion.UseObject(serial);
-    Orion.Wait(2000);
-    travel("Clydesdale", "Stables");
-    Orion.UseObject(self);
-    Orion.Wait(1000);
-    
     Orion.UseSkill('Animal Lore');
     Orion.WaitForTarget();
     Orion.TargetObject(serial);
@@ -352,7 +324,6 @@ function KillTarget(serial) {
     Orion.TargetObject(serial);
     Orion.Wait(2000);
    	Orion.Ignore(serial);
-   	travel("Clydesdale", "Clydesdale");
     Orion.Wait(1000);
 }
 
@@ -552,4 +523,13 @@ var PetIntensity = function(petId){
 	return petIntensity
 	
 	
+}
+
+function DiscordAnnouncement()
+{
+    // Discord
+    var bot = "https://discord.com/api/webhooks/1391946497221857501/UdrIDs4wZY9OwFmWmNJ1IXk7AqgY__kAHPE41Ppi3HW62aXMydJ1SeeW9n50grfdk_bH"; // Webhook url
+    var charName = Player.Name();
+    var paramText = "username="+charName+"&content=@everyone "+charName+" WE GOT A HORSIE!";
+	Orion.HttpPost(bot, paramText);
 }
